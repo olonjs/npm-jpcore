@@ -3,7 +3,7 @@
  * Enterprise: error boundary, defensive config, and safe init to avoid black screen.
  */
 import React, { useEffect, useState, useCallback, Component, ErrorInfo, ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { PageRenderer } from './PageRenderer';
 import { StudioProvider } from './StudioContext';
 import { ConfigProvider } from './ConfigContext';
@@ -90,6 +90,32 @@ class EngineErrorBoundary extends Component<
   }
 }
 
+function normalizeSlugSegments(value: string): string {
+  return value
+    .split('/')
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .join('/');
+}
+
+function resolveSlugFromPathname(pathname: string, prefix = ''): string {
+  const normalizedPrefix = normalizeSlugSegments(prefix);
+  const normalizedPath = pathname.replace(/\/+/g, '/');
+  let remainder = normalizedPath;
+
+  if (normalizedPrefix) {
+    const prefixedPath = `/${normalizedPrefix}`;
+    if (remainder === prefixedPath) {
+      remainder = '/';
+    } else if (remainder.startsWith(`${prefixedPath}/`)) {
+      remainder = remainder.slice(prefixedPath.length);
+    }
+  }
+
+  const slug = normalizeSlugSegments(remainder);
+  return slug || 'home';
+}
+
 interface VisitorRouteProps {
   pageRegistry: Record<string, PageConfig>;
   siteConfig: SiteConfig;
@@ -107,7 +133,8 @@ const VisitorRoute: React.FC<VisitorRouteProps> = ({
   adminCss,
   NotFoundComponent,
 }) => {
-  const { slug = 'home' } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const slug = resolveSlugFromPathname(location.pathname);
   const [bakedState, setBakedState] = useState<ProjectState | null>(null);
 
   useEffect(() => {
@@ -167,7 +194,8 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   saveToFile,
   exportHTML,
 }) => {
-  const { slug = 'home' } = useParams<{ slug: string }>();
+  const location = useLocation();
+  const slug = resolveSlugFromPathname(location.pathname, 'admin');
   const navigate = useNavigate();
   const pageSlugs = Object.keys(pageRegistry).sort((a, b) =>
     a === 'home' ? -1 : b === 'home' ? 1 : a.localeCompare(b)
@@ -493,7 +521,14 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
                 onResetToFile={handleResetToFile}
                 pageSlugs={pageSlugs}
                 currentSlug={slug}
-                onPageChange={pageSlugs.length > 1 ? (s) => navigate(`/admin/${s}`) : undefined}
+                onPageChange={
+                  pageSlugs.length > 1
+                    ? (s) => {
+                        const nextSlug = normalizeSlugSegments(s);
+                        navigate(nextSlug === 'home' ? '/admin' : `/admin/${nextSlug}`);
+                      }
+                    : undefined
+                }
               />
             </div>
           </div>
@@ -601,7 +636,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
               }
             />
             <Route
-              path="/:slug"
+              path="/*"
               element={
                 <VisitorRoute
                   pageRegistry={pageRegistry}
@@ -631,7 +666,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
               }
             />
             <Route
-              path="/admin/:slug"
+              path="/admin/*"
               element={
                 <StudioRoute
                   pageRegistry={pageRegistry}
@@ -648,7 +683,11 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
               }
             />
             <Route
-              path="/admin/preview/:slug"
+              path="/admin/preview"
+              element={<PreviewRoute tenantCss={tenantCss} adminCss={adminCss} />}
+            />
+            <Route
+              path="/admin/preview/*"
               element={<PreviewRoute tenantCss={tenantCss} adminCss={adminCss} />}
             />
             <Route path="*" element={<NotFoundComponent />} />
