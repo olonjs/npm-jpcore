@@ -7,7 +7,7 @@
     "dev": "vite",
     "dev:clean": "vite --force",
     "build": "tsc && vite build",
-    "dist": "bash ./src2Code.sh src index.html",
+    "dist": "bash ./src2Code.sh src index.html package.json",
     "preview": "vite preview"
   },
   "dependencies": {
