@@ -134,7 +134,9 @@ program
       await processScriptInNode(scriptPath, targetDir);
       spinner.succeed('Source code and assets projected successfully.');
 
-      // 5. Dependencies: gestite nello script .sh (es. copia/package.json da tenant-alpha o npm install)
+      // 5. Install dependencies (lo script .sh deve aver già scritto/copiato package.json in targetDir)
+      spinner.start('Installing dependencies (this may take a minute)...');
+      await execa(npmCmd, ['install'], { cwd: targetDir });
       spinner.succeed(chalk.green.bold('✨ Tenant Ready!'));
 
       console.log(`\n${chalk.white.bgBlue(' NEXT STEPS ')}`);
