@@ -4,6 +4,15 @@
 import type React from 'react';
 import type { PageConfig, SiteConfig, ThemeConfig, MenuConfig, ProjectState } from './kernel';
 
+/** v1.3 strict Studio path segment (root -> leaf). */
+export interface SelectionPathSegment {
+  fieldKey: string;
+  itemId?: string;
+}
+
+/** v1.3 strict Studio path for field/item focus synchronization. */
+export type SelectionPath = SelectionPathSegment[];
+
 /** Persistence API; defaults provided by Core, overridable by Tenant. */
 export interface PersistenceConfig {
   exportJSON: (state: ProjectState, slug: string) => Promise<void>;

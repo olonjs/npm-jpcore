@@ -18,6 +18,7 @@ import { GitSectionSchema }       from '@/components/git-section';
 import { DevexSchema }            from '@/components/devex';
 import { CliSectionSchema }       from '@/components/cli-section';
 import { DocsLayoutSchema }       from '@/components/docs-layout';
+import { TiptapSchema }           from '@/components/tiptap';
 
 export const SECTION_SCHEMAS = {
   'header':            HeaderSchema,
@@ -38,6 +39,7 @@ export const SECTION_SCHEMAS = {
   'devex':             DevexSchema,
   'cli-section':       CliSectionSchema,
   'docs-layout':       DocsLayoutSchema,
+  'tiptap':            TiptapSchema,
 } as const;
 
 export type SectionType = keyof typeof SECTION_SCHEMAS;

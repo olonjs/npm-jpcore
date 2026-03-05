@@ -2,7 +2,7 @@
  * Sovereign Shell: routing, state, and Admin layout live in the Engine.
  * Enterprise: error boundary, defensive config, and safe init to avoid black screen.
  */
-import React, { useEffect, useState, useCallback, Component, ErrorInfo, ReactNode } from 'react';
+import React, { useEffect, useState, useCallback, useRef, Component, ErrorInfo, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { PageRenderer } from './PageRenderer';
 import { StudioProvider } from './StudioContext';
@@ -16,7 +16,7 @@ import { DefaultNotFound } from './DefaultNotFound';
 import { themeManager } from '../utils/theme-manager';
 import { STUDIO_EVENTS } from './events';
 import { exportProjectJSON, exportBakedHTML } from './persistence';
-import type { JsonPagesConfig } from './types-engine';
+import type { JsonPagesConfig, SelectionPath } from './types-engine';
 import type { PageConfig, SiteConfig, Section, MenuItem, ProjectState } from './kernel';
 
 import defaultAdminCss from '../admin/admin-skin.css?inline';
@@ -226,8 +226,18 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   const [scrollToSectionId, setScrollToSectionId] = useState<string | null>(null);
   const [addSectionLibraryOpen, setAddSectionLibraryOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(400);
+  const draftRef = useRef<PageConfig | null>(draft);
+  const globalDraftRef = useRef<SiteConfig>(globalDraft);
   const sidebarMin = 360;
   const sidebarMax = 920;
+
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+
+  useEffect(() => {
+    globalDraftRef.current = globalDraft;
+  }, [globalDraft]);
 
   const handleResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
@@ -305,37 +315,55 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
         setSelected(event.data.section);
         const itemPath = event.data.itemPath;
         if (Array.isArray(itemPath) && itemPath.length > 0) {
-          setExpandedItemPath(itemPath.map((s: { fieldKey: string; itemId?: string }) => ({
+          setExpandedItemPath((itemPath as SelectionPath).map((s) => ({
             fieldKey: s.fieldKey,
             ...(s.itemId != null ? { itemId: String(s.itemId) } : {}),
           })));
         } else {
-          const itemField = event.data.itemField;
-          const itemId = event.data.itemId;
-          if (typeof itemField === 'string') {
-            setExpandedItemPath([
-              { fieldKey: itemField, ...(itemId != null ? { itemId: String(itemId) } : {}) },
-            ]);
-          } else {
-            setExpandedItemPath(null);
-          }
+          setExpandedItemPath(null);
+        }
+      }
+      if (event.data.type === STUDIO_EVENTS.INLINE_FIELD_UPDATE) {
+        const sectionId = typeof event.data.sectionId === 'string' ? event.data.sectionId : null;
+        const fieldKey = typeof event.data.fieldKey === 'string' ? event.data.fieldKey : null;
+        if (sectionId && fieldKey) {
+          setDraft((prev) => {
+            if (!prev) return prev;
+            const nextDraft: PageConfig = {
+              ...prev,
+              sections: prev.sections.map((section) =>
+                section.id === sectionId
+                  ? {
+                      ...section,
+                      data: {
+                        ...(section.data as Record<string, unknown>),
+                        [fieldKey]: event.data.value,
+                      },
+                    } as Section
+                  : section
+              ),
+            };
+            draftRef.current = nextDraft;
+            return nextDraft;
+          });
+          setHasChanges(true);
         }
       }
       if (event.data.type === STUDIO_EVENTS.ACTIVE_SECTION_CHANGED) {
         setActiveSectionId(event.data.activeSectionId ?? null);
       }
-      if (event.data.type === 'jsonpages:section-reorder' && draft) {
+      if (event.data.type === 'jsonpages:section-reorder' && draftRef.current) {
         const { sectionId, newIndex } = event.data as { sectionId?: string; newIndex?: number };
         if (typeof sectionId === 'string' && typeof newIndex === 'number' && newIndex >= 0) {
-          handleReorderSection(sectionId, newIndex, draft);
+          handleReorderSection(sectionId, newIndex, draftRef.current);
         }
       }
       if (event.data.type === STUDIO_EVENTS.SEND_CLEAN_HTML) {
-        if (!draft) return;
-        const headerData = globalDraft.header?.data as { links?: MenuItem[] } | undefined;
+        if (!draftRef.current) return;
+        const headerData = globalDraftRef.current.header?.data as { links?: MenuItem[] } | undefined;
         const projectState: ProjectState = {
-          page: draft,
-          site: globalDraft,
+          page: draftRef.current,
+          site: globalDraftRef.current,
           menu: { main: headerData?.links ?? [] },
           theme: themeConfig,
         };
@@ -343,7 +371,7 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
         setHasChanges(false);
       }
     },
-    [draft, globalDraft, slug, themeConfig, handleReorderSection, exportHTML]
+    [slug, themeConfig, handleReorderSection, exportHTML]
   );
 
   useEffect(() => {
@@ -415,12 +443,40 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
     iframe?.contentWindow?.postMessage({ type: STUDIO_EVENTS.REQUEST_CLEAN_HTML }, '*');
   };
 
-  const handleSaveToFile = () => {
-    if (!draft || !saveToFile) return;
-    const headerData = globalDraft.header?.data as { links?: MenuItem[] } | undefined;
+  const requestInlineFlush = useCallback(async () => {
+    const iframe = document.querySelector('iframe');
+    if (!iframe?.contentWindow) return;
+    const requestId = crypto.randomUUID();
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const onMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type === STUDIO_EVENTS.INLINE_FLUSHED && event.data?.requestId === requestId) {
+          settled = true;
+          window.removeEventListener('message', onMessage);
+          resolve();
+        }
+      };
+      window.addEventListener('message', onMessage);
+      iframe.contentWindow?.postMessage({ type: STUDIO_EVENTS.REQUEST_INLINE_FLUSH, requestId }, '*');
+      window.setTimeout(() => {
+        if (settled) return;
+        window.removeEventListener('message', onMessage);
+        resolve();
+      }, 400);
+    });
+  }, []);
+
+  const handleSaveToFile = async () => {
+    if (!saveToFile) return;
+    await requestInlineFlush();
+    const currentDraft = draftRef.current;
+    const currentGlobalDraft = globalDraftRef.current;
+    if (!currentDraft) return;
+    const headerData = currentGlobalDraft.header?.data as { links?: MenuItem[] } | undefined;
     const projectState: ProjectState = {
-      page: draft,
-      site: globalDraft,
+      page: currentDraft,
+      site: currentGlobalDraft,
       menu: { main: headerData?.links ?? [] },
       theme: themeConfig,
     };

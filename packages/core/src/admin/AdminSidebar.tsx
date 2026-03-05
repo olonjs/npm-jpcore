@@ -90,6 +90,28 @@ interface AdminSidebarProps {
 }
 
 const SETTINGS_KEYS = new Set(['anchorId', 'paddingTop', 'paddingBottom', 'theme', 'container']);
+const INLINE_EDITOR_UI_HINTS = new Set(['ui:editorial-markdown']);
+
+const unwrapSchema = (schema: z.ZodTypeAny): z.ZodTypeAny => {
+  if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodNullable) {
+    return unwrapSchema(schema._def.innerType);
+  }
+  return schema;
+};
+
+const getUiHint = (schema: z.ZodTypeAny | undefined): string => {
+  if (!schema) return '';
+  const raw = schema as z.ZodTypeAny & { _def?: { description?: unknown } };
+  const direct = typeof schema.description === 'string' ? schema.description : null;
+  if (direct) return direct;
+  const defDescription = typeof raw._def?.description === 'string' ? raw._def.description : null;
+  if (defDescription) return defDescription;
+  const unwrapped = unwrapSchema(schema);
+  if (unwrapped !== schema) {
+    return getUiHint(unwrapped);
+  }
+  return '';
+};
 
 /** Activation: 8px movement to start drag (avoids accidental drag on click). Touch: 200ms delay so scroll works. */
 const pointerSensor = { activationConstraint: { distance: 8 } };
@@ -385,6 +407,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const formSchema = deferredSection
     ? (schemas[deferredSection.type] as z.ZodObject<z.ZodRawShape> | undefined)
     : undefined;
+  const isInlineEditorialSection = useMemo(() => {
+    if (!formSchema) return false;
+    const shape = formSchema.shape;
+    const contentKeys = Object.keys(shape).filter((k) => !SETTINGS_KEYS.has(k));
+    if (contentKeys.length === 0) return false;
+    return contentKeys.every((k) => INLINE_EDITOR_UI_HINTS.has(getUiHint(shape[k])));
+  }, [formSchema]);
+  useEffect(() => {
+    if (selectedSection?.id != null && isInlineEditorialSection) {
+      setLayersOpen(true);
+    }
+  }, [selectedSection?.id, isInlineEditorialSection]);
 
   /** When no section is selected, Page Layers list is always shown (open); otherwise use accordion state. */
   const showLayersList = allLayers.length > 0 && (layersOpen || !selectedSection);
@@ -639,21 +673,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             </div>
           ) : (() => {
             const shapeKeys = Object.keys(formSchema.shape);
-            const contentKeys = shapeKeys.filter((k) => !SETTINGS_KEYS.has(k));
+            const contentKeys = shapeKeys.filter(
+              (k) =>
+                !SETTINGS_KEYS.has(k) &&
+                !INLINE_EDITOR_UI_HINTS.has(getUiHint(formSchema.shape[k]))
+            );
             const data = (formSection?.data as Record<string, unknown>) || {};
             if (contentKeys.length === 0) {
               return (
-                <p className="text-xs text-zinc-500">No content fields in schema.</p>
+                <p className="text-xs text-zinc-500">Inline editorial section: edit content directly on the canvas.</p>
               );
             }
-            const firstSeg = effectiveExpandedItemPath?.[0];
-            const expandedItemIdByField =
-              firstSeg?.itemId != null
-                ? { [firstSeg.fieldKey]: firstSeg.itemId }
-                : effectiveExpandedItem?.itemId != null
-                  ? { [effectiveExpandedItem.fieldKey]: effectiveExpandedItem.itemId }
-                  : undefined;
-            const focusedFieldKey = firstSeg?.fieldKey ?? effectiveExpandedItem?.fieldKey ?? null;
             return (
               <FormFactory
                 schema={formSchema}
@@ -661,8 +691,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 onChange={(newData) => onUpdate(newData)}
                 keys={contentKeys}
                 expandedItemPath={effectiveExpandedItemPath}
-                expandedItemIdByField={expandedItemIdByField}
-                focusedFieldKey={focusedFieldKey}
                 onSidebarExpandedItemChange={setSidebarExpandedItem}
               />
             );

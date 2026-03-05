@@ -4,6 +4,10 @@ import { StudioProvider } from '../lib/StudioContext';
 import { themeManager } from '../utils/theme-manager';
 import { STUDIO_EVENTS } from '../lib/events';
 import type { PageConfig, SiteConfig, MenuConfig, MenuItem } from '../lib/kernel';
+import type { SelectionPath } from '../lib/types-engine';
+
+const INTERACTIVE_SELECTION_GUARD =
+  '[data-jp-ignore-select="true"],[data-jp-interactive="true"],.ProseMirror,[contenteditable="true"],button,input,textarea,select,[role="button"],[role="menuitem"]';
 
 export const PreviewEntry: React.FC = () => {
   const [draft, setDraft] = useState<PageConfig | null>(null);
@@ -14,6 +18,8 @@ export const PreviewEntry: React.FC = () => {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+
       if (event.data.type === STUDIO_EVENTS.UPDATE_DRAFTS) {
         setDraft(event.data.draft);
         setGlobalDraft(event.data.globalDraft);
@@ -28,6 +34,17 @@ export const PreviewEntry: React.FC = () => {
 
       if (event.data.type === STUDIO_EVENTS.REQUEST_SCROLL_TO_SECTION) {
         setScrollToSectionId(event.data.sectionId ?? null);
+      }
+
+      if (event.data.type === STUDIO_EVENTS.REQUEST_INLINE_FLUSH) {
+        const requestId = typeof event.data.requestId === 'string' ? event.data.requestId : null;
+        window.dispatchEvent(new CustomEvent(STUDIO_EVENTS.REQUEST_INLINE_FLUSH, { detail: { requestId } }));
+        setTimeout(() => {
+          window.parent.postMessage(
+            { type: STUDIO_EVENTS.INLINE_FLUSHED, requestId },
+            window.location.origin
+          );
+        }, 0);
       }
 
       // 🛡️ BAKE HANDSHAKE: Switch to visitor mode and send HTML back
@@ -56,8 +73,19 @@ export const PreviewEntry: React.FC = () => {
    * React tree or pointer-events. Find section + item/field and notify parent.
    */
   useEffect(() => {
+    const shouldIgnoreSelectionTarget = (target: HTMLElement): boolean => {
+      if (target.closest(INTERACTIVE_SELECTION_GUARD)) return true;
+      // In Studio preview avoid accidental in-iframe navigation from content links.
+      if (target.closest('a[href]')) return true;
+      return false;
+    };
+
     const handleDocumentClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      if (shouldIgnoreSelectionTarget(target)) {
+        if (target.closest('a[href]')) e.preventDefault();
+        return;
+      }
       const x = e.clientX;
       const y = e.clientY;
       let sectionEl: HTMLElement | null = null;
@@ -97,7 +125,7 @@ export const PreviewEntry: React.FC = () => {
         return;
       }
       // Collect full path of nested array items (root-to-leaf) for deep focus
-      const itemPath: Array<{ fieldKey: string; itemId?: string }> = [];
+      const itemPath: SelectionPath = [];
       el = rootAtPoint;
       while (el && el !== sectionEl) {
         const id = el.getAttribute?.('data-jp-item-id');
@@ -140,13 +168,6 @@ export const PreviewEntry: React.FC = () => {
       const payload: Record<string, unknown> = { type: STUDIO_EVENTS.SECTION_SELECT, section };
       if (itemPath.length > 0) {
         payload.itemPath = itemPath;
-        const first = itemPath[0];
-        if (first.itemId != null) {
-          payload.itemField = first.fieldKey;
-          payload.itemId = first.itemId;
-        } else {
-          payload.itemField = first.fieldKey;
-        }
       }
       window.parent.postMessage(payload, '*');
     };

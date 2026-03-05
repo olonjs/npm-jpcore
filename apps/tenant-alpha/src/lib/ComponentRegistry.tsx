@@ -17,6 +17,7 @@ import { GitSection }       from '@/components/git-section';
 import { Devex }            from '@/components/devex';
 import { CliSection }       from '@/components/cli-section';
 import { DocsLayout }       from '@/components/docs-layout';
+import { Tiptap }           from '@/components/tiptap';
 
 import type { SectionType }              from '@jsonpages/core';
 import type { SectionComponentPropsMap } from '@/types';
@@ -42,4 +43,5 @@ export const ComponentRegistry: {
   'devex':             Devex,
   'cli-section':       CliSection,
   'docs-layout':       DocsLayout,
+  'tiptap':            Tiptap,
 };

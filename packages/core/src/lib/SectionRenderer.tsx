@@ -7,7 +7,6 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { useConfig } from './ConfigContext';
 import { useStudio } from './StudioContext';
 import { cn } from './utils';
-import { STUDIO_EVENTS } from './events';
 import type { Section, MenuItem } from './kernel';
 import { AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
 
@@ -145,6 +144,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
 
   const Component = registry[section.type];
   const scope = (section.type === 'header' || section.type === 'footer') ? 'global' : 'local';
+  const disableOverlayForSection = section.type === 'tiptap';
   
   const isStickyHeader = section.type === 'header' && (section.settings as any)?.sticky;
 
@@ -155,96 +155,6 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
       </div>
     );
   }
-
-  const handleSectionClick = (e: React.MouseEvent) => {
-    if (!isStudio) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const sectionEl = e.currentTarget as HTMLElement;
-    const x = e.clientX;
-    const y = e.clientY;
-    // Click directly on section container (out of item scope) → restore section-level view
-    if ((e.target as HTMLElement) === sectionEl) {
-      window.parent.postMessage({
-        type: STUDIO_EVENTS.SECTION_SELECT,
-        section: { id: section.id, type: section.type, scope: scope },
-      }, '*');
-      return;
-    }
-    // Resolve actual element under cursor (overlay/content wrappers may have pointer-events so e.target can be wrong)
-    const rootAtPoint = (document.elementFromPoint(x, y) as HTMLElement) ?? (e.target as HTMLElement);
-    if (!rootAtPoint || !sectionEl.contains(rootAtPoint)) {
-      window.parent.postMessage({
-        type: STUDIO_EVENTS.SECTION_SELECT,
-        section: { id: section.id, type: section.type, scope: scope },
-      }, '*');
-      return;
-    }
-    // Section container click (e.g. overlay/padding): restore section-level view, out of item scope
-    if (rootAtPoint === sectionEl) {
-      window.parent.postMessage({
-        type: STUDIO_EVENTS.SECTION_SELECT,
-        section: { id: section.id, type: section.type, scope: scope },
-      }, '*');
-      return;
-    }
-    // Collect full path of nested array items (root-to-leaf) for deep focus
-    const itemPath: Array<{ fieldKey: string; itemId?: string }> = [];
-    let el: HTMLElement | null = rootAtPoint;
-    while (el && el !== sectionEl) {
-      const id = el.getAttribute?.('data-jp-item-id');
-      const field = el.getAttribute?.('data-jp-item-field');
-      if (id && field) {
-        itemPath.push({ fieldKey: field || 'items', itemId: id });
-      }
-      el = el.parentElement;
-    }
-    itemPath.reverse();
-    if (itemPath.length === 0) {
-      el = rootAtPoint;
-      while (el && el !== sectionEl) {
-        const field = el.getAttribute?.('data-jp-field');
-        if (field) {
-          itemPath.push({ fieldKey: field });
-          break;
-        }
-        el = el.parentElement;
-      }
-    }
-    if (itemPath.length === 0 && rootAtPoint) {
-      let best: HTMLElement | null = null;
-      const visit = (node: HTMLElement) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.left <= x && x <= rect.right && rect.top <= y && y <= rect.bottom) {
-          for (let i = 0; i < node.children.length; i++) visit(node.children[i] as HTMLElement);
-          if (node.getAttribute?.('data-jp-item-id') || node.getAttribute?.('data-jp-field')) best = node;
-        }
-      };
-      visit(rootAtPoint);
-      if (best) {
-        const el = best as HTMLElement;
-        const id = el.getAttribute?.('data-jp-item-id');
-        const field = el.getAttribute?.('data-jp-field');
-        if (id && field) itemPath.push({ fieldKey: field || 'items', itemId: id });
-        else if (field) itemPath.push({ fieldKey: field });
-      }
-    }
-    const payload: Record<string, unknown> = {
-      type: STUDIO_EVENTS.SECTION_SELECT,
-      section: { id: section.id, type: section.type, scope: scope },
-    };
-    if (itemPath.length > 0) {
-      payload.itemPath = itemPath;
-      const first = itemPath[0];
-      if (first.itemId != null) {
-        payload.itemField = first.fieldKey;
-        payload.itemId = first.itemId;
-      } else {
-        payload.itemField = first.fieldKey;
-      }
-    }
-    window.parent.postMessage(payload, '*');
-  };
 
   const renderInnerComponent = () => {
     const DynamicComponent = Component as any;
@@ -263,10 +173,9 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
       data-section-type={isStudio ? section.type : undefined}
       data-section-scope={isStudio ? scope : undefined}
       {...(isStudio && isSelected ? { 'data-jp-selected': true } : {})}
-      onClickCapture={isStudio ? handleSectionClick : undefined}
       className={cn(
         "relative w-full",
-        isStudio && "group cursor-pointer",
+        isStudio && !disableOverlayForSection && "group cursor-pointer",
         isStudio && isStickyHeader ? "sticky top-0 z-[60]" : "relative z-0",
         isSelected && "z-[70]" 
       )}
@@ -277,7 +186,7 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
         </SectionErrorBoundary>
       </div>
 
-      {isStudio && (
+      {isStudio && !disableOverlayForSection && (
         <SovereignOverlay
           type={section.type}
           scope={scope}

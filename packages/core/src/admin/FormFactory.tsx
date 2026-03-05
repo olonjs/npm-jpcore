@@ -40,10 +40,25 @@ const generateDefaultValue = (schema: z.ZodTypeAny): unknown => {
  * 🛠️ HELPER: Extracts the real schema ignoring Zod wrappers.
  */
 const getEffectiveSchema = (schema: z.ZodTypeAny): z.ZodTypeAny => {
-  if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault) {
+  if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodNullable) {
     return getEffectiveSchema(schema._def.innerType);
   }
   return schema;
+};
+
+const getUiHint = (schema: z.ZodTypeAny): string | null => {
+  const raw = schema as z.ZodTypeAny & { _def?: { description?: unknown } };
+  if (typeof schema.description === 'string' && schema.description.length > 0) {
+    return schema.description;
+  }
+  if (typeof raw._def?.description === 'string' && raw._def.description.length > 0) {
+    return raw._def.description;
+  }
+  const effective = getEffectiveSchema(schema);
+  if (effective !== schema) {
+    return getUiHint(effective);
+  }
+  return null;
 };
 
 interface FormFactoryProps {
@@ -54,10 +69,6 @@ interface FormFactoryProps {
   keys?: string[] | null;
   /** Root-to-leaf path for deep focus (e.g. silos -> blocks). First segment applies to this level. */
   expandedItemPath?: Array<{ fieldKey: string; itemId?: string }> | null;
-  /** When user selects an item on the Stage, expand that array item (fieldKey -> itemId). */
-  expandedItemIdByField?: Record<string, string>;
-  /** When user clicks a field on the Stage, show it at top / scroll to it (simple field key). */
-  focusedFieldKey?: string | null;
   /** Called when user expands/collapses an array item in the sidebar (so parent can drive fade). */
   onSidebarExpandedItemChange?: (item: { fieldKey: string; itemId?: string } | null) => void;
 }
@@ -73,23 +84,13 @@ const fadeWhenUnfocused = (inItemScope: boolean, isFocused: boolean) =>
 const fieldKeyMatches = (focusedKey: string | null | undefined, schemaKey: string) =>
   focusedKey != null && schemaKey.toLowerCase() === focusedKey.toLowerCase();
 
-/** Get expanded item id for a schema key from map that may use canvas casing (e.g. "ctas" vs "CTAS"). */
-const getExpandedItemIdForField = (map: Record<string, string> | undefined, schemaKey: string): string | undefined => {
-  if (!map) return undefined;
-  const lower = schemaKey.toLowerCase();
-  const entry = Object.entries(map).find(([k]) => k.toLowerCase() === lower);
-  return entry?.[1];
-};
-
-export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange, keys, expandedItemPath, expandedItemIdByField, focusedFieldKey, onSidebarExpandedItemChange }) => {
+export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange, keys, expandedItemPath, onSidebarExpandedItemChange }) => {
   const shape = schema.shape;
   const fieldKeys = keys != null
     ? Object.keys(shape).filter((k) => keys.includes(k))
     : Object.keys(shape);
   const firstSeg = expandedItemPath?.[0];
-  const effectiveExpandedItemIdByField =
-    firstSeg?.itemId != null ? { [firstSeg.fieldKey]: firstSeg.itemId } : expandedItemIdByField;
-  const effectiveFocusedFieldKey = firstSeg?.fieldKey ?? focusedFieldKey ?? null;
+  const effectiveFocusedFieldKey = firstSeg?.fieldKey ?? null;
   const inItemScope = effectiveFocusedFieldKey != null;
 
   return (
@@ -99,8 +100,11 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
         if (!fieldSchema) return null;
 
         const effectiveSchema = getEffectiveSchema(fieldSchema);
-        const uiHint = (fieldSchema.description as WidgetType) || 'ui:text';
+        const uiHint = getUiHint(fieldSchema) || 'ui:text';
         const value = data[key];
+
+        // Editorial fields are edited directly on Stage and not in Inspector form.
+        if (uiHint === 'ui:editorial-markdown') return null;
 
         // 0. IMAGE PICKER: object value but single widget (no nested form)
         if (uiHint === 'ui:image-picker' && effectiveSchema instanceof z.ZodObject) {
@@ -142,8 +146,6 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
                 data={objectData} 
                 onChange={(val) => onChange({ ...data, [key]: val })}
                 expandedItemPath={expandedItemPath && fieldKeyMatches(firstSeg?.fieldKey, key) ? expandedItemPath.slice(1) : undefined}
-                expandedItemIdByField={effectiveExpandedItemIdByField}
-                focusedFieldKey={effectiveFocusedFieldKey}
               />
             </div>
           );
@@ -164,7 +166,7 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
 
           const isFocusedField = fieldKeyMatches(effectiveFocusedFieldKey, key);
           const openItemIdFromPath = fieldKeyMatches(firstSeg?.fieldKey, key) ? firstSeg?.itemId : undefined;
-          const effectiveOpenItemId = getExpandedItemIdForField(effectiveExpandedItemIdByField, key) ?? openItemIdFromPath;
+          const effectiveOpenItemId = openItemIdFromPath;
           return (
             <div
               key={key}
@@ -251,7 +253,9 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
         }
 
         // 3. ATOMIC WIDGET HANDLING
-        const Widget = (InputWidgets[uiHint] || InputWidgets['ui:text']) as React.ComponentType<BaseWidgetProps>;
+        const widgetKey: WidgetType =
+          uiHint in InputWidgets ? (uiHint as WidgetType) : 'ui:text';
+        const Widget = (InputWidgets[widgetKey] || InputWidgets['ui:text']) as React.ComponentType<BaseWidgetProps>;
         const options = effectiveSchema instanceof z.ZodEnum ? (effectiveSchema._def.values as string[]) : undefined;
         const isFocusedField = fieldKeyMatches(effectiveFocusedFieldKey, key);
 

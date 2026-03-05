@@ -4,7 +4,7 @@ const addableSectionTypes = [
   'hero', 'feature-grid', 'code-block', 'problem-statement',
   'pillars-grid', 'arch-layers', 'product-triad', 'pa-section',
   'philosophy', 'cta-banner', 'image-break',
-  'cms-ice', 'git-section', 'devex', 'cli-section', 'docs-layout',
+  'cms-ice', 'git-section', 'devex', 'cli-section', 'docs-layout', 'tiptap',
 ] as const;
 
 const sectionTypeLabels: Record<string, string> = {
@@ -24,6 +24,7 @@ const sectionTypeLabels: Record<string, string> = {
   'devex':             'Developer Experience',
   'cli-section':       'CLI Tool',
   'docs-layout':       'Documentation Layout',
+  'tiptap':            'Tiptap Editorial',
 };
 
 function getDefaultSectionData(type: string): Record<string, unknown> {
@@ -44,6 +45,7 @@ function getDefaultSectionData(type: string): Record<string, unknown> {
     case 'devex':             return { title: 'Developer Experience', description: '', features: [] };
     case 'cli-section':       return { title: 'CLI Tool', description: '', steps: [] };
     case 'docs-layout':       return { pageTitle: 'Documentation', pageSubtitle: '', version: 'v1.0', groups: [] };
+    case 'tiptap':            return { content: '# Post title\n\nStart writing in Markdown...' };
     default:                  return {};
   }
 }

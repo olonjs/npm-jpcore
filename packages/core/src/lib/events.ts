@@ -17,9 +17,12 @@ export const STUDIO_EVENTS = {
   
   // Child -> Parent (User Interaction)
   SECTION_SELECT: 'jsonpages:section-select',
+  INLINE_FIELD_UPDATE: 'jsonpages:inline-field-update',
+  INLINE_FLUSHED: 'jsonpages:inline-flushed',
 
   // Parent -> Child (Scroll Stage to section)
   REQUEST_SCROLL_TO_SECTION: 'jsonpages:request-scroll-to-section',
+  REQUEST_INLINE_FLUSH: 'jsonpages:request-inline-flush',
 
   // Child -> Parent (Active section in viewport)
   ACTIVE_SECTION_CHANGED: 'jsonpages:active-section-changed',

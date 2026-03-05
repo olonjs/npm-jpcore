@@ -171,4 +171,38 @@ html {
   opacity: 0;
 }
 
+/* Editorial focus lock: avoid section reselection while selecting text in inline editor. */
+[data-section-id].jp-editorial-focus [data-jp-section-overlay] {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+[data-section-id].jp-editorial-focus [data-jp-section-overlay] > div {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Tiptap simple-editor-like behavior in Studio */
+.jp-simple-editor .ProseMirror:focus {
+  outline: none;
+}
+
+.jp-simple-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.jp-simple-editor .ProseMirror img[data-uploading="true"] {
+  opacity: 0.6;
+  filter: grayscale(0.25);
+  outline: 2px dashed rgb(59 130 246 / 0.7);
+  outline-offset: 2px;
+}
+
+.jp-simple-editor .ProseMirror img[data-upload-error="true"] {
+  outline: 2px solid rgb(239 68 68 / 0.8);
+  outline-offset: 2px;
+}
+
 

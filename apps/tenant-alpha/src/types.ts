@@ -17,6 +17,7 @@ import type { GitSectionData,       GitSectionSettings }       from '@/component
 import type { DevexData,            DevexSettings }            from '@/components/devex';
 import type { CliSectionData,       CliSectionSettings }       from '@/components/cli-section';
 import type { DocsLayoutData,       DocsLayoutSettings }       from '@/components/docs-layout';
+import type { TiptapData,           TiptapSettings }           from '@/components/tiptap';
 
 export type SectionComponentPropsMap = {
   'header':            { data: HeaderData;           settings?: HeaderSettings;           menu: MenuItem[] };
@@ -37,6 +38,7 @@ export type SectionComponentPropsMap = {
   'devex':             { data: DevexData;             settings?: DevexSettings             };
   'cli-section':       { data: CliSectionData;        settings?: CliSectionSettings        };
   'docs-layout':       { data: DocsLayoutData;        settings?: DocsLayoutSettings        };
+  'tiptap':            { data: TiptapData;            settings?: TiptapSettings            };
 };
 
 declare module '@jsonpages/core' {
@@ -59,6 +61,7 @@ declare module '@jsonpages/core' {
     'devex':             DevexData;
     'cli-section':       CliSectionData;
     'docs-layout':       DocsLayoutData;
+    'tiptap':            TiptapData;
   }
   export interface SectionSettingsRegistry {
     'header':            HeaderSettings;
@@ -79,6 +82,7 @@ declare module '@jsonpages/core' {
     'devex':             DevexSettings;
     'cli-section':       CliSectionSettings;
     'docs-layout':       DocsLayoutSettings;
+    'tiptap':            TiptapSettings;
   }
 }
 

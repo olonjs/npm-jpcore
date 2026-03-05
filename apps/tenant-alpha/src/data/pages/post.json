@@ -1,0 +1,18 @@
+{
+  "id": "post-page",
+  "slug": "post",
+  "meta": {
+    "title": "Post",
+    "description": "Smoke test page for header + tiptap + footer flow."
+  },
+  "sections": [
+    {
+      "id": "post-editorial-main",
+      "type": "tiptap",
+      "data": {
+        "content": "![Screenshot 2026-03-05 at 14-45-10 JsonPages.png](/assets/images/1772721027290-Screenshot_2026-03-05_at_14-45-10_JsonPages.png \"Screenshot 2026-03-05 at 14-45-10 JsonPages.png\")## qefqfqfqf**header / tiptap / footer** smoke flow.\n\nInline **editing** in Studio\n\n## `Markdown persistence on Save`\n\n- Safe render on public route"
+      },
+      "settings": {}
+    }
+  ]
+}
