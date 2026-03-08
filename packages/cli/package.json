@@ -1,6 +1,6 @@
 {
   "name": "@jsonpages/cli",
-  "version": "3.0.66",
+  "version": "3.0.67",
   "description": "The Sovereign CLI Engine for JsonPages.",
   "type": "module",
   "bin": {
