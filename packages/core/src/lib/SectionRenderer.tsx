@@ -176,11 +176,15 @@ export const SectionRenderer: React.FC<SectionRendererProps> = ({
       className={cn(
         "relative w-full",
         isStudio && !disableOverlayForSection && "group cursor-pointer",
-        isStudio && isStickyHeader ? "sticky top-0 z-[60]" : "relative z-0",
+        isStudio && isStickyHeader
+          ? "sticky top-0 z-[60]"
+          : section.type === 'header'
+            ? "relative"
+            : "relative z-0",
         isSelected && "z-[70]" 
       )}
     >
-      <div className="relative z-0">
+      <div className={section.type === 'header' ? "relative" : "relative z-0"}>
         <SectionErrorBoundary type={section.type}>
           {renderInnerComponent()}
         </SectionErrorBoundary>
