@@ -1,0 +1,2 @@
+# Uploaded images are written here by the dev server (POST /api/upload-asset).
+# Served at /assets/images/. Section data stores URLs like /assets/images/{filename}.

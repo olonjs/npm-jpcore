@@ -1,171 +1,148 @@
-# Pubblicazione pacchetti JsonPages
+# Publishing and Release
 
-Istruzioni per pubblicare **@jsonpages/stack**, **@jsonpages/core** e **@jsonpages/cli** su npm.
+This document is the operational source of truth for publishing `@jsonpages/stack`, `@jsonpages/core`, and `@jsonpages/cli` from this monorepo.
 
----
+## Scope
 
-## Prerequisiti
+- Standard flow: `npm run release`
+- Enterprise-gated flow: `npm run release:enterprise`
+- Multi-template DNA governance (`alpha`, `agritourism`)
 
-1. **Account npm** con accesso in scrittura all’organizzazione `@jsonpages`.
-2. **Login:** dalla root del monorepo o da qualsiasi package:
-   ```bash
-   npm login
-   ```
-   (Oppure uso di token da [npmjs.com → Access Tokens](https://www.npmjs.com/).)
-3. **Registry:** deve essere quello pubblico:
-   ```bash
-   npm config get registry
-   # https://registry.npmjs.org/
-   ```
-4. Se è la **prima pubblicazione** di un pacchetto scoped, usare `--access public` dove indicato.
+## Prerequisites
 
----
+- npm account with publish rights on `@jsonpages`
+- `NPM_TOKEN` available in environment or root `.env`
+- root `.npmrc` configured for npm registry auth
+- dependencies installed from monorepo root
 
-## Ordine di pubblicazione
-
-Pubblicare **sempre** in questo ordine:
-
-1. **@jsonpages/stack**
-2. **@jsonpages/core**
-3. **@jsonpages/cli**
-
-Core e CLI dipendono dalla manifest dello stack; il template del tenant (in CLI) deve usare la versione di Core appena pubblicata.
-
----
-
-## 1. Pubblicare @jsonpages/stack
-
-Dalla **root del monorepo** (`~/npm-jpcore`):
+Example `.env`:
 
 ```bash
-npm publish -w @jsonpages/stack --access public
+NPM_TOKEN=npm_xxx
 ```
 
-Oppure, se il workspace è indicato per path:
+## Package publish order
+
+Always publish in this order:
+
+1. `@jsonpages/stack`
+2. `@jsonpages/core`
+3. `@jsonpages/cli`
+
+Reason:
+
+- `core` aligns dependency contracts using stack manifest
+- `cli` must package DNA generated from tenant source apps using the new `core` version
+
+## Release scripts
+
+### `npm run release`
+
+Executes legacy release pipeline in `scripts/release.js`.
+
+Current behavior includes:
+
+- build all workspaces
+- patch version + publish `stack`
+- build, patch version + publish `core`
+- update `apps/tenant-alpha` to new `@jsonpages/core`
+- build and `dist` `tenant-alpha`
+- build, patch version + publish `cli`
+
+### `npm run release:enterprise`
+
+Executes `scripts/release-enterprise.js`:
+
+1. `npm run check:templates`
+2. `npm run dist:dna:all`
+3. delegates to `node scripts/release.js`
+
+Use this for gated releases when template governance must be enforced before publish.
+
+## DNA governance
+
+### Source of truth
+
+- `apps/tenant-alpha` is SoT for template `alpha`
+- `apps/tenant-agritourism` is SoT for template `agritourism`
+
+### Dist command
+
+Root DNA generation:
 
 ```bash
-npm publish -w packages/stack --access public
+npm run dist:dna:all
 ```
 
-Non è necessario un build: il pacchetto contiene solo `index.js` e `stack-versions.json`.
+This runs:
 
----
+- `npm run dist -w tenant-alpha`
+- `npm run dist -w tenant-agritourism`
 
-## 2. Pubblicare @jsonpages/core
+### Template conformance
 
-Dalla **root del monorepo**:
+Validate required template assets:
 
 ```bash
-# Build (genera dist/). Il prepack sincronizza i peerDependencies da stack.
-npm run build -w @jsonpages/core
-
-# Pubblica
-npm publish -w @jsonpages/core --access public
+npm run check:templates
 ```
 
-Oppure:
+Validation checks:
+
+- required template directories exist
+- `src_tenant.sh` exists per required template
+- `manifest.json` exists and is consistent
+- DNA script contains baseline safety/content markers
+
+## Recommended release procedure
+
+Run from repository root.
+
+1. Validate workspace state
 
 ```bash
-npm run build -w packages/core
-npm publish -w packages/core --access public
+npm install
+npm run build:all
 ```
 
-**Nota:** allo script `prepack` del Core viene eseguito prima del publish e allinea i `peerDependencies` a `@jsonpages/stack`. Pubblicare prima lo stack.
-
----
-
-## 3. Aggiornare tenant-alpha e preparare il CLI
-
-Prima di pubblicare il CLI, il template di tenant (tenant-alpha) deve usare la **nuova versione** di Core e il contenuto di `apps/tenant-alpha` deve essere riversato nel pacchetto CLI.
-
-### 3.1 Aggiornare la dipendenza Core in tenant-alpha
-
-In **`apps/tenant-alpha/package.json`** imposta la versione di `@jsonpages/core` uguale a quella appena pubblicata (es. `1.0.12`):
-
-```json
-"dependencies": {
-  "@jsonpages/core": "^1.0.12",
-  ...
-}
-```
-
-Sostituisci `1.0.12` con la versione effettiva di Core che hai pubblicato.
-
-### 3.2 Eseguire `npm run dist` da tenant-alpha
-
-Da **dentro** la cartella `apps/tenant-alpha`:
+2. Validate templates and regenerate DNA
 
 ```bash
-cd apps/tenant-alpha
-npm run dist
-cd ../..
+npm run check:templates
+npm run dist:dna:all
 ```
 
-Lo script **`dist`**:
-
-- esegue `src2Code.sh` e copia `src/` e `index.html` nel pacchetto CLI (template per i nuovi tenant);
-- normalizza i fine riga in `packages/cli/src/index.js` (`sed` per CRLF);
-- esegue `npm link --force` per il CLI (utile per test locali).
-
-Dopo questo passaggio il pacchetto CLI contiene il template aggiornato e riferito alla nuova versione di Core.
-
----
-
-## 4. Pubblicare @jsonpages/cli
-
-Dalla **root del monorepo**:
+3. Dry-run release
 
 ```bash
-npm publish -w @jsonpages/cli --access public
+npm run release -- --dry-run
 ```
 
-Oppure:
+4. Execute enterprise release
 
 ```bash
-npm publish -w packages/cli --access public
+npm run release:enterprise
 ```
 
-I nuovi tenant creati con `jsonpages new tenant <nome>` useranno il template aggiornato e installeranno la versione di Core indicata nel template (quella impostata al passo 3.1).
+## Windows note
 
----
+If npm commands fail under UNC paths (`\\wsl.localhost\...`), use WSL shell to run release commands.
 
-## Riepilogo comandi (dalla root)
+## Troubleshooting
 
-```bash
-# 1. Stack
-npm publish -w @jsonpages/stack --access public
+- `Error: Unknown template ...` in CLI
+  - Check `packages/cli/assets/templates/<template>/src_tenant.sh`
+  - Run `npm run dist:dna:all`
+- Template conformance failure
+  - Run `npm run check:templates` and fix missing assets/manifests
+- npm auth errors during publish
+  - Verify `NPM_TOKEN`, `.npmrc`, and npm org permissions
+- Release succeeds but new tenants are stale
+  - Ensure `dist:dna:all` ran before publishing `@jsonpages/cli`
 
-# 2. Core
-npm run build -w @jsonpages/core
-npm publish -w @jsonpages/core --access public
+## Related docs
 
-# 3. Aggiorna tenant-alpha e prepara CLI
-#    - Modifica a mano apps/tenant-alpha/package.json: @jsonpages/core alla nuova versione
-#    - Poi:
-cd apps/tenant-alpha && npm run dist && cd ../..
-
-# 4. CLI
-npm publish -w @jsonpages/cli --access public
-```
-
----
-
-## Errori comuni
-
-| Messaggio | Causa | Soluzione |
-|-----------|--------|-----------|
-| `Access token expired or revoked` | Sessione npm non valida | `npm login` (o nuovo token). |
-| `404 Not Found - PUT ... @jsonpages/...` | Token scaduto o nessun permesso sull’org | Rifare login; verificare di essere member dell’org `@jsonpages` con permesso di publish. |
-| `node\r: No such file or directory` (CLI) | CRLF in `packages/cli/src/index.js` | Lo script `dist` esegue già `sed -i 's/\r$//' ...`; rieseguire `npm run dist` da `apps/tenant-alpha`. |
-
----
-
-## Bump versioni
-
-Prima di ogni publish, aggiornare la versione nel rispettivo `package.json`:
-
-- **packages/stack/package.json** → `version` (es. `1.0.1` → `1.0.2`)
-- **packages/core/package.json** → `version` (es. `1.0.11` → `1.0.12`)
-- **packages/cli/package.json** → `version` (es. `3.0.28` → `3.0.29`)
-
-E in **apps/tenant-alpha/package.json** usare la stessa versione di Core che si sta per pubblicare (come descritto al passo 3.1).
+- `docs/ARCHITECTURE.md`
+- `docs/CLI.md`
+- `docs/TEMPLATES.md`
+- `docs/README.md`

@@ -7,26 +7,23 @@ import { execa } from 'execa';
 import ora from 'ora';
 import { fileURLToPath } from 'url';
 
-// 🛡️ Risoluzione path ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const CLI_ASSETS_DIR = path.resolve(__dirname, '../assets');
+const TEMPLATES_DIR = path.join(CLI_ASSETS_DIR, 'templates');
+const LEGACY_ALPHA_DNA_PATH = path.join(CLI_ASSETS_DIR, 'src_tenant_alpha.sh');
 
 const program = new Command();
 
 program
   .name('jsonpages')
   .description('JsonPages CLI - Sovereign Projection Engine')
-  .version('2.0.2'); // Bump version
+  .version('2.0.2');
 
-/**
- * 🧠 THE UNIVERSAL INTERPRETER
- * Legge lo script bash "DNA" e lo esegue usando le API di Node.js.
- * Rende la CLI compatibile con Windows (PowerShell/CMD) senza bisogno di Bash.
- */
 async function processScriptInNode(scriptPath, targetDir) {
   const content = await fs.readFile(scriptPath, 'utf-8');
   const lines = content.split('\n');
-  
+
   let captureMode = false;
   let delimiter = '';
   let currentFile = '';
@@ -35,35 +32,25 @@ async function processScriptInNode(scriptPath, targetDir) {
   for (const line of lines) {
     const trimmed = line.trim();
 
-    // 1. Modalità Cattura (Siamo dentro un cat << 'DELIMITER')
     if (captureMode) {
       if (trimmed === delimiter) {
-        // Fine del blocco: Scriviamo su disco
         const filePath = path.join(targetDir, currentFile);
         await fs.outputFile(filePath, fileBuffer.join('\n'));
         captureMode = false;
         fileBuffer = [];
       } else {
-        fileBuffer.push(line); // Preserva l'indentazione originale
+        fileBuffer.push(line);
       }
       continue;
     }
 
-    // 2. Parsing Comandi Bash -> Node Operations
-    
-    // Rileva: mkdir -p "path"
     if (trimmed.startsWith('mkdir -p')) {
-      const match = trimmed.match(/"([^"]+)"/) || trimmed.match(/\s+([^\s]+)/); 
-      // Supporta sia mkdir -p "foo/bar" che mkdir -p foo/bar
+      const match = trimmed.match(/"([^"]+)"/) || trimmed.match(/\s+([^\s]+)/);
       const dirPath = match ? match[1].replace(/"/g, '') : null;
       if (dirPath) {
         await fs.ensureDir(path.join(targetDir, dirPath));
       }
-    }
-    
-    // Rileva: cat << 'DELIMITER' > "path"
-    else if (trimmed.startsWith('cat <<')) {
-      // Regex robusta per catturare il delimitatore e il path del file
+    } else if (trimmed.startsWith('cat <<')) {
       const match = trimmed.match(/<<\s*'([^']+)'\s*>\s*"([^"]+)"/);
       if (match) {
         delimiter = match[1];
@@ -71,49 +58,69 @@ async function processScriptInNode(scriptPath, targetDir) {
         captureMode = true;
       }
     }
-    // Ignora echo, set -e, commenti #, ecc.
   }
+}
+
+function getAvailableTemplates() {
+  if (!fs.existsSync(TEMPLATES_DIR)) return [];
+  return fs
+    .readdirSync(TEMPLATES_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => fs.existsSync(path.join(TEMPLATES_DIR, name, 'src_tenant.sh')))
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function resolveTemplateScriptPath(templateName) {
+  const templatePath = path.join(TEMPLATES_DIR, templateName, 'src_tenant.sh');
+  if (fs.existsSync(templatePath)) return templatePath;
+  if (templateName === 'alpha' && fs.existsSync(LEGACY_ALPHA_DNA_PATH)) return LEGACY_ALPHA_DNA_PATH;
+  return templatePath;
 }
 
 program
   .command('new')
   .argument('<type>', 'Type of artifact (tenant)')
   .argument('<name>', 'Name of the new tenant')
+  .option('--template <name>', 'Template profile (default: alpha)', 'alpha')
+  .option('--agritourism', 'Alias for --template agritourism')
   .option('--script <path>', 'Override default deterministic script path')
   .action(async (type, name, options) => {
     if (type !== 'tenant') {
-      console.log(chalk.red('❌ Error: Only "tenant" type is supported.'));
+      console.log(chalk.red('Error: Only "tenant" type is supported.'));
       return;
     }
 
     const targetDir = path.join(process.cwd(), name);
-    
-    // 🔍 Asset Resolution
-    // Cerca lo script nella cartella assets installata col pacchetto
-    const defaultScriptPath = path.resolve(__dirname, '../assets/src_tenant_alpha.sh');
-    const scriptPath = options.script ? path.resolve(process.cwd(), options.script) : defaultScriptPath;
+    const availableTemplates = getAvailableTemplates();
+    const template = options.agritourism ? 'agritourism' : options.template;
+    const scriptPath = options.script
+      ? path.resolve(process.cwd(), options.script)
+      : resolveTemplateScriptPath(template);
 
-    if (!fs.existsSync(scriptPath)) {
-      console.log(chalk.red(`❌ Error: DNA script not found at ${scriptPath}`));
-      console.log(chalk.yellow(`Debug info: __dirname is ${__dirname}`));
+    if (!options.script && !availableTemplates.includes(template) && !(template === 'alpha' && fs.existsSync(LEGACY_ALPHA_DNA_PATH))) {
+      console.log(chalk.red(`Error: Unknown template "${template}".`));
+      console.log(chalk.yellow(`Available templates: ${availableTemplates.length ? availableTemplates.join(', ') : '(none found)'}`));
       return;
     }
 
-    console.log(chalk.blue.bold(`\n🚀 Projecting Sovereign Tenant: ${name}\n`));
+    if (!fs.existsSync(scriptPath)) {
+      console.log(chalk.red(`Error: DNA script not found at ${scriptPath}`));
+      console.log(chalk.yellow(`Debug info: template=${template}, assets=${CLI_ASSETS_DIR}`));
+      return;
+    }
+
+    console.log(chalk.blue.bold(`\nProjecting Sovereign Tenant: ${name} (template: ${template})\n`));
     const spinner = ora();
 
     try {
-      // 1. SCAFFOLDING INFRA
       spinner.start('Setting up environment (Vite + TS)...');
       await fs.ensureDir(targetDir);
-      
-      // Windows fix: npm.cmd invece di npm
+
       const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-      
       await execa(npmCmd, ['create', 'vite@latest', '.', '--', '--template', 'react-ts'], { cwd: targetDir });
       spinner.succeed('Environment scaffolded.');
 
-      // 2. CLEANUP
       spinner.start('Wiping default boilerplate...');
       await fs.emptyDir(path.join(targetDir, 'src'));
       const junk = ['App.css', 'App.tsx', 'main.tsx', 'vite-env.d.ts', 'favicon.ico', 'index.html'];
@@ -123,28 +130,23 @@ program
       }
       spinner.succeed('Clean slate achieved.');
 
-      // 3. INJECTION
       spinner.start('Injecting Sovereign Configurations...');
       await injectInfraFiles(targetDir, name);
       spinner.succeed('Infrastructure configured.');
 
-      // 4. DETERMINISTIC PROJECTION (Node-based Interpreter)
       spinner.start('Executing deterministic src projection...');
-      // Invece di execa('./script.sh'), usiamo il nostro interprete
       await processScriptInNode(scriptPath, targetDir);
       spinner.succeed('Source code and assets projected successfully.');
 
-      // 5. Install dependencies (lo script .sh deve aver già scritto/copiato package.json in targetDir)
       spinner.start('Installing dependencies (this may take a minute)...');
       await execa(npmCmd, ['install'], { cwd: targetDir });
-      spinner.succeed(chalk.green.bold('✨ Tenant Ready!'));
+      spinner.succeed(chalk.green.bold('Tenant Ready.'));
 
       console.log(`\n${chalk.white.bgBlue(' NEXT STEPS ')}`);
       console.log(`  ${chalk.cyan(`cd ${name}`)}`);
-      console.log(`  ${chalk.cyan(`npm run dev`)}   <- Start development`);
-      console.log(`  ${chalk.cyan(`npm run build`)} <- Validate Green Build`);
-      console.log(`\nGovernance enforced. Build is now safe.\n`);
-
+      console.log(`  ${chalk.cyan('npm run dev')}   <- Start development`);
+      console.log(`  ${chalk.cyan('npm run build')} <- Validate Green Build`);
+      console.log(`\nTemplate used: ${template}\n`);
     } catch (error) {
       spinner.fail(chalk.red('Projection failed.'));
       console.error(error);
@@ -153,15 +155,15 @@ program
 
 async function injectInfraFiles(targetDir, name) {
   const pkg = {
-    name: name,
+    name,
     private: true,
-    version: "1.0.0",
-    type: "module",
+    version: '1.0.0',
+    type: 'module',
     scripts: {
-      "dev": "vite",
-      "build": "tsc && vite build",
-      "preview": "vite preview"
-    }
+      dev: 'vite',
+      build: 'tsc && vite build',
+      preview: 'vite preview',
+    },
   };
   await fs.writeJson(path.join(targetDir, 'package.json'), pkg, { spaces: 2 });
 
@@ -197,24 +199,24 @@ async function injectInfraFiles(targetDir, name) {
   await fs.writeFile(path.join(targetDir, 'tsconfig.json'), tsConfig.trim());
 
   const shadcnConfig = {
-    "$schema": "https://ui.shadcn.com/schema.json",
-    "style": "radix-nova",
-    "rsc": false,
-    "tsx": true,
-    "tailwind": {
-      "config": "",
-      "css": "src/index.css",
-      "baseColor": "zinc",
-      "cssVariables": true,
-      "prefix": ""
+    $schema: 'https://ui.shadcn.com/schema.json',
+    style: 'radix-nova',
+    rsc: false,
+    tsx: true,
+    tailwind: {
+      config: '',
+      css: 'src/index.css',
+      baseColor: 'zinc',
+      cssVariables: true,
+      prefix: '',
     },
-    "aliases": {
-      "components": "@/components",
-      "utils": "@/lib/utils",
-      "ui": "@/components/ui",
-      "lib": "@/lib",
-      "hooks": "@/hooks"
-    }
+    aliases: {
+      components: '@/components',
+      utils: '@/lib/utils',
+      ui: '@/components/ui',
+      lib: '@/lib',
+      hooks: '@/hooks',
+    },
   };
   await fs.writeJson(path.join(targetDir, 'components.json'), shadcnConfig, { spaces: 2 });
 }

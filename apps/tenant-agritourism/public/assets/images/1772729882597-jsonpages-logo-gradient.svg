@@ -1,0 +1,48 @@
+<svg width="1000" height="300" viewBox="0 0 1000 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="text-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Full Logo - Gradient (Icon + Wordmark) -->
+  
+  <!-- Icon -->
+  <g transform="translate(50, 50)">
+    <!-- Left Brace { -->
+    <path d="M 70 40 
+             C 60 40, 50 45, 50 55
+             L 50 85
+             C 50 90, 45 95, 40 95
+             C 45 95, 50 100, 50 105
+             L 50 135
+             C 50 145, 60 150, 70 150"
+          stroke="url(#icon-gradient)" 
+          stroke-width="8" 
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          fill="none"/>
+    
+    <!-- Content Lines -->
+    <rect x="90" y="60" width="40" height="6" rx="3" fill="url(#icon-gradient)" opacity="0.7"/>
+    <rect x="90" y="80" width="70" height="6" rx="3" fill="url(#icon-gradient)"/>
+    <rect x="90" y="100" width="55" height="6" rx="3" fill="url(#icon-gradient)" opacity="0.85"/>
+    <rect x="90" y="120" width="70" height="6" rx="3" fill="url(#icon-gradient)"/>
+  </g>
+  
+  <!-- Wordmark -->
+  <text x="320" y="175" 
+        font-family="'Instrument Sans', sans-serif" 
+        font-size="110" 
+        font-weight="700" 
+        fill="url(#text-gradient)" 
+        letter-spacing="-3">JsonPages</text>
+</svg>

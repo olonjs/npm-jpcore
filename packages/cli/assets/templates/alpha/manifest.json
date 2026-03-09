@@ -1,0 +1,5 @@
+{
+  "name": "alpha",
+  "sourceApp": "tenant-alpha",
+  "dnaScript": "src_tenant.sh"
+}

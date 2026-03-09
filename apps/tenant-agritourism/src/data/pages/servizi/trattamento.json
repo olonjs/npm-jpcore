@@ -1,0 +1,29 @@
+{
+  "id": "servizi-trattamento-page",
+  "slug": "servizi/trattamento",
+  "meta": {
+    "title": "Servizi - Trattamento",
+    "description": "Pagina nested di smoke test per verificare routing visitor/admin/preview."
+  },
+  "sections": [
+    {
+      "id": "hero-servizi-trattamento",
+      "type": "hero",
+      "data": {
+        "badge": "Smoke Test",
+        "title": "Trattamento",
+        "titleHighlight": "Pagina Nested",
+        "description": "Questa pagina verifica il supporto ai nested slug su filesystem e router.",
+        "ctas": [
+          {
+            "id": "cta-home",
+            "label": "Torna Home",
+            "href": "/",
+            "variant": "primary"
+          }
+        ]
+      },
+      "settings": {}
+    }
+  ]
+}
