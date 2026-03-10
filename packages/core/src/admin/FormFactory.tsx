@@ -84,6 +84,14 @@ const fadeWhenUnfocused = (inItemScope: boolean, isFocused: boolean) =>
 const fieldKeyMatches = (focusedKey: string | null | undefined, schemaKey: string) =>
   focusedKey != null && schemaKey.toLowerCase() === focusedKey.toLowerCase();
 
+const humanizeLabel = (label: string): string =>
+  label
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange, keys, expandedItemPath, onSidebarExpandedItemChange }) => {
   const shape = schema.shape;
   const fieldKeys = keys != null
@@ -137,8 +145,8 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
             >
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-1 h-3 bg-blue-500 rounded-full" />
-                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">
-                  {key}
+                <h4 className="text-[11px] font-semibold text-zinc-300 tracking-[0.02em]">
+                  {humanizeLabel(key)}
                 </h4>
               </div>
               <FormFactory 
@@ -174,8 +182,8 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
               {...(isFocusedField ? { 'data-jp-focused-field': key } : {})}
             >
               <div className="flex items-center justify-between mb-3">
-                <label className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">
-                  {key} ({items.length})
+                <label className="text-[12px] font-semibold text-zinc-300 tracking-[0.01em]">
+                  {humanizeLabel(key)} ({items.length})
                 </label>
                 <button 
                   type="button"
@@ -183,7 +191,7 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
                     const newItem = generateDefaultValue(itemSchema);
                     onChange({ ...data, [key]: [...items, newItem] });
                   }}
-                  className="flex items-center gap-1 px-2 py-1 bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 rounded text-[10px] font-bold transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 rounded text-[11px] font-semibold transition-colors"
                 >
                   <Plus size={12} /> Add Item
                 </button>
@@ -204,7 +212,7 @@ export const FormFactory: React.FC<FormFactoryProps> = ({ schema, data, onChange
                     (typeof itemRecord.name === 'string' ? itemRecord.name : null) || 
                     (typeof itemRecord.content === 'string' ? itemRecord.content : null) || 
                     (typeof itemRecord.text === 'string' ? itemRecord.text : null) || 
-                    `${key} #${index + 1}`;
+                    `${humanizeLabel(key)} #${index + 1}`;
 
                   const openItemId = effectiveOpenItemId;
                   const itemIdStr = String(itemRecord.id ?? stableKey);
@@ -333,7 +341,7 @@ const ArrayItemWrapper: React.FC<ArrayItemWrapperProps> = ({
           <button 
             type="button"
             onClick={handleToggle}
-            className="flex items-center gap-2 text-[10px] font-bold text-zinc-300 uppercase tracking-tight truncate"
+            className="flex items-center gap-2 text-[12px] font-semibold text-zinc-200 tracking-[0.01em] truncate"
           >
             {isOpen ? <ChevronUp size={12} className="shrink-0" /> : <ChevronDown size={12} className="shrink-0" />}
             <span className="truncate">{label}</span>

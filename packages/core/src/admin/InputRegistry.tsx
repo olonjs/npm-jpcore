@@ -51,15 +51,23 @@ import { BaseWidgetProps } from '../lib/shared-types';
 import { cn } from '../lib/utils';
 import { ImagePreviewField } from './image-picker';
 
+const humanizeLabel = (label: string): string =>
+  label
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 export const InputWidgets = {
   'ui:text': ({ label, value, onChange }: BaseWidgetProps<string>) => (
-    <div className="grid w-full items-center gap-1.5 mb-4">
-      <Label className="text-[9px] uppercase font-black tracking-widest text-zinc-500">
-        {label}
+    <div className="grid w-full items-center gap-2 mb-4">
+      <Label className="text-[11px] font-semibold tracking-[0.02em] text-zinc-300">
+        {humanizeLabel(label)}
       </Label>
       <Input 
         type="text" 
-        className="h-7 text-[11px] bg-zinc-900/50 border-zinc-800 focus-visible:ring-blue-600"
+        className="h-9 text-[13px] bg-zinc-900/50 border-zinc-700 focus-visible:ring-blue-600"
         value={value || ''} 
         onChange={(e) => onChange(e.target.value)} 
       />
@@ -67,12 +75,12 @@ export const InputWidgets = {
   ),
 
   'ui:textarea': ({ label, value, onChange }: BaseWidgetProps<string>) => (
-    <div className="grid w-full gap-1.5 mb-4">
-      <Label className="text-[9px] uppercase font-black tracking-widest text-zinc-500">
-        {label}
+    <div className="grid w-full gap-2 mb-4">
+      <Label className="text-[11px] font-semibold tracking-[0.02em] text-zinc-300">
+        {humanizeLabel(label)}
       </Label>
       <Textarea 
-        className="min-h-[80px] text-[11px] bg-zinc-900/50 border-zinc-800 focus-visible:ring-blue-600 resize-none"
+        className="min-h-[96px] text-[13px] bg-zinc-900/50 border-zinc-700 focus-visible:ring-blue-600 resize-none"
         value={value || ''} 
         onChange={(e) => onChange(e.target.value)} 
       />
@@ -80,17 +88,17 @@ export const InputWidgets = {
   ),
 
   'ui:select': ({ label, value, onChange, options = [] }: BaseWidgetProps<string>) => (
-    <div className="grid w-full gap-1.5 mb-4">
-      <Label className="text-[9px] uppercase font-black tracking-widest text-zinc-500">
-        {label}
+    <div className="grid w-full gap-2 mb-4">
+      <Label className="text-[11px] font-semibold tracking-[0.02em] text-zinc-300">
+        {humanizeLabel(label)}
       </Label>
       <Select value={value || ""} onValueChange={onChange}>
-        <SelectTrigger className="w-full h-7 text-[11px] bg-zinc-900/50 border-zinc-800 focus:ring-blue-600">
+        <SelectTrigger className="w-full h-9 text-[13px] bg-zinc-900/50 border-zinc-700 focus:ring-blue-600">
           <SelectValue placeholder={`Select...`} />
         </SelectTrigger>
         <SelectContent className="dark">
           {options.map((opt) => (
-            <SelectItem key={opt} value={opt} className="text-[11px]">
+            <SelectItem key={opt} value={opt} className="text-[13px]">
               {opt}
             </SelectItem>
           ))}
@@ -100,7 +108,7 @@ export const InputWidgets = {
   ),
 
   'ui:checkbox': ({ label, value, onChange }: BaseWidgetProps<boolean>) => (
-    <div className="flex items-center space-x-2 mb-4 p-2 rounded border border-zinc-800/50 bg-zinc-900/20">
+    <div className="flex items-center space-x-2 mb-4 p-2.5 rounded border border-zinc-700/60 bg-zinc-900/20">
       <Checkbox 
         id={label} 
         checked={!!value} 
@@ -108,9 +116,9 @@ export const InputWidgets = {
       />
       <Label 
         htmlFor={label} 
-        className="text-[11px] font-medium cursor-pointer select-none text-zinc-300"
+        className="text-[13px] font-medium cursor-pointer select-none text-zinc-200"
       >
-        {label}
+        {humanizeLabel(label)}
       </Label>
     </div>
   ),

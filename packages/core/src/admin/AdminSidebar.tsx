@@ -24,7 +24,7 @@ import { useConfig } from '../lib/ConfigContext';
 import { cn } from '../lib/utils';
 import { FormFactory } from './FormFactory';
 import type { PageConfig, Section } from '../lib/kernel';
-import { Layers, ChevronUp, GripVertical, Settings, Trash2, AlertCircle, X, Plus, FileCode, Save } from 'lucide-react';
+import { Layers, ChevronUp, GripVertical, Settings, Trash2, AlertCircle, X, Plus, Save } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip';
 import { PageSelector } from './PageSelector';
@@ -112,6 +112,14 @@ const getUiHint = (schema: z.ZodTypeAny | undefined): string => {
   }
   return '';
 };
+
+const humanizeLabel = (label: string): string =>
+  label
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 
 /** Activation: 8px movement to start drag (avoids accidental drag on click). Touch: 200ms delay so scroll works. */
 const pointerSensor = { activationConstraint: { distance: 8 } };
@@ -239,7 +247,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onDeleteSection,
   onAddSection,
   hasChanges = false,
-  onExportHTML,
   onSaveToFile,
   saveSuccessFeedback = false,
   onResetToFile,
@@ -627,7 +634,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               (typeof rec.name === 'string' ? rec.name : null) ??
               (typeof rec.title === 'string' ? rec.title : null) ??
               (typeof rec.label === 'string' ? rec.label : null) ??
-              fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1).replace(/([A-Z])/g, ' $1').trim();
+              humanizeLabel(fieldKey);
           } else {
             const fieldKey = effectiveExpandedItem.fieldKey;
             if (effectiveExpandedItem.itemId != null) {
@@ -638,9 +645,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 (typeof rec.name === 'string' ? rec.name : null) ??
                 (typeof rec.title === 'string' ? rec.title : null) ??
                 (typeof rec.label === 'string' ? rec.label : null) ??
-                fieldKey;
+                humanizeLabel(fieldKey);
             } else {
-              label = fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1).replace(/([A-Z])/g, ' $1').trim();
+              label = humanizeLabel(fieldKey);
             }
           }
           return (
@@ -698,44 +705,35 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </div>
       </ScrollArea>
 
-      <div className="px-4 py-2.5 border-t border-zinc-800 bg-zinc-900/50 flex items-center gap-3 opacity-100 flex-wrap shrink-0">
-        {(onExportHTML != null || onSaveToFile != null || onResetToFile != null) && (
+      <div className="px-4 py-2.5 border-t border-zinc-800 bg-zinc-900/50 flex items-center justify-between gap-3 opacity-100 shrink-0">
+        {(onSaveToFile != null || onResetToFile != null) && (
           <>
-            <div className={cn(
-              'w-2 h-2 rounded-full transition-colors duration-300 shrink-0',
-              hasChanges ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-emerald-500'
-            )} />
-            <span className={cn(
-              'text-xs font-medium transition-colors duration-300 shrink-0',
-              saveSuccessFeedback ? 'text-emerald-400' : hasChanges ? 'text-amber-500' : 'text-zinc-500'
-            )}>
-              {saveSuccessFeedback ? 'Salvato' : hasChanges ? 'Unsaved Changes' : 'All Changes Saved'}
-            </span>
-            {onExportHTML != null && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={onExportHTML}>
-                    <FileCode size={12} />
-                    <span>Bake HTML</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Generate static HTML output</TooltipContent>
-              </Tooltip>
-            )}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className={cn(
+                'w-2 h-2 rounded-full transition-colors duration-300 shrink-0',
+                hasChanges ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-emerald-500'
+              )} />
+              <span className={cn(
+                'text-sm font-medium transition-colors duration-300 truncate',
+                saveSuccessFeedback ? 'text-emerald-400' : hasChanges ? 'text-amber-500' : 'text-zinc-500'
+              )}>
+                {saveSuccessFeedback ? 'Salvato' : hasChanges ? 'Unsaved Changes' : 'All Changes Saved'}
+              </span>
+            </div>
             {onSaveToFile != null && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="sm"
+                    size="default"
                     disabled={!hasChanges}
-                    className="gap-1.5"
+                    className="h-9 min-w-[156px] px-5 text-sm gap-2 ml-auto"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       onSaveToFile();
                     }}
                   >
-                    <Save size={12} />
+                    <Save size={14} />
                     <span>Save</span>
                   </Button>
                 </TooltipTrigger>

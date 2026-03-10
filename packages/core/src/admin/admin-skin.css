@@ -46,6 +46,8 @@
   --ring: oklch(0.552 0.016 285.938);
   --radius: 0.5rem;
   font-family: ui-sans-serif, system-ui, sans-serif;
+  --jp-inspector-label-size: 11px;
+  --jp-inspector-field-size: 13px;
 }
 
 @layer base {
