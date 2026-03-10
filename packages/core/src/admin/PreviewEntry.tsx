@@ -5,9 +5,12 @@ import { themeManager } from '../utils/theme-manager';
 import { STUDIO_EVENTS } from '../lib/events';
 import type { PageConfig, SiteConfig, MenuConfig, MenuItem } from '../lib/kernel';
 import type { SelectionPath } from '../lib/types-engine';
+import { buildSelectionPath } from './selection-path';
 
 const INTERACTIVE_SELECTION_GUARD =
   '[data-jp-ignore-select="true"],[data-jp-interactive="true"],.ProseMirror,[contenteditable="true"],button,input,textarea,select,[role="button"],[role="menuitem"]';
+const IDAC_SELECTION_MARKER =
+  '[data-jp-field],[data-jp-item-id],[data-jp-item-field]';
 
 export const PreviewEntry: React.FC = () => {
   const [draft, setDraft] = useState<PageConfig | null>(null);
@@ -73,10 +76,19 @@ export const PreviewEntry: React.FC = () => {
    * React tree or pointer-events. Find section + item/field and notify parent.
    */
   useEffect(() => {
+    const hasIdacSelectionMarker = (target: HTMLElement): boolean =>
+      !!target.closest(IDAC_SELECTION_MARKER);
+
     const shouldIgnoreSelectionTarget = (target: HTMLElement): boolean => {
-      if (target.closest(INTERACTIVE_SELECTION_GUARD)) return true;
-      // In Studio preview avoid accidental in-iframe navigation from content links.
-      if (target.closest('a[href]')) return true;
+      if (target.closest('[data-jp-ignore-select="true"]')) return true;
+
+      // Interactive controls are ignored unless explicitly annotated with IDAC markers.
+      if (target.closest(INTERACTIVE_SELECTION_GUARD) && !hasIdacSelectionMarker(target)) {
+        return true;
+      }
+
+      // Keep in-iframe links non-navigable, but allow inspector selection when IDAC is present.
+      if (target.closest('a[href]') && !hasIdacSelectionMarker(target)) return true;
       return false;
     };
 
@@ -124,29 +136,9 @@ export const PreviewEntry: React.FC = () => {
         window.parent.postMessage({ type: STUDIO_EVENTS.SECTION_SELECT, section }, '*');
         return;
       }
-      // Collect full path of nested array items (root-to-leaf) for deep focus
-      const itemPath: SelectionPath = [];
-      el = rootAtPoint;
-      while (el && el !== sectionEl) {
-        const id = el.getAttribute?.('data-jp-item-id');
-        const field = el.getAttribute?.('data-jp-item-field');
-        if (id && field) {
-          itemPath.push({ fieldKey: field || 'items', itemId: id });
-        }
-        el = el.parentElement;
-      }
-      itemPath.reverse();
-      if (itemPath.length === 0) {
-        el = rootAtPoint;
-        while (el && el !== sectionEl) {
-          const field = el.getAttribute?.('data-jp-field');
-          if (field) {
-            itemPath.push({ fieldKey: field });
-            break;
-          }
-          el = el.parentElement;
-        }
-      }
+      // Collect deterministic root-to-leaf path for both array items and scalar fields.
+      let itemPath: SelectionPath = buildSelectionPath(rootAtPoint, sectionEl);
+
       if (itemPath.length === 0 && rootAtPoint) {
         let best: HTMLElement | null = null;
         const visit = (node: HTMLElement) => {
@@ -158,11 +150,7 @@ export const PreviewEntry: React.FC = () => {
         };
         visit(rootAtPoint);
         if (best) {
-          const el = best as HTMLElement;
-          const id = el.getAttribute?.('data-jp-item-id');
-          const field = el.getAttribute?.('data-jp-field');
-          if (id && field) itemPath.push({ fieldKey: field || 'items', itemId: id });
-          else if (field) itemPath.push({ fieldKey: field });
+          itemPath = buildSelectionPath(best as HTMLElement, sectionEl);
         }
       }
       const payload: Record<string, unknown> = { type: STUDIO_EVENTS.SECTION_SELECT, section };
