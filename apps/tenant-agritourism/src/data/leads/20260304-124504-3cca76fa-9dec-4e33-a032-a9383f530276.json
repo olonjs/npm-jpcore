@@ -1,0 +1,23 @@
+{
+  "name": "guido serio",
+  "phone": "+393472475598",
+  "email": "groot@olon.it",
+  "email_confirm": "groot@olon.it",
+  "checkin": "2026-03-18",
+  "checkout": "2026-03-19",
+  "guests": "2",
+  "rooms": "1",
+  "notes": "sono allergico",
+  "recipientEmail": "gserio@olon.it",
+  "page": "contatti",
+  "section": "form",
+  "tenant": "tenant-agritourism",
+  "source": "contact-form",
+  "submittedAt": "2026-03-04T12:45:02.285Z",
+  "_meta": {
+    "tenantId": "3990b3f9-06bf-4bf2-a366-cbf07443630f",
+    "tenantSlug": "tenant-agritourism",
+    "correlationId": "6d9219c4-d032-4eb0-978f-100185b67056",
+    "submittedAt": "2026-03-04T12:45:04.312Z"
+  }
+}

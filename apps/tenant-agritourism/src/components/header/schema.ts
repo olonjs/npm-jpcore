@@ -1,24 +1,20 @@
 import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem, ImageSelectionSchema } from '@/lib/base-schemas';
 
-/**
- * 📝 HEADER SCHEMA (Contract)
- * Definisce la struttura dati che l'Admin userà per generare la form.
- */
-export const HeaderSchema = z.object({
-  logoText: z.string().describe('ui:text'),
-  logoHighlight: z.string().optional().describe('ui:text'),
-  logoIconText: z.string().optional().describe('ui:text'),
-  links: z.array(z.object({
-    label: z.string().describe('ui:text'),
-    href: z.string().describe('ui:text'),
-    isCta: z.boolean().default(false).describe('ui:checkbox'),
-  })).describe('ui:list'),
+const HeaderLinkSchema = BaseArrayItem.extend({
+  label: z.string().describe('ui:text'),
+  href:  z.string().describe('ui:text'),
 });
 
-/**
- * ⚙️ HEADER SETTINGS
- * Definisce i parametri tecnici (non di contenuto).
- */
-export const HeaderSettingsSchema = z.object({
-  sticky: z.boolean().default(true).describe('ui:checkbox'),
+export const HeaderSchema = BaseSectionData.extend({
+  logoText:       z.string().describe('ui:text'),
+  logoHighlight:  z.string().optional().describe('ui:text'),
+  logoImageUrl:   ImageSelectionSchema.optional(),
+  logoImageScrolled: ImageSelectionSchema.optional(),
+  logoMaxHeight:  z.number().int().min(10).max(30).default(30).describe('ui:number'),
+  showLogoText:   z.boolean().optional().default(true).describe('ui:checkbox'),
+  ctaLabel:       z.string().optional().describe('ui:text'),
+  ctaHref:        z.string().optional().describe('ui:text'),
+  showLangToggle: z.boolean().optional().default(false).describe('ui:checkbox'),
+  links:          z.array(HeaderLinkSchema).optional().describe('ui:list'),
 });

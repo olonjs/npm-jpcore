@@ -23,6 +23,15 @@ export interface PersistenceConfig {
    */
   saveToFile?: (state: ProjectState, slug: string) => Promise<void>;
   /**
+   * Optional. Hot save path (e.g. POST to /api/v1/save2edge).
+   * Core only triggers this callback; tenant decides transport and endpoint.
+   */
+  hotSave?: (state: ProjectState, slug: string) => Promise<void>;
+  /** Controls legacy Save button visibility in sidebar. Default true. */
+  showLegacySave?: boolean;
+  /** Controls Hot Save button visibility in sidebar. Default false. */
+  showHotSave?: boolean;
+  /**
    * Optional. If provided, flushes in-memory /uploaded-assets/ blobs to disk and returns oldUrl -> newUrl map.
    * Omit when uploads write directly to disk (e.g. public/assets/images) and section data already stores final URLs.
    */

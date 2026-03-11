@@ -1,0 +1,23 @@
+{
+  "name": "guido",
+  "phone": "+3934755698",
+  "email": "gf.serio@icloud.com",
+  "email_confirm": "gf.serio@icloud.com",
+  "checkin": "2026-03-19",
+  "checkout": "2026-03-20",
+  "guests": "",
+  "rooms": "",
+  "notes": "",
+  "recipientEmail": "gserio@olon.it",
+  "page": "contatti",
+  "section": "form",
+  "tenant": "tenant-agritourism",
+  "source": "contact-form",
+  "submittedAt": "2026-03-03T18:43:42.576Z",
+  "_meta": {
+    "tenantId": "3990b3f9-06bf-4bf2-a366-cbf07443630f",
+    "tenantSlug": "tenant-agritourism",
+    "correlationId": "47439e32-9fe8-487b-a4ec-38a3e79dfd30",
+    "submittedAt": "2026-03-03T18:43:45.524Z"
+  }
+}

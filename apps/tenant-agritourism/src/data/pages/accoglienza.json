@@ -1,0 +1,191 @@
+{
+  "id": "accoglienza-page",
+  "slug": "accoglienza",
+  "meta": {
+    "title": "Accoglienza — SantaMamma Agriturismo",
+    "description": "Stanze accoglienti nel cuore del Parco dei Nebrodi. Soggiorna nella masseria di Alfonso e Giusy e vivi la Sicilia autentica."
+  },
+  "sections": [
+    {
+      "id": "acc-hero",
+      "type": "hero",
+      "data": {
+        "badge": "Soggiorno & Alloggio",
+        "title": "Dormire a",
+        "titleHighlight": "SantaMamma",
+        "description": "Le nostre stanze sono rifugi di pace e semplicità. Svegliarti con il profumo dei Nebrodi e la colazione preparata con le mani di Giusy è un privilegio che non dimenticherai.",
+        "bgImageUrl": {
+          "url": "https://www.santamamma.it/assets/img/esterno.jpg",
+          "alt": ""
+        },
+        "ctas": [
+          {
+            "id": "ac-cta-1",
+            "label": "Prenota ora",
+            "href": "/contatti",
+            "variant": "primary"
+          },
+          {
+            "id": "ac-cta-2",
+            "label": "Vedi i prezzi",
+            "href": "/offerte",
+            "variant": "secondary"
+          }
+        ],
+        "scrollLabel": "Scopri le stanze"
+      }
+    },
+    {
+      "id": "acc-about",
+      "type": "about-strip",
+      "data": {
+        "label": "Le nostre stanze",
+        "title": "Il silenzio come lusso",
+        "description": "Non troverai rumore, traffico, né fretta. Le stanze di SantaMamma sono pensate per chi vuole davvero staccare: letti comodi, vista sulla natura, bagni privati. La semplicità curata di chi ama quello che fa.",
+        "bullets": [
+          {
+            "id": "ab-1",
+            "text": "Stanze con bagno privato e vista sulla campagna"
+          },
+          {
+            "id": "ab-2",
+            "text": "Colazione con prodotti freschi dell'azienda agricola"
+          },
+          {
+            "id": "ab-3",
+            "text": "Wi-Fi e tutto il necessario per stare bene"
+          },
+          {
+            "id": "ab-4",
+            "text": "Possibilità di mezza pensione e pensione completa"
+          }
+        ],
+        "imageUrl": {
+          "url": "https://www.santamamma.it/assets/img/pianoterra-1.jpg",
+          "alt": "Camera accogliente con vista sul verde"
+        },
+        "imageAlt": "Camera accogliente con vista sul verde",
+        "imagePosition": "left"
+      }
+    },
+    {
+      "id": "acc-gallery",
+      "type": "gallery-strip",
+      "data": {
+        "label": "Fotografie",
+        "title": "La masseria in immagini",
+        "images": [
+          {
+            "id": "gi-1",
+            "image": {
+              "url": "https://www.santamamma.it/assets/img/pianoterra-2.jpg",
+              "alt": ""
+            },
+            "caption": "La masseria al tramonto"
+          },
+          {
+            "id": "gi-2",
+            "image": {
+              "url": "https://www.santamamma.it/assets/img/gialla.jpg",
+              "alt": ""
+            },
+            "caption": "Stanza con vista"
+          },
+          {
+            "id": "gi-3",
+            "image": {
+              "url": "https://www.santamamma.it/assets/img/pianoterra_1.jpg",
+              "alt": ""
+            },
+            "caption": "Il Parco dei Nebrodi"
+          },
+          {
+            "id": "gi-4",
+            "image": {
+              "url": "https://www.santamamma.it/assets/img/primo_piano_2-2.jpg",
+              "alt": ""
+            },
+            "caption": "Colazione biologica"
+          }
+        ]
+      }
+    },
+    {
+      "id": "acc-pricing",
+      "type": "pricing-table",
+      "data": {
+        "label": "Tariffe",
+        "title": "Scegli il tuo soggiorno",
+        "description": "Prezzi per notte, a persona. Colazione inclusa. Prezzo indicativo, confermare al momento della prenotazione.",
+        "plans": [
+          {
+            "id": "pl-1",
+            "name": "Bed&breakfast",
+            "price": "80",
+            "period": "per persona/notte",
+            "description": "Camera con bagno privato e colazione inclusa.",
+            "features": [
+              "Camera con bagno privato",
+              "Colazione con prodotti bio",
+              "Wi-Fi gratuito",
+              "Parcheggio"
+            ],
+            "ctaLabel": "Prenota",
+            "ctaHref": "/contatti",
+            "featured": false
+          },
+          {
+            "id": "pl-2",
+            "name": "Mezza Pensione",
+            "price": "110",
+            "period": "per persona/notte",
+            "description": "Alloggio con colazione e cena km.0.",
+            "features": [
+              "Camera con bagno privato",
+              "Colazione biologica",
+              "Cena con prodotti del territorio",
+              "Wi-Fi gratuito",
+              "Parcheggio"
+            ],
+            "ctaLabel": "Prenota",
+            "ctaHref": "/contatti",
+            "featured": true
+          },
+          {
+            "id": "pl-3",
+            "name": "Pensione Completa",
+            "price": "140",
+            "period": "per persona/notte",
+            "description": "Tutti i pasti inclusi, per immergersi completamente.",
+            "features": [
+              "Camera con bagno privato",
+              "Colazione, pranzo e cena",
+              "Prodotti freschi km.0",
+              "Wi-Fi gratuito",
+              "Parcheggio"
+            ],
+            "ctaLabel": "Prenota",
+            "ctaHref": "/contatti",
+            "featured": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "acc-cta",
+      "type": "cta-nature",
+      "data": {
+        "title": "Prenota il tuo soggiorno",
+        "subtitle": "Contattaci per verificare la disponibilità e costruire insieme l'esperienza perfetta.",
+        "bgImageUrl": {
+          "url": "https://www.santamamma.it/assets/img/outdoor_3.jpg",
+          "alt": ""
+        },
+        "ctaLabel": "Contattaci",
+        "ctaHref": "/contatti",
+        "secondaryLabel": "",
+        "secondaryHref": ""
+      }
+    }
+  ]
+}

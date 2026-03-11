@@ -1,20 +1,24 @@
 {
   "main": [
     {
-      "label": "Architecture",
-      "href": "#architecture"
+      "label": "Accoglienza",
+      "href": "/accoglienza"
     },
     {
-      "label": "CMS",
-      "href": "#cms"
+      "label": "Cucina",
+      "href": "/cucina"
     },
     {
-      "label": "Versioning",
-      "href": "#git"
+      "label": "Da Fare",
+      "href": "/dafare"
     },
     {
-      "label": "Developer",
-      "href": "#devex"
+      "label": "Prezzi",
+      "href": "/offerte"
+    },
+    {
+      "label": "Contatti",
+      "href": "/contatti"
     }
   ]
 }

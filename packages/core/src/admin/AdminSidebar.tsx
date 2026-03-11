@@ -75,8 +75,18 @@ interface AdminSidebarProps {
   onExportHTML?: () => void;
   /** Save to file (writes JSON to repo via server). Replaces Export JSON in sidebar when provided. */
   onSaveToFile?: () => void;
+  /** Hot Save callback (typically cloud save2edge). */
+  onHotSave?: () => void;
   /** When true, show "Salvato" in the status bar (e.g. for 2s after save-to-file succeeds). */
   saveSuccessFeedback?: boolean;
+  /** When true, show "Saved" feedback for hot save (e.g. for 2s after success). */
+  hotSaveSuccessFeedback?: boolean;
+  /** When true, hot save action is currently running. */
+  hotSaveInProgress?: boolean;
+  /** Controls visibility of legacy Save button. */
+  showLegacySave?: boolean;
+  /** Controls visibility of Hot Save button. */
+  showHotSave?: boolean;
   /** Restore page from file (resets in-memory draft for current slug). Hidden by default; set showResetToFile to display. */
   onResetToFile?: () => void;
   /** When true, shows the "Ripristina da file" button (default false = hidden). */
@@ -248,7 +258,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onAddSection,
   hasChanges = false,
   onSaveToFile,
+  onHotSave,
   saveSuccessFeedback = false,
+  hotSaveSuccessFeedback = false,
+  hotSaveInProgress = false,
+  showLegacySave = true,
+  showHotSave = false,
   onResetToFile,
   showResetToFile = false,
   pageSlugs = [],
@@ -706,7 +721,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       </ScrollArea>
 
       <div className="px-4 py-2.5 border-t border-zinc-800 bg-zinc-900/50 flex items-center justify-between gap-3 opacity-100 shrink-0">
-        {(onSaveToFile != null || onResetToFile != null) && (
+        {((showLegacySave && onSaveToFile != null) || (showHotSave && onHotSave != null) || onResetToFile != null) && (
           <>
             <div className="flex items-center gap-2 min-w-0">
               <div className={cn(
@@ -715,12 +730,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               )} />
               <span className={cn(
                 'text-sm font-medium transition-colors duration-300 truncate',
-                saveSuccessFeedback ? 'text-emerald-400' : hasChanges ? 'text-amber-500' : 'text-zinc-500'
+                (saveSuccessFeedback || hotSaveSuccessFeedback) ? 'text-emerald-400' : hasChanges ? 'text-amber-500' : 'text-zinc-500'
               )}>
-                {saveSuccessFeedback ? 'Salvato' : hasChanges ? 'Unsaved Changes' : 'All Changes Saved'}
+                {(saveSuccessFeedback || hotSaveSuccessFeedback) ? 'Saved' : hasChanges ? 'Unsaved Changes' : 'All Changes Saved'}
               </span>
             </div>
-            {onSaveToFile != null && (
+            {showLegacySave && onSaveToFile != null && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -738,6 +753,26 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Save (export JSON)</TooltipContent>
+              </Tooltip>
+            )}
+            {showHotSave && onHotSave != null && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="default"
+                    disabled={!hasChanges || hotSaveInProgress}
+                    className="h-9 min-w-[156px] px-5 text-sm gap-2 ml-auto"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onHotSave();
+                    }}
+                  >
+                    <Save size={14} />
+                    <span>{hotSaveInProgress ? 'Saving...' : 'Hot Save'}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Hot save to edge</TooltipContent>
               </Tooltip>
             )}
             {onResetToFile != null && showResetToFile && (

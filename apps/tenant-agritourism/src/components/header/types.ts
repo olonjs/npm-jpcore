@@ -1,16 +1,6 @@
 import { z } from 'zod';
-import { HeaderSchema, HeaderSettingsSchema } from './schema';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { HeaderSchema } from './schema';
 
-/**
- * 🧩 HEADER DATA
- * Tipo inferito dallo schema Zod del contenuto.
- * Utilizzato dalla View per renderizzare logo e links.
- */
-export type HeaderData = z.infer<typeof HeaderSchema>;
-
-/**
- * ⚙️ HEADER SETTINGS
- * Tipo inferito dallo schema Zod dei settings.
- * Gestisce comportamenti tecnici come lo 'sticky'.
- */
-export type HeaderSettings = z.infer<typeof HeaderSettingsSchema>;
+export type HeaderData     = z.infer<typeof HeaderSchema>;
+export type HeaderSettings = z.infer<typeof BaseSectionSettingsSchema> & { sticky?: boolean };

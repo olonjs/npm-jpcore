@@ -1,7 +1,7 @@
 {
   "identity": {
-    "title": "JsonPages",
-    "logoUrl": "/logo.svg"
+    "title": "SantaMamma — Agriturismo in Sicilia",
+    "logoUrl": "/assets/img/logo.png"
   },
   "pages": [
     {
@@ -9,41 +9,65 @@
       "label": "Home"
     },
     {
-      "slug": "docs",
-      "label": "Docs"
+      "slug": "accoglienza",
+      "label": "Accoglienza"
     },
     {
-      "slug": "architecture",
-      "label": "Architecture"
+      "slug": "cucina",
+      "label": "Cucina"
     },
     {
-      "slug": "usage",
-      "label": "Usage"
+      "slug": "dafare",
+      "label": "Da Fare"
+    },
+    {
+      "slug": "offerte",
+      "label": "Prezzi"
+    },
+    {
+      "slug": "contatti",
+      "label": "Contatti"
     }
   ],
   "header": {
     "id": "global-header",
     "type": "header",
     "data": {
-      "logoText": "Json",
-      "logoHighlight": "Pages",
-      "logoIconText": "{ }",
+      "logoText": "Santa",
+      "logoHighlight": "Mamma",
+      "logoImageUrl": {
+        "url": "/assets/images/1772099974534-santalogo.png",
+        "alt": "SantaMamma"
+      },
+      "logoImageScrolled": {
+        "url": "/assets/images/1772100918531-santalogo_1_.png",
+        "alt": "1772100918531-santalogo_1_.png"
+      },
+      "showLogoText": true,
+      "logoMaxHeight": 30,
+      "ctaLabel": "Prenota",
+      "ctaHref": "/contatti",
+      "showLangToggle": true,
       "links": [
         {
-          "label": "Architecture",
-          "href": "#architecture"
+          "label": "Accoglienza",
+          "href": "/accoglienza"
         },
         {
-          "label": "CMS",
-          "href": "#cms"
+          "label": "Cucina",
+          "href": "/cucina"
         },
         {
-          "label": "Versioning",
-          "href": "#git"
+          "label": "Da Fare",
+          "href": "/dafare"
         },
         {
-          "label": "Developer",
-          "href": "#devex"
+          "label": "Prezzi",
+          "href": "/offerte"
+        },
+        {
+          "label": "Contatti",
+          "href": "/contatti"
         }
       ]
     },
@@ -55,30 +79,44 @@
     "id": "global-footer",
     "type": "footer",
     "data": {
-      "brandText": "Json",
-      "brandHighlight": "Pages",
-      "copyright": "© 2026 JsonPages. Source-available · Free to use.",
+      "brandText": "Santa",
+      "brandHighlight": "Mamma",
+      "logoImageUrl": {
+        "url": "/assets/images/1772099974534-santalogo.png",
+        "alt": "SantaMamma"
+      },
+      "showLogoText": true,
+      "logoMaxHeight": 30,
+      "tagline": "Agriturismo nel cuore del Parco dei Nebrodi, Sicilia.",
+      "copyright": "© 2025 Masseria S. Mamma di Agostino Collura & C. s.s. — Acquedolci (ME)",
+      "vatLabel": "P.IVA 01744070838",
       "links": [
         {
-          "label": "Docs",
-          "href": "/docs"
+          "id": "fl-1",
+          "label": "Accoglienza",
+          "href": "/accoglienza"
         },
         {
-          "label": "NPM",
-          "href": "#"
+          "id": "fl-2",
+          "label": "Cucina",
+          "href": "/cucina"
         },
         {
-          "label": "GitHub",
-          "href": "#"
+          "id": "fl-3",
+          "label": "Da Fare",
+          "href": "/dafare"
         },
         {
-          "label": "Changelog",
-          "href": "#"
+          "id": "fl-4",
+          "label": "Prezzi",
+          "href": "/offerte"
+        },
+        {
+          "id": "fl-5",
+          "label": "Contatti",
+          "href": "/contatti"
         }
       ]
-    },
-    "settings": {
-      "showLogo": true
     }
   }
 }

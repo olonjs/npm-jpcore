@@ -1,0 +1,61 @@
+{
+  "id": "dafare-page",
+  "slug": "dafare",
+  "meta": {
+    "title": "Cose da Fare — SantaMamma Agriturismo",
+    "description": "Escursioni nel Parco dei Nebrodi, borghi medievali, spiagge siciliane. Scopri tutto quello che puoi fare vicino a SantaMamma."
+  },
+  "sections": [
+    {
+      "id": "df-hero",
+      "type": "hero",
+      "data": {
+        "badge": "Natura · Avventura · Cultura",
+        "title": "Cose da Fare",
+        "titleHighlight": "Intorno a noi",
+        "description": "I Nebrodi sono un universo da esplorare. Sentieri, borghi, mare, storia. E SantaMamma è la base perfetta per scoprire tutto questo.",
+        "bgImageUrl": {
+          "url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80",
+          "alt": ""
+        },
+        "ctas": [
+          { "id": "df-cta-1", "label": "Prenota il tuo soggiorno", "href": "/contatti", "variant": "primary" }
+        ],
+        "scrollLabel": "Scopri le attività"
+      }
+    },
+    {
+      "id": "df-activities",
+      "type": "activities-grid",
+      "data": {
+        "label": "Attività e dintorni",
+        "title": "Un territorio da esplorare",
+        "description": "Il Parco dei Nebrodi è tra le aree naturali più ricche della Sicilia. Ogni direzione è un'avventura.",
+        "items": [
+          { "id": "ai-1", "icon": "🌲", "title": "Trekking nei Nebrodi",      "description": "Sentieri attraverso querceti secolari, boschi di faggio e pascoli d'alta quota. Fauna selvatica: caprioli, aquile, cinghiali." },
+          { "id": "ai-2", "icon": "🏛️", "title": "Borghi Medievali",          "description": "A pochi km: Mistretta, Caronia, Troina. Centri storici intatti, chiese barocche, tradizioni vive." },
+          { "id": "ai-3", "icon": "🏖️", "title": "Il Mare di Sicilia",         "description": "In 30 minuti raggiungi le spiagge di Acquedolci, San Gregorio e la costa dei Nebrodi." },
+          { "id": "ai-4", "icon": "🐎", "title": "Equitazione",               "description": "Escursioni a cavallo tra i boschi del parco con guide esperte del territorio." },
+          { "id": "ai-5", "icon": "🍄", "title": "Raccolta e Foraging",       "description": "In stagione, escursioni guidate per la raccolta di funghi, erbe selvatiche e frutti del bosco." },
+          { "id": "ai-6", "icon": "🔭", "title": "Osservazione Stellare",      "description": "Lontani dall'inquinamento luminoso, i cieli dei Nebrodi sono tra i più bui d'Italia. Perfetti per le stelle." },
+          { "id": "ai-7", "icon": "🏺", "title": "Archeologia Siciliana",     "description": "A meno di un'ora: il Parco Archeologico di Tindari e i siti greci della costa." },
+          { "id": "ai-8", "icon": "🍋", "title": "Esperienze Gastronomiche", "description": "Visite a cantine, frantoi e caseifici locali. Degustazioni di prodotti tipici del territorio." }
+        ]
+      }
+    },
+    {
+      "id": "df-cta",
+      "type": "cta-nature",
+      "data": {
+        "title": "Pronti per un'avventura?",
+        "subtitle": "Soggiorna da noi e usa SantaMamma come base per esplorare i Nebrodi e la Sicilia più autentica.",
+        "bgImageUrl": {
+          "url": "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1920&q=80",
+          "alt": ""
+        },
+        "ctaLabel": "Prenota il soggiorno",
+        "ctaHref":  "/contatti"
+      }
+    }
+  ]
+}

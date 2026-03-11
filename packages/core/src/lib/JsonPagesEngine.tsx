@@ -179,6 +179,9 @@ interface StudioRouteProps {
   addSectionConfig: JsonPagesConfig['addSection'];
   addableSectionTypes: string[];
   saveToFile?: (state: ProjectState, slug: string) => Promise<void>;
+  hotSave?: (state: ProjectState, slug: string) => Promise<void>;
+  showLegacySave?: boolean;
+  showHotSave?: boolean;
   exportHTML: (state: ProjectState, slug: string, cleanHtml: string) => void;
 }
 
@@ -192,6 +195,9 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   addSectionConfig,
   addableSectionTypes,
   saveToFile,
+  hotSave,
+  showLegacySave = true,
+  showHotSave = false,
   exportHTML,
 }) => {
   const location = useLocation();
@@ -203,6 +209,8 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   const [draft, setDraft] = useState<PageConfig | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveSuccessFeedback, setSaveSuccessFeedback] = useState(false);
+  const [hotSaveSuccessFeedback, setHotSaveSuccessFeedback] = useState(false);
+  const [hotSaveInProgress, setHotSaveInProgress] = useState(false);
   const [globalDraft, setGlobalDraft] = useState<SiteConfig>(() => {
     try {
       const base = JSON.parse(JSON.stringify(siteConfig ?? {})) as SiteConfig;
@@ -483,10 +491,43 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
     saveToFile(projectState, slug).then(() => {
       setHasChanges(false);
       setSaveSuccessFeedback(true);
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => setSaveSuccessFeedback(false), 2500);
+      }
     }).catch((err) => {
       console.error('[JsonPages] saveToFile failed', err);
       const msg = err instanceof Error ? err.message : String(err);
       alert(`Save to file failed: ${msg}`);
+    });
+  };
+
+  const handleHotSave = async () => {
+    if (!hotSave) return;
+    await requestInlineFlush();
+    const currentDraft = draftRef.current;
+    const currentGlobalDraft = globalDraftRef.current;
+    if (!currentDraft) return;
+    const headerData = currentGlobalDraft.header?.data as { links?: MenuItem[] } | undefined;
+    const projectState: ProjectState = {
+      page: currentDraft,
+      site: currentGlobalDraft,
+      menu: { main: headerData?.links ?? [] },
+      theme: themeConfig,
+    };
+
+    setHotSaveInProgress(true);
+    hotSave(projectState, slug).then(() => {
+      setHasChanges(false);
+      setHotSaveSuccessFeedback(true);
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => setHotSaveSuccessFeedback(false), 2500);
+      }
+    }).catch((err) => {
+      console.error('[JsonPages] hotSave failed', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`Hot save failed: ${msg}`);
+    }).finally(() => {
+      setHotSaveInProgress(false);
     });
   };
 
@@ -574,6 +615,11 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
                 onExportHTML={triggerBake}
                 onSaveToFile={saveToFile != null ? handleSaveToFile : undefined}
                 saveSuccessFeedback={saveSuccessFeedback}
+                onHotSave={hotSave != null ? handleHotSave : undefined}
+                hotSaveSuccessFeedback={hotSaveSuccessFeedback}
+                hotSaveInProgress={hotSaveInProgress}
+                showLegacySave={showLegacySave}
+                showHotSave={showHotSave}
                 onResetToFile={handleResetToFile}
                 pageSlugs={pageSlugs}
                 currentSlug={slug}
@@ -633,6 +679,9 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
     exportJSON: config.persistence?.exportJSON ?? exportProjectJSON,
     exportHTML: config.persistence?.exportHTML ?? exportBakedHTML,
     saveToFile: config.persistence?.saveToFile,
+    hotSave: config.persistence?.hotSave,
+    showLegacySave: config.persistence?.showLegacySave ?? true,
+    showHotSave: config.persistence?.showHotSave ?? false,
   };
 
   const tenantCss =
@@ -717,6 +766,9 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   addSectionConfig={addSectionConfig}
                   addableSectionTypes={addableSectionTypes}
                   saveToFile={persistence.saveToFile}
+                  hotSave={persistence.hotSave}
+                  showLegacySave={persistence.showLegacySave}
+                  showHotSave={persistence.showHotSave}
                   exportHTML={persistence.exportHTML}
                 />
               }
@@ -734,6 +786,9 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   addSectionConfig={addSectionConfig}
                   addableSectionTypes={addableSectionTypes}
                   saveToFile={persistence.saveToFile}
+                  hotSave={persistence.hotSave}
+                  showLegacySave={persistence.showLegacySave}
+                  showHotSave={persistence.showHotSave}
                   exportHTML={persistence.exportHTML}
                 />
               }

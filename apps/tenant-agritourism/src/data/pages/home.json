@@ -2,232 +2,208 @@
   "id": "home-page",
   "slug": "home",
   "meta": {
-    "title": "JsonPages — The Sovereign Shell. Zero Runtime Overhead.",
-    "description": "The @jsonpages/core package is a headless, schema-driven runtime. It handles routing, hydration, and the admin interface, leaving your Tenant code pure and framework-agnostic."
+    "title": "SantaMamma — Agriturismo nel Parco dei Nebrodi, Sicilia",
+    "description": "Scopri l'autentico agriturismo siciliano tra querceti secolari, cucina km.0 e paesaggi mozzafiato nel cuore del Parco dei Nebrodi."
   },
   "sections": [
     {
-      "id": "hero-main",
+      "id": "home-hero",
       "type": "hero",
       "data": {
-        "badge": "Architecture v1.2",
-        "title": "The Sovereign Shell.",
-        "titleHighlight": "Zero Runtime Overhead.",
-        "description": "The @jsonpages/core package is a headless, schema-driven runtime. It handles routing, hydration, and the admin interface, leaving your Tenant code pure and framework-agnostic.",
+        "badge": "Parco dei Nebrodi · Sicilia",
+        "title": "Benvenuti a",
+        "titleHighlight": "SantaMamma",
+        "description": "Un agriturismo autentico tra querceti secolari, animali selvatici e sapori che sanno di radici. Nel cuore del Parco dei Nebrodi, dove la natura è protagonista assoluta.",
+        "bgImageUrl": {
+          "url": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1920&q=80",
+          "alt": ""
+        },
         "ctas": [
           {
-            "id": "cta-1",
-            "label": "Read the Docs",
-            "href": "#devex",
+            "id": "h-cta-1",
+            "label": "Scopri l'Accoglienza",
+            "href": "/accoglienza",
             "variant": "primary"
           },
           {
-            "id": "cta-2",
-            "label": "View on NPM",
-            "href": "#",
+            "id": "h-cta-2",
+            "label": "La nostra Cucina",
+            "href": "/cucina",
             "variant": "secondary"
           }
         ],
-        "metrics": [
-          {
-            "id": "m-1",
-            "val": "3KB",
-            "label": "Core Overhead"
-          },
-          {
-            "id": "m-2",
-            "val": "100%",
-            "label": "Type Safety"
-          },
-          {
-            "id": "m-3",
-            "val": "MIT",
-            "label": "License"
-          }
-        ]
-      },
-      "settings": {}
+        "scrollLabel": "Scorri per scoprire"
+      }
     },
     {
-      "id": "soc-section",
-      "type": "arch-layers",
+      "id": "home-about",
+      "type": "about-strip",
       "data": {
-        "anchorId": "architecture",
-        "label": "Architecture",
-        "title": "Separation of Concerns",
-        "description": "We enforce a strict boundary between the Engine (us) and the Tenant (you). This prevents vendor lock-in.",
-        "layers": [
+        "anchorId": "chi-siamo",
+        "label": "La nostra storia",
+        "title": "Alfonso e Giusy, custodi di un luogo speciale",
+        "description": "Gestiamo SantaMamma con passione e amore da generazioni. La masseria sorge in uno degli angoli più belli del Parco dei Nebrodi, tra querceti popolati da animali selvatici e panorami di eccezionale suggestione.",
+        "bullets": [
           {
-            "id": "layer-3",
-            "number": "3",
-            "layerLevel": "l2",
-            "title": "The Form Factory",
-            "description": "The Admin UI is not hardcoded. It is generated at runtime by analyzing your Zod schemas. Change the schema, change the UI."
+            "id": "ab-1",
+            "text": "Cucina genuina con prodotti a km zero dall'orto di casa"
           },
           {
-            "id": "layer-2",
-            "number": "2",
-            "layerLevel": "l1",
-            "title": "The Tenant Protocol (TBP)",
-            "description": "Your components live here. They receive pure JSON data. They do not know they are being edited. They just render."
+            "id": "ab-2",
+            "text": "Formaggi e latticini artigianali prodotti in fattoria"
           },
           {
-            "id": "layer-1",
-            "number": "1",
-            "layerLevel": "l0",
-            "title": "The Core Engine (@jsonpages/core)",
-            "description": "Handles the React rendering loop, routing, and the Studio iframe injection. It is completely agnostic of your design system."
+            "id": "ab-3",
+            "text": "Atmosfera familiare, silenzi profondi, contatto diretto con la natura"
+          },
+          {
+            "id": "ab-4",
+            "text": "A pochi minuti da borghi medievali e dalla costa siciliana"
           }
         ],
-        "codeLines": []
-      },
-      "settings": {}
+        "imageUrl": {
+          "url": "https://www.santamamma.it/assets/img/esterno.jpg",
+          "alt": "Vista panoramica delle colline dei Nebrodi"
+        },
+        "imageAlt": "Vista panoramica delle colline dei Nebrodi",
+        "imagePosition": "right"
+      }
     },
     {
-      "id": "cms-ice-section",
-      "type": "cms-ice",
+      "id": "home-testimonials",
+      "type": "testimonials",
       "data": {
-        "anchorId": "cms",
-        "label": "In-Context Editing",
-        "title": "The Inspector that only shows what you need.",
-        "description": "Traditional CMS sidebars dump every field at once. ICE binds to the section you click in the live canvas and shows only the fields for that block. Zero cognitive overhead. The Form Factory generates every input widget automatically from your Zod schema — change the schema, change the UI.",
-        "callouts": [
+        "anchorId": "recensioni",
+        "label": "Cosa dicono i nostri ospiti",
+        "title": "Esperienze che restano nel cuore",
+        "items": [
           {
-            "id": "cl-1",
-            "icon": "🎯",
-            "title": "Context-bound Inspector",
-            "description": "Click any section in the canvas. The Inspector shows exactly — and only — the fields for that block. No sidebar overload."
+            "id": "t-1",
+            "name": "Sietske & Olaf",
+            "location": "Olanda",
+            "rating": 5,
+            "quote": "We stayed 3 nights in August. The location is just amazing: remote, green, silent — one of the most beautiful places we've ever seen. And the cooking is amazing! They cook with their home grown veggies, fruits and herbs. We loved it!!"
           },
           {
-            "id": "cl-2",
-            "icon": "⚡",
-            "title": "Schema → UI, automatically",
-            "description": "The Admin UI is not hardcoded. It is generated at runtime by analyzing your Zod schemas. Change the schema, change the UI."
+            "id": "t-2",
+            "name": "Angela",
+            "location": "Italia",
+            "rating": 5,
+            "quote": "Naturale, spontaneo e genuino... ecco come descriverei il nostro soggiorno. Struttura suggestiva gestita con passione da Alfonso e Giusy. Cibo delizioso e genuino, sapori della nonna. Grandi silenzi di quiete. Torneremo!"
           },
           {
-            "id": "cl-3",
-            "icon": "📤",
-            "title": "Bake to Zero-Runtime HTML",
-            "description": "Hit Bake. The engine exports pure HTML/CSS with no JavaScript runtime — CDN-ready, infinitely cacheable, fully portable."
+            "id": "t-3",
+            "name": "Giulia",
+            "location": "Italia",
+            "rating": 5,
+            "quote": "Sono stata con un gruppo di amici per una breve vacanza. È un vero agriturismo. Il cibo è semplice ma con sapori indimenticabili. Il posto veramente incantevole ed immerso nella natura. Ci siamo sentiti a casa nostra."
           }
         ]
-      },
-      "settings": {}
+      }
     },
     {
-      "id": "git-section",
-      "type": "git-section",
+      "id": "home-kitchen",
+      "type": "kitchen-showcase",
       "data": {
-        "anchorId": "git",
-        "label": "Versioning",
-        "title": "Your content is code.",
-        "titleHighlight": "Branch it. Diff it. Roll it back.",
-        "description": "Because every page is a plain JSON file, your content workflow is identical to your code workflow. No database exports, no CMS snapshots, no proprietary backups. Just git.",
-        "points": [
-          {
-            "id": "p-1",
-            "text": "Content changes appear in pull requests like any code change"
-          },
-          {
-            "id": "p-2",
-            "text": "Branch a page, preview it, merge when approved"
-          },
-          {
-            "id": "p-3",
-            "text": "Full diff history on every field of every section"
-          },
-          {
-            "id": "p-4",
-            "text": "Roll back any page to any commit in seconds"
-          },
-          {
-            "id": "p-5",
-            "text": "CI/CD pipelines trigger on content changes, not just code"
-          }
-        ]
-      },
-      "settings": {}
-    },
-    {
-      "id": "devex-section",
-      "type": "devex",
-      "data": {
-        "anchorId": "devex",
-        "label": "Developer Experience",
-        "title": "Your App.tsx is incredibly thin.",
-        "description": "You don't write routing logic. You don't write admin panels. You just import the Engine and pass your configuration.",
+        "anchorId": "cucina",
+        "label": "La cucina",
+        "title": "Mangiare a km.0",
+        "quote": "I sapori di una volta, coltivati con le nostre mani.",
+        "description": "Ogni piatto racconta la storia di questo luogo. Verdure dell'orto, erbe raccolte al mattino, formaggi fatti in casa, farine macinate a pietra. La cucina di SantaMamma è un viaggio nei sapori autentici della Sicilia contadina.",
         "features": [
           {
-            "id": "f-1",
-            "text": "Automatic Routing based on JSON files"
+            "id": "kf-1",
+            "icon": "🥬",
+            "text": "Orto biologico coltivato con cura"
           },
           {
-            "id": "f-2",
-            "text": "Hot Module Replacement (HMR)"
+            "id": "kf-2",
+            "icon": "🧀",
+            "text": "Formaggi e latticini artigianali"
           },
           {
-            "id": "f-3",
-            "text": "Full TypeScript support"
+            "id": "kf-3",
+            "icon": "🍯",
+            "text": "Miele e conserve di produzione propria"
+          },
+          {
+            "id": "kf-4",
+            "icon": "🍷",
+            "text": "Vini locali selezionati del territorio"
+          },
+          {
+            "id": "kf-5",
+            "icon": "🌿",
+            "text": "Erbe aromatiche fresche ogni giorno"
+          },
+          {
+            "id": "kf-6",
+            "icon": "🐄",
+            "text": "Allevamento rispettoso e naturale"
           }
-        ]
-      },
-      "settings": {}
+        ],
+        "imageUrl": {
+          "url": "https://images.unsplash.com/photo-1498579150354-977475b7ea0b?w=900&q=80",
+          "alt": "Tavola imbandita con prodotti tipici siciliani"
+        },
+        "imageAlt": "Tavola imbandita con prodotti tipici siciliani"
+      }
     },
     {
-      "id": "cli-section",
-      "type": "cli-section",
+      "id": "home-services",
+      "type": "service-cards",
       "data": {
-        "anchorId": "cli",
-        "label": "CLI Tool",
-        "title": "A new tenant in under 5 minutes.",
-        "description": "Install the CLI once. From there, scaffolding a fully-typed, production-ready tenant — with all capsules, registry, schemas, and config wired up — is a single command.",
-        "steps": [
+        "anchorId": "servizi",
+        "label": "Cosa offriamo",
+        "title": "Un'esperienza a 360°",
+        "description": "Dalla natura incontaminata alla tavola imbandita con i sapori del territorio.",
+        "cards": [
           {
-            "id": "s-1",
-            "num": "1",
-            "title": "Install the CLI globally",
-            "description": "One-time install. The CLI lives alongside your other dev tools."
+            "id": "sc-1",
+            "emoji": "🏡",
+            "title": "Accoglienza",
+            "description": "Stanze confortevoli e accoglienti, immerse nel verde dei Nebrodi. Il silenzio e la pace come benvenuto.",
+            "href": "/accoglienza"
           },
           {
-            "id": "s-2",
-            "num": "2",
-            "title": "Scaffold a new tenant",
-            "description": "Generates the full TBP structure: capsules, registry, schemas, config, and data files — all typed and ready."
+            "id": "sc-2",
+            "emoji": "🍃",
+            "title": "Cucina km.0",
+            "description": "Verdure dell'orto, formaggi artigianali, erbe aromatiche raccolte ogni mattina. Sapori autentici che non dimentichi.",
+            "href": "/cucina"
           },
           {
-            "id": "s-3",
-            "num": "3",
-            "title": "Start building",
-            "description": "Run npm run dev and your tenant is live with Studio, HMR, and full CMS editing."
+            "id": "sc-3",
+            "emoji": "🌲",
+            "title": "Natura & Escursioni",
+            "description": "Querceti secolari, fauna selvatica, sentieri nel parco. La natura dei Nebrodi ti aspetta.",
+            "href": "/dafare"
+          },
+          {
+            "id": "sc-4",
+            "emoji": "📍",
+            "title": "Arrivare",
+            "description": "Siamo a Acquedolci (ME). Indicazioni dettagliate per raggiungerci nel cuore del parco.",
+            "href": "/contatti"
           }
         ]
-      },
-      "settings": {}
+      }
     },
     {
-      "id": "cta-final",
-      "type": "cta-banner",
+      "id": "home-cta",
+      "type": "cta-nature",
       "data": {
-        "anchorId": "start",
-        "title": "Trust the Architecture.",
-        "description": "Stop building page builders. Start building Systems.",
-        "cliCommand": "npx @jsonpages/cli@latest new tenant",
-        "ctas": [
-          {
-            "id": "cta-docs",
-            "label": "Read the Docs",
-            "href": "#devex",
-            "variant": "primary"
-          },
-          {
-            "id": "cta-npm",
-            "label": "View on NPM",
-            "href": "#",
-            "variant": "secondary"
-          }
-        ]
-      },
-      "settings": {}
+        "title": "Vuoi venire a trovarci?",
+        "subtitle": "Prenota il tuo soggiorno e lasciati avvolgere dalla natura dei Nebrodi. Ti aspettiamo.",
+        "bgImageUrl": {
+          "url": "https://www.santamamma.it/assets/img/outdoor_8.jpg",
+          "alt": ""
+        },
+        "ctaLabel": "Richiedi disponibilità",
+        "ctaHref": "/contatti",
+        "secondaryLabel": "Guarda i prezzi",
+        "secondaryHref": "/offerte"
+      }
     }
   ]
 }
