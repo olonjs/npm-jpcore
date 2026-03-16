@@ -596,7 +596,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.69",
+    "@olonjs/core": "^1.0.70",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
     "react": "^19.0.0",
@@ -2321,7 +2321,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/contact-form/View.tsx"
 import React, { useCallback, useState } from 'react';
 import { useInView } from '@/lib/useInView';
 import { useFormSubmit } from '@/lib/useFormSubmit';
-import { useConfig } from '@jsonpages/core';
+import { useConfig } from '@olonjs/core';
 import type { ContactFormData, ContactFormSettings } from './types';
 
 const inputCls = `
@@ -2695,7 +2695,7 @@ mkdir -p "src/components/cta-nature"
 echo "Creating src/components/cta-nature/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/cta-nature/View.tsx"
 import React from 'react';
-import { resolveAssetUrl, useConfig } from '@jsonpages/core';
+import { resolveAssetUrl, useConfig } from '@olonjs/core';
 import type { CtaNatureData, CtaNatureSettings } from './types';
 import type { SiteConfig } from '@/types';
 import type { HeaderData } from '@/components/header';
@@ -3448,7 +3448,7 @@ mkdir -p "src/components/footer"
 echo "Creating src/components/footer/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/footer/View.tsx"
 import React, { useEffect, useState } from 'react';
-import { resolveAssetUrl, useConfig } from '@jsonpages/core';
+import { resolveAssetUrl, useConfig } from '@olonjs/core';
 import type { FooterData, FooterSettings } from './types';
 
 export const Footer: React.FC<{ data: FooterData; settings?: FooterSettings }> = ({ data }) => {
@@ -3888,9 +3888,9 @@ mkdir -p "src/components/header"
 echo "Creating src/components/header/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/header/View.tsx"
 import React, { useState, useEffect } from 'react';
-import { resolveAssetUrl, useConfig } from '@jsonpages/core';
+import { resolveAssetUrl, useConfig } from '@olonjs/core';
 import type { HeaderData, HeaderSettings } from './types';
-import type { MenuItem } from '@jsonpages/core';
+import type { MenuItem } from '@olonjs/core';
 
 interface HeaderProps {
   data: HeaderData;
@@ -4303,7 +4303,7 @@ mkdir -p "src/components/image-break"
 echo "Creating src/components/image-break/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/image-break/View.tsx"
 import React from 'react';
-import { resolveAssetUrl, useConfig } from '@jsonpages/core';
+import { resolveAssetUrl, useConfig } from '@olonjs/core';
 import type { ImageBreakData, ImageBreakSettings } from './types';
 
 export const ImageBreak: React.FC<{ data: ImageBreakData; settings?: ImageBreakSettings }> = ({ data }) => {

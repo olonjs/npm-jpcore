@@ -596,7 +596,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.69",
+    "@olonjs/core": "^1.0.70",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
     "react": "^19.0.0",
@@ -3467,7 +3467,7 @@ echo "Creating src/components/header/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/header/View.tsx"
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import type { MenuItem } from '@jsonpages/core';
+import type { MenuItem } from '@olonjs/core';
 import type { HeaderData, HeaderSettings } from './types';
 
 export const Header: React.FC<{
@@ -3891,7 +3891,7 @@ mkdir -p "src/components/image-break"
 echo "Creating src/components/image-break/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/image-break/View.tsx"
 import React from 'react';
-import { resolveAssetUrl, useConfig } from '@jsonpages/core';
+import { resolveAssetUrl, useConfig } from '@olonjs/core';
 import type { ImageBreakData, ImageBreakSettings } from './types';
 
 export const ImageBreak: React.FC<{ data: ImageBreakData; settings?: ImageBreakSettings }> = ({ data }) => {
