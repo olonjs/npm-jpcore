@@ -31,14 +31,13 @@
   --font-primary: var(--theme-font-primary);
   --font-mono: var(--theme-font-mono);
 
-  /* 
-     🔧 DISPLAY FONT — Forward-compatible workaround
-     theme-manager.ts does NOT inject --theme-font-display (Skeleton v2.7 gap).
-     The var() falls through to the hardcoded fallback today.
-     When Skeleton v2.8 wires display into theme-manager, the var() will resolve
-     automatically and the fallback becomes dead code.
+  /*
+     DISPLAY FONT bridge
+     The core now emits --theme-font-display from theme.json, so this keeps
+     the tenant on the stable semantic alias rather than depending on the
+     flattened internal variable path.
   */
-  --font-display: var(--theme-font-display, 'Playfair Display', Georgia, serif);
+  --font-display: var(--theme-font-display);
 }
 
 /* 
@@ -56,7 +55,7 @@
   --muted: var(--theme-surface-alt);
   --muted-foreground: var(--theme-text-muted);
   --border: var(--theme-border);
-  --radius: 0.45rem;
+  --radius: 3.45rem;
 
   /* 
      🔧 ACCENT CHAIN — Forward-compatible workaround

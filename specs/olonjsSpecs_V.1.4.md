@@ -1,11 +1,12 @@
-# 📐 JSONPAGES Architecture Specifications v1.3
+# 📐 OlonJS Architecture Specifications v1.4
 
 **Status:** Mandatory Standard  
-**Version:** 1.3.0 (Sovereign Core Edition — Architecture + Studio/ICE UX, Path-Deterministic Nested Editing)  
+**Version:** 1.4.0 (Sovereign Core Edition — Architecture + Studio/ICE UX, Path-Deterministic Nested Editing, Deterministic Local Design Tokens)  
 **Target:** Senior Architects / AI Agents / Enterprise Governance  
 
-**Scope v1.3:** This edition preserves the complete v1.2 architecture (MTRP, JSP, TBP, CIP, ECIP, JAP + Studio/ICE UX contract: IDAC, TOCC, BSDS, ASC, JEB + Tenant Type & Code-Generation Annex) as a **faithful superset**, and adds strict path-based/nested-array behavior for Studio selection and Inspector expansion.  
-**Scope note (breaking):** In strict v1.3 Studio semantics, the legacy flat protocol (`itemField` / `itemId`) is removed in favor of `itemPath` (root-to-leaf path segments).
+**Scope v1.4:** This edition preserves the complete v1.3 architecture (MTRP, JSP, TBP, CIP, ECIP, JAP + Studio/ICE UX contract: IDAC, TOCC, BSDS, ASC, JEB + Tenant Type & Code-Generation Annex + strict path-based/nested-array behavior) as a **faithful superset**, and upgrades **Local Design Tokens** from a principle to a deterministic implementation contract.  
+**Scope note (breaking):** In strict v1.3+ Studio semantics, the legacy flat protocol (`itemField` / `itemId`) is removed in favor of `itemPath` (root-to-leaf path segments).  
+**Scope note (clarification):** In v1.4, `theme.json` is the tenant theme source of truth for themed tenants; runtime theme publication is mandatory for compliant themed tenants; section-local tokens (`--local-*`) are the required scoping layer for section-owned color and radius concerns.
 
 ---
 
@@ -16,7 +17,7 @@
 ### 1.1 The Sovereign Dependency Inversion
 The **Core** defines the empty `SectionDataRegistry`. The **Tenant** "injects" its specific definitions using **Module Augmentation**. This allows the Core to be distributed as a compiled NPM package while remaining aware of Tenant-specific types at compile-time.
 
-### 1.2 Technical Implementation (`@jsonpages/core/kernel`)
+### 1.2 Technical Implementation (`@olonjs/core/kernel`)
 ```typescript
 export interface SectionDataRegistry {} // Augmented by Tenant
 export interface SectionSettingsRegistry {} // Augmented by Tenant
@@ -49,13 +50,15 @@ export type Section = {
 Every site must reside in an isolated directory. Global Governance is physically separated from Local Content.
 *   **`/config/site.json`** — Global Identity & Reserved System Blocks (Header/Footer). See Appendix A for typed shape.
 *   **`/config/menu.json`** — Navigation Tree (SSOT for System Header). See Appendix A.
-*   **`/config/theme.json`** — Theme tokens (optional but recommended). See Appendix A.
+*   **`/config/theme.json`** — Theme tokens for themed tenants. See Appendix A.
 *   **`/pages/[slug].json`** — Local Body Content per page. See Appendix A (PageConfig).
 
 **Application path convention:** The runtime app typically imports these via an alias (e.g. **`@/data/config/`** and **`@/data/pages/`**). The physical silo may be `src/data/config/` and `src/data/pages/` so that `site.json`, `menu.json`, `theme.json` live under `src/data/config/`, and page JSONs under `src/data/pages/`. The CLI or projection script may use `/config/` and `/pages/` at repo root; the **contract** is that the app receives **siteConfig**, **menuConfig**, **themeConfig**, and **pages** as defined in JEB (§10) and Appendix A.
 
+**Rule:** For a tenant that claims v1.4 design-token compliance, `theme.json` is not optional in practice. If a tenant omits a physical `theme.json`, it must still provide an equivalent `ThemeConfig` object before bootstrap; otherwise the tenant is outside full v1.4 theme compliance.
+
 ### 2.2 Deterministic Projection (CLI Workflow)
-The CLI (`@jsonpages/cli`) creates new tenants by:
+The CLI (`@olonjs/cli`) creates new tenants by:
 1.  **Infra Projection:** Generating `package.json`, `tsconfig.json`, and `vite.config.ts` (The Shell).
 2.  **Source Projection:** Executing a deterministic script (`src_tenant_alpha.sh`) to reconstruct the `src` folder (The DNA).
 3.  **Dependency Resolution:** Enforcing specific versions of React, Radix, and Tailwind v4.
@@ -84,7 +87,7 @@ Components are self-contained directories under **`src/components/<sectionType>/
 
 ---
 
-## 4. 🧱 Component Implementation Protocol (CIP) v1.5
+## 4. 🧱 Component Implementation Protocol (CIP) v1.6
 
 **Objective:** Ensure system-wide stability and Admin UI integrity.
 
@@ -92,13 +95,193 @@ Components are self-contained directories under **`src/components/<sectionType>/
 2.  **Z-Index Neutrality:** Components must not use `z-index > 1`. Layout delegation (sticky/fixed) is managed by the `SectionRenderer`.
 3.  **Agnostic Asset Protocol:** Use `resolveAssetUrl(path, tenantId)` for all media. Resolved URLs are under **`/assets/...`** with no tenantId segment in the path (e.g. relative `img/hero.jpg` → `/assets/img/hero.jpg`).
 
-### 4.4 Local Design Tokens (v1.2)
-Section Views that control their own background, text, borders, or radii **shall** define a **local scope** via an inline `style` object on the section root: e.g. `--local-bg`, `--local-text`, `--local-text-muted`, `--local-surface`, `--local-border`, `--local-radius-lg`, `--local-accent`, mapped to theme variables. All Tailwind classes that affect color or radius in that section **must** use these variables (e.g. `bg-[var(--local-bg)]`, `text-[var(--local-text)]`). No naked utilities (e.g. `bg-blue-500`). An optional **`label`** in section data may be rendered with class **`jp-section-label`** for overlay type labels.
+### 4.4 Local Design Tokens (v1.4)
+**Objective:** Standardize how a section consumes tenant theme values without leaking global styling assumptions into the section implementation.
+
+#### 4.4.1 The Required Four-Layer Chain
+For any section that controls background, text color, border color, accent color, or radii, the following chain is normative:
+
+1. **Tenant theme source of truth** — Values are declared in `src/data/config/theme.json`.
+2. **Runtime theme publication** — The Core and/or tenant bootstrap **must** publish those values as CSS custom properties.
+3. **Section-local scope** — The View root **must** define `--local-*` variables mapped to the published theme variables for the concerns the section owns.
+4. **Rendered classes** — Section-owned color/radius utilities **must** consume `var(--local-*)`.
+
+**Rule:** A section may not skip layer 3 when it visually owns those concerns. Directly using global theme variables throughout the JSX is non-canonical for a fully themed section and must be treated as non-compliant unless the usage falls under an explicitly allowed exception.
+
+#### 4.4.2 Source Of Truth: `theme.json`
+`theme.json` is the tenant-level source of truth for theme values. Example:
+
+```json
+{
+  "name": "JsonPages Landing",
+  "tokens": {
+    "colors": {
+      "primary": "#3b82f6",
+      "secondary": "#22d3ee",
+      "accent": "#60a5fa",
+      "background": "#060d1b",
+      "surface": "#0b1529",
+      "surfaceAlt": "#101e38",
+      "text": "#e2e8f0",
+      "textMuted": "#94a3b8",
+      "border": "#162a4d"
+    },
+    "typography": {
+      "fontFamily": {
+        "primary": "'Instrument Sans', system-ui, sans-serif",
+        "mono": "'JetBrains Mono', monospace",
+        "display": "'Bricolage Grotesque', system-ui, sans-serif"
+      }
+    },
+    "borderRadius": {
+      "sm": "0px",
+      "md": "0px",
+      "lg": "2px"
+    }
+  }
+}
+```
+
+**Rule:** For a themed tenant, `theme.json` must contain the canonical semantic keys defined in Appendix A. Extra brand-specific keys are allowed only as extensions to those canonical groups, not as replacements for them.
+
+#### 4.4.3 Runtime Theme Publication
+The tenant and/or Core **must** expose theme values as CSS variables before section rendering. A compliant bridge may use semantic aliases, flattened variables, or both, but runtime publication itself is mandatory. Example:
+
+```css
+:root {
+  --background: var(--theme-background);
+  --foreground: var(--theme-text);
+  --card: var(--theme-surface);
+  --muted-foreground: var(--theme-text-muted);
+  --primary: var(--theme-primary);
+  --border: var(--theme-border);
+
+  --font-primary: var(--theme-font-primary);
+  --font-mono: var(--theme-font-mono);
+  --font-display: var(--theme-font-display);
+
+  --radius-sm: var(--theme-radius-sm);
+  --radius-md: var(--theme-radius-md);
+  --radius-lg: var(--theme-radius-lg);
+}
+```
+
+**Rule:** The exact internal naming strategy may evolve (for example flattened `--theme-colors-primary` plus semantic aliases), but the section must consume a stable published theme-variable contract rather than literals or direct JSON imports.
+
+#### 4.4.4 Section-Local Scope
+If a section controls its own visual language, it **shall** establish a local token scope on the section root. Example:
+
+```tsx
+<section
+  style={{
+    '--local-bg': 'var(--background)',
+    '--local-text': 'var(--foreground)',
+    '--local-text-muted': 'var(--muted-foreground)',
+    '--local-primary': 'var(--primary)',
+    '--local-border': 'var(--border)',
+    '--local-surface': 'var(--card)',
+    '--local-radius-sm': 'var(--theme-radius-sm)',
+    '--local-radius-md': 'var(--theme-radius-md)',
+    '--local-radius-lg': 'var(--theme-radius-lg)',
+  } as React.CSSProperties}
+>
+```
+
+**Rule:** `--local-*` values must map to published theme variables. They must **not** be defined as hardcoded brand values such as `#fff`, `#111827`, `12px`, or `Inter, sans-serif` if those values belong to the tenant theme layer.
+
+**Rule:** Local tokens are **mandatory** for section-owned color and radius concerns. They are **optional** for font-family concerns unless the section must remap or isolate font roles locally.
+
+#### 4.4.5 Canonical Typography Rule
+Typography follows a deterministic rule distinct from color/radius:
+
+1. **Canonical font publication** — Tenant/Core must publish semantic font variables such as `--theme-font-primary`, `--theme-font-mono`, and `--theme-font-display` when those roles exist in the theme.
+2. **Canonical font consumption** — Sections must consume typography through semantic tenant font utilities or variables backed by those published theme roles (for example `.font-display` backed by `--font-display`, itself backed by `--theme-font-display`).
+3. **Local font tokens** — `--local-font-*` is optional and should be used only when a section needs to remap a font role locally rather than simply consume the canonical tenant font role.
+
+Example of canonical global semantic bridge:
+
+```css
+:root {
+  --font-primary: var(--theme-font-primary);
+  --font-display: var(--theme-font-display);
+}
+
+.font-display {
+  font-family: var(--font-display, var(--font-primary));
+}
+```
+
+**Rule:** A section is compliant if it consumes themed fonts through this published semantic chain. It is **not** required to define `--local-font-display` unless the section needs local remapping. This closes the ambiguity between global semantic typography utilities and local color/radius scoping.
+
+#### 4.4.6 View Consumption
+All section-owned classes that affect color or radius must consume local variables. Font consumption must follow the typography rule above. Example:
+
+```tsx
+<section
+  style={{
+    '--local-bg': 'var(--background)',
+    '--local-text': 'var(--foreground)',
+    '--local-primary': 'var(--primary)',
+    '--local-border': 'var(--border)',
+    '--local-radius-md': 'var(--theme-radius-md)',
+    '--local-radius-lg': 'var(--theme-radius-lg)',
+  } as React.CSSProperties}
+  className="bg-[var(--local-bg)]"
+>
+  <h1 className="font-display text-[var(--local-text)]">Build Tenant DNA</h1>
+
+  <a className="bg-[var(--local-primary)] rounded-[var(--local-radius-md)] text-white">
+    Read the Docs
+  </a>
+
+  <div className="border border-[var(--local-border)] rounded-[var(--local-radius-lg)]">
+    {/* illustration / mockup / card */}
+  </div>
+</section>
+```
+
+#### 4.4.7 Compliance Rules
+A section is compliant when all of the following are true:
+
+1. `theme.json` is the source of truth for the theme values being used.
+2. Those values are published at runtime as CSS custom properties before the section renders.
+3. The section root defines a local token scope for the color/radius concerns it controls.
+4. Local color/radius tokens map to published theme variables rather than hardcoded literals.
+5. JSX classes use `var(--local-*)` for section-owned color/radius concerns.
+6. Fonts are consumed through the published semantic font chain, and only use local font tokens when local remapping is required.
+7. Hardcoded colors/radii are absent from the primary visual contract of the section.
+
+#### 4.4.8 Allowed Exceptions
+The following are acceptable if documented and intentionally limited:
+
+*   Tiny decorative one-off values that are not part of the tenant theme contract (for example an isolated translucent pixel-grid overlay).
+*   Temporary compatibility shims during migration, provided the section still exposes a clear compliant path and the literal is not the primary themed value.
+*   Semantic alias bridges in tenant CSS (for example `--font-display: var(--theme-font-display)`), as long as the source remains the theme layer.
+
+#### 4.4.9 Non-Compliant Patterns
+The following are non-compliant:
+
+*   `style={{ '--local-bg': '#060d1b' }}` when that background belongs to tenant theme.
+*   Buttons using `rounded-[7px]`, `bg-blue-500`, `text-zinc-100`, or similar hardcoded utilities inside a section that claims to be theme-driven.
+*   A section root that defines `--local-*`, but child elements still use raw `bg-*`, `text-*`, or `rounded-*` utilities for the same owned concerns.
+*   Reading `theme.json` directly inside a View instead of consuming published runtime theme variables.
+*   Treating brand-specific extension keys as a replacement for canonical semantic keys such as `primary`, `background`, `text`, `border`, or `fontFamily.primary`.
+
+#### 4.4.10 Practical Interpretation
+`--local-*` is not the source of truth. It is the **local scoping layer** between tenant theme and section implementation.
+
+Canonical chain:
+
+`theme.json` → published runtime theme vars → section `--local-*` → JSX classes`
+
+Canonical font chain:
+
+`theme.json` → published semantic font vars → tenant font utility/variable → section typography`
 
 ### 4.5 Z-Index & Overlay Governance (v1.2)
 Section content root **must** stay at **`z-index` ≤ 1** (prefer `z-0`) so the Sovereign Overlay can sit above with high z-index in Tenant CSS (§7). Header/footer may use a higher z-index (e.g. 50) only as a documented exception for global chrome.
 
-**Perché servono (CIP):** View “dumb” (solo data/settings) e senza import di Zod evita accoppiamento e permette al Form Factory di essere l’unica fonte di verità sugli schemi. Z-index basso evita che il contenuto copra l’overlay di selezione in Studio. Asset via `resolveAssetUrl`: i path relativi vengono risolti in `/assets/...` (senza segmento tenantId nel path). Token locali (`--local-*`) rendono le section temabili e coerenti con overlay e tema; senza, stili “nudi” creano drift visivo e conflitti con l’UI di editing.
+**Perché servono (CIP):** View “dumb” (solo data/settings) e senza import di Zod evita accoppiamento e permette al Form Factory di essere l’unica fonte di verità sugli schemi. Z-index basso evita che il contenuto copra l’overlay di selezione in Studio. Asset via `resolveAssetUrl`: i path relativi vengono risolti in `/assets/...` (senza segmento tenantId nel path). In v1.4 la catena `theme.json -> runtime vars -> --local-* -> JSX classes` rende i tenant temabili, riproducibili e compatibili con la Studio UX; senza questa separazione, stili “nudi” o valori hardcoded creano drift visivo, rompono il contratto del brand, e rendono ambiguo ciò che appartiene al tema contro ciò che appartiene alla section.
 
 ---
 
@@ -135,7 +318,7 @@ export type SelectionPath = SelectionPathSegment[];
 Rules:
 *   Expansion and focus for nested arrays **must** be computed from `SelectionPath` (root → leaf), not from a single flat pair.
 *   Matching by `fieldKey` alone is non-compliant for nested structures.
-*   Legacy flat payload fields **`itemField`** and **`itemId`** are removed from strict v1.3 selection protocol.
+*   Legacy flat payload fields **`itemField`** and **`itemId`** are removed in strict v1.3 selection protocol.
 
 **Perché servono (ECIP):** Il Form Factory deve sapere quale widget usare (text, textarea, select, list, …) senza hardcodare per tipo; `.describe('ui:...')` è il contratto. BaseArrayItem con `id` su ogni item di array garantisce chiavi stabili in React e reorder/delete corretti nell’Inspector. In v1.3 la selezione/espansione path-only elimina ambiguità su array annidati: senza path completo root→leaf, la sidebar può aprire il ramo sbagliato o non aprire il target.
 
@@ -261,7 +444,7 @@ Core creates a new section with deterministic UUID, `type`, and `data` from `get
 
 ## 10. ⚙️ JsonPagesConfig & Engine Bootstrap (JEB) v1.1
 
-**Objective:** Bootstrap contract between Tenant app and `@jsonpages/core`.
+**Objective:** Bootstrap contract between Tenant app and `@olonjs/core`.
 
 ### 10.1 JsonPagesConfig (required fields)
 The Tenant passes a single **config** object to **JsonPagesEngine**. Required fields:
@@ -302,7 +485,7 @@ Removed from strict protocol:
 
 ---
 
-# 🏛️ JSONPAGES_ADMIN_PROTOCOL (JAP) v1.2
+# 🏛️ OlonJS_ADMIN_PROTOCOL (JAP) v1.2
 
 **Status:** Mandatory Standard  
 **Version:** 1.2.0 (Sovereign Shell Edition — Path/Nested Strictness)  
@@ -311,7 +494,7 @@ Removed from strict protocol:
 ---
 
 ## 1. The Sovereign Shell Topology
-The Admin interface is a **Sovereign Shell** from `@jsonpages/core`.
+The Admin interface is a **Sovereign Shell** from `@olonjs/core`.
 1.  **The Stage (Canvas):** Isolated Iframe; postMessage for data updates and selection mirroring. Section markup follows **IDAC** (§6); overlay styling follows **TOCC** (§7).
 2.  **The Inspector (Sidebar):** Consumes Tenant Zod schemas to generate editors; binding via `data-jp-field` and `data-jp-item-*`.
 3.  **The Control Bar:** Save, Export, Add Section.
@@ -346,13 +529,13 @@ Studio enforces `tsc && vite build`. No export with TypeScript errors.
 
 ---
 
-## Compliance: Legacy vs Full UX (v1.3)
+## Compliance: Legacy vs Full UX (v1.4)
 
 | Dimension | Legacy / Less UX | Full UX (Core-aligned) |
 |-----------|-------------------|-------------------------|
 | **ICE binding** | No `data-jp-*`; Inspector cannot bind. | IDAC (§6) on every editable section/field/item. |
 | **Section wrapper** | Plain `<section>`; no overlay contract. | Core wrapper + overlay; Tenant CSS per TOCC (§7). |
-| **Design tokens** | Raw BEM / fixed classes. | Local tokens (§4.4); `var(--local-*)` only. |
+| **Design tokens** | Raw BEM / fixed classes, or local vars fed by literals. | `theme.json` as source of truth, mandatory runtime publication, local color/radius scope via `--local-*`, typography via canonical semantic font chain, no primary hardcoded themed values. |
 | **Base schemas** | Ad hoc. | BSDS (§8): BaseSectionData, BaseArrayItem, BaseSectionSettings. |
 | **Add Section** | Ad hoc defaults. | ASC (§9): addableSectionTypes, labels, getDefaultSectionData. |
 | **Bootstrap** | Implicit. | JEB (§10): JsonPagesConfig + JsonPagesEngine. |
@@ -364,16 +547,17 @@ Studio enforces `tsc && vite build`. No export with TypeScript errors.
 
 ---
 
-## Summary of v1.3 Additions
+## Summary of v1.4 Additions
 
 | § | Title | Purpose |
 |---|--------|--------|
-| 5.5 | Path-Only Nested Selection & Expansion | ECIP: root→leaf `SelectionPath`; remove flat matching in strict mode. |
-| 6.5 | Strict Path Extraction for Nested Arrays | IDAC: path-based nested targeting; no strict flat fallback. |
-| 10.3 | Studio Selection Event Contract | JEB: `SECTION_SELECT` uses `itemPath`; remove `itemField/itemId`. |
-| JAP §7 | Path-Deterministic Selection & Sidebar Expansion | Studio state synchronization for nested arrays. |
-| Compliance | Legacy vs Full UX (v1.3) | Explicit breaking delta for flat protocol removal and strict IDs. |
-| **Appendix A.6** | **v1.3 Path/Nested Strictness Addendum** | Type/export and migration checklist for path-only protocol. |
+| 4.4 | Local Design Tokens | Makes the `theme.json -> runtime vars -> --local-* -> JSX classes` chain explicit and normative. |
+| 4.4.3 | Runtime Theme Publication | Makes runtime CSS publication mandatory for themed tenants. |
+| 4.4.5 | Canonical Typography Rule | Removes ambiguity between global semantic font utilities and local token scoping. |
+| 4.4.7 | Compliance Rules | Turns Local Design Tokens into a checklist-grade compliance contract. |
+| 4.4.9 | Non-Compliant Patterns | Makes hardcoded token anti-patterns explicit. |
+| **Appendix A.2.6** | **Deterministic ThemeConfig** | Aligns the spec-level theme contract with the core’s structured semantic keys plus extension policy. |
+| **Appendix A.7** | **Local Design Tokens Implementation Addendum** | Operational checklist and implementation examples for compliant tenant sections. |
 
 ---
 
@@ -385,7 +569,7 @@ Studio enforces `tsc && vite build`. No export with TypeScript errors.
 
 ---
 
-## A.1 Core-Provided Types (from `@jsonpages/core`)
+## A.1 Core-Provided Types (from `@olonjs/core`)
 
 The following are assumed to be exported by Core. The Tenant augments **SectionDataRegistry** and **SectionSettingsRegistry**; all other types are consumed as-is.
 
@@ -404,7 +588,7 @@ The following are assumed to be exported by Core. The Tenant augments **SectionD
 
 ## A.2 Tenant-Provided Types (single source: `src/types.ts` or equivalent)
 
-The Tenant **must** define the following in one module (e.g. **`src/types.ts`**). This module **must** perform the **module augmentation** of `@jsonpages/core` for **SectionDataRegistry** and **SectionSettingsRegistry**, and **must** export **SectionComponentPropsMap** and re-export from `@jsonpages/core` so that **SectionType** is available after augmentation.
+The Tenant **must** define the following in one module (e.g. **`src/types.ts`**). This module **must** perform the **module augmentation** of `@olonjs/core` for **SectionDataRegistry** and **SectionSettingsRegistry**, and **must** export **SectionComponentPropsMap** and re-export from `@olonjs/core` so that **SectionType** is available after augmentation.
 
 ### A.2.1 SectionComponentPropsMap
 
@@ -413,7 +597,7 @@ Maps each section type to the props of its React component. **Header** is the on
 **Option A — Explicit (recommended for clarity and tooling):** For each section type K, add one entry. Header receives **menu**.
 
 ```typescript
-import type { MenuItem } from '@jsonpages/core';
+import type { MenuItem } from '@olonjs/core';
 // Import Data/Settings from each capsule.
 
 export type SectionComponentPropsMap = {
@@ -427,7 +611,7 @@ export type SectionComponentPropsMap = {
 **Option B — Mapped type (DRY, requires SectionDataRegistry/SectionSettingsRegistry in scope):**
 
 ```typescript
-import type { MenuItem } from '@jsonpages/core';
+import type { MenuItem } from '@olonjs/core';
 
 export type SectionComponentPropsMap = {
   [K in SectionType]: K extends 'header'
@@ -441,11 +625,10 @@ SectionType is imported from Core (after Tenant augmentation). In practice Optio
 **Perché servono (A.2):** SectionComponentPropsMap e i tipi di config (PageConfig, SiteConfig, MenuConfig, ThemeConfig) definiscono il contratto tra dati (JSON, API) e componente; l’augmentation è l’unico modo per estendere i registry del Core senza fork. Senza questi tipi, generazione tenant e refactor sarebbero senza guida e il type-check fallirebbe.
 
 ### A.2.2 ComponentRegistry type
-
 The registry object **must** be typed as:
 
 ```typescript
-import type { SectionType } from '@jsonpages/core';
+import type { SectionType } from '@olonjs/core';
 import type { SectionComponentPropsMap } from '@/types';
 
 export const ComponentRegistry: {
@@ -456,7 +639,6 @@ export const ComponentRegistry: {
 File: **`src/lib/ComponentRegistry.tsx`** (or equivalent). Imports one View per section type and assigns it to the corresponding key.
 
 ### A.2.3 PageConfig
-
 Minimum shape for a single page (used in **pages** and in each **`[slug].json`**):
 
 ```typescript
@@ -474,7 +656,6 @@ export interface PageConfig {
 **Section** is the union type from MTRP (§1.2). Each element of **sections** has **id**, **type**, **data**, **settings** and conforms to the capsule schemas.
 
 ### A.2.4 SiteConfig
-
 Minimum shape for **site.json** (and for **siteConfig** in JsonPagesConfig):
 
 ```typescript
@@ -504,7 +685,6 @@ export interface SiteConfig {
 **HeaderData**, **FooterData**, **HeaderSettings**, **FooterSettings** are the types exported from the header and footer capsules.
 
 ### A.2.5 MenuConfig
-
 Minimum shape for **menu.json** (and for **menuConfig** in JsonPagesConfig). Structure is tenant-defined; Core expects the header to receive **MenuItem[]**. Common pattern: an object with a key (e.g. **main**) whose value is **MenuItem[]**.
 
 ```typescript
@@ -517,20 +697,53 @@ export interface MenuConfig {
 Or simply **`MenuItem[]`** if the app uses a single flat list. The Tenant must ensure that the value passed to the header component as **menu** conforms to **MenuItem[]** (e.g. `menuConfig.main` or `menuConfig` if it is the array).
 
 ### A.2.6 ThemeConfig
-
-Minimum shape for **theme.json** (and for **themeConfig** in JsonPagesConfig). Tenant-defined; typically tokens for colors, typography, radius.
+Minimum shape for **theme.json** (and for **themeConfig** in JsonPagesConfig). This shape is deterministic: semantic keys are required, and extensions are allowed only as additional keys within the canonical groups.
 
 ```typescript
+export interface ThemeColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  surfaceAlt: string;
+  text: string;
+  textMuted: string;
+  border: string;
+  [key: string]: string;
+}
+
+export interface ThemeFontFamily {
+  primary: string;
+  mono: string;
+  display?: string;
+  [key: string]: string | undefined;
+}
+
+export interface ThemeTypography {
+  fontFamily: ThemeFontFamily;
+}
+
+export interface ThemeBorderRadius {
+  sm: string;
+  md: string;
+  lg: string;
+  [key: string]: string;
+}
+
+export interface ThemeTokens {
+  colors: ThemeColors;
+  typography: ThemeTypography;
+  borderRadius: ThemeBorderRadius;
+}
+
 export interface ThemeConfig {
-  name?: string;
-  tokens?: {
-    colors?: Record<string, string>;
-    typography?: Record<string, string | Record<string, string>>;
-    borderRadius?: Record<string, string>;
-  };
-  [key: string]: unknown;
+  name: string;
+  tokens: ThemeTokens;
 }
 ```
+
+**Rule:** Brand-specific keys such as `colors.pi`, `colors.marketingGlow`, or `borderRadius.xl` are allowed only as additive extensions. They must not replace the required semantic keys that power the deterministic theme contract.
 
 ---
 
@@ -561,7 +774,7 @@ export interface ThemeConfig {
 | Schema aggregate | **`src/lib/schemas.ts`** | SECTION_SCHEMAS; re-exports base schemas. |
 | Registry | **`src/lib/ComponentRegistry.tsx`** | ComponentRegistry object. |
 | Add-section config | **`src/lib/addSectionConfig.ts`** | addSectionConfig (AddSectionConfig). |
-| Tenant types & augmentation | **`src/types.ts`** | SectionComponentPropsMap, PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@jsonpages/core'** for SectionDataRegistry and SectionSettingsRegistry; re-export from Core. |
+| Tenant types & augmentation | **`src/types.ts`** | SectionComponentPropsMap, PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@olonjs/core'** for SectionDataRegistry and SectionSettingsRegistry; re-export from `@olonjs/core`. |
 | Bootstrap | **`src/App.tsx`** | Imports config (site, theme, menu, pages), registry, schemas, addSection, themeCss; builds JsonPagesConfig; renders **<JsonPagesEngine config={config} />**. |
 
 The app entry (e.g. **main.tsx**) renders **App**. No other bootstrap contract is specified; the Tenant may use Vite aliases (e.g. **@/**) for the paths above.
@@ -576,14 +789,15 @@ When generating or auditing a tenant, ensure the following in order:
 
 1. **Capsules** — For each section type, create **`src/components/<type>/`** with View.tsx, schema.ts, types.ts, index.ts. Data schema extends BaseSectionData; array items extend BaseArrayItem; View complies with CIP and IDAC (§6.2–6.3 for non-reserved types).
 2. **Base schemas** — **src/lib/base-schemas.ts** exports BaseSectionData, BaseArrayItem, BaseSectionSettingsSchema (and optional CtaSchema or similar shared fragments).
-3. **types.ts** — Define SectionComponentPropsMap (header with **menu**), PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@jsonpages/core'** and augment SectionDataRegistry and SectionSettingsRegistry; re-export from `@jsonpages/core`.
+3. **types.ts** — Define SectionComponentPropsMap (header with **menu**), PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@olonjs/core'** and augment SectionDataRegistry and SectionSettingsRegistry; re-export from `@olonjs/core`.
 4. **ComponentRegistry** — Import every View; build object **{ [K in SectionType]: ViewComponent }**; type as **{ [K in SectionType]: React.FC<SectionComponentPropsMap[K]> }**.
 5. **schemas.ts** — Import base schemas and each capsule’s data schema; export SECTION_SCHEMAS as **{ [K in SectionType]: SchemaK }**; export SectionType as **keyof typeof SECTION_SCHEMAS** if not using Core’s SectionType.
 6. **addSectionConfig** — addableSectionTypes, sectionTypeLabels, getDefaultSectionData; export as AddSectionConfig.
 7. **App.tsx** — Import site, theme, menu, pages from data paths; build config (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss: { tenant }, addSection); render JsonPagesEngine.
 8. **Data files** — Create or update site.json, menu.json, theme.json, and one or more **<slug>.json** under the paths in A.4. Ensure JSON shapes match SiteConfig, MenuConfig, ThemeConfig, PageConfig.
-9. **Tenant CSS** — Include TOCC (§7) selectors in global CSS so the Stage overlay is visible.
-10. **Reserved types** — Header and footer capsules receive props per SectionComponentPropsMap; menu is populated from menuConfig (e.g. menuConfig.main) when building the config or inside Core when rendering the header.
+9. **Runtime theme publication** — Publish the theme contract as runtime CSS custom properties before themed sections render.
+10. **Tenant CSS** — Include TOCC (§7) selectors in global CSS so the Stage overlay is visible, and bridge semantic theme variables where needed.
+11. **Reserved types** — Header and footer capsules receive props per SectionComponentPropsMap; menu is populated from menuConfig (e.g. menuConfig.main) when building the config or inside Core when rendering the header.
 
 **Perché servono (A.5):** La checklist in ordine evita di dimenticare passi (es. augmentation prima del registry, TOCC dopo le View) e rende la spec sufficiente per generare o verificare un tenant senza codebase di riferimento.
 
@@ -600,5 +814,56 @@ This addendum extends Appendix A without removing prior v1.2 obligations:
 
 ---
 
-**Validation:** Align with current `@jsonpages/core` exports (SectionType, MenuItem, AddSectionConfig, JsonPagesConfig, and in v1.3 path types for Studio selection).  
-**Distribution:** Core via `.yalc`; tenant projections via `@jsonpages/cli`. This annex makes the spec **necessary and sufficient** for tenant code-generation and governance at enterprise grade.
+## A.7 v1.4 Local Design Tokens Implementation Addendum
+
+This addendum extends Appendix A without removing prior v1.3 obligations:
+
+1. **Theme source of truth** — Tenant theme values belong in `src/data/config/theme.json`.
+2. **Runtime publication** — Core and/or tenant bootstrap **must** expose those values as runtime CSS custom properties before section rendering.
+3. **Local scope** — A themed section must define `--local-*` variables on its root for the color/radius concerns it owns.
+4. **Class consumption** — Section-owned color/radius utilities must consume `var(--local-*)`, not raw hardcoded theme values.
+5. **Typography policy** — Fonts must consume the published semantic font chain; local font tokens are optional and only for local remapping.
+6. **Migration policy** — Hardcoded colors/radii may exist only as temporary compatibility shims or purely decorative exceptions, not as the primary section contract.
+
+Canonical implementation pattern:
+
+```text
+theme.json -> published runtime theme vars -> section --local-* -> JSX classes
+```
+
+Canonical typography pattern:
+
+```text
+theme.json -> published semantic font vars -> tenant font utility/variable -> section typography
+```
+
+Minimal compliant example:
+
+```tsx
+<section
+  style={{
+    '--local-bg': 'var(--background)',
+    '--local-text': 'var(--foreground)',
+    '--local-primary': 'var(--primary)',
+    '--local-radius-md': 'var(--theme-radius-md)',
+  } as React.CSSProperties}
+  className="bg-[var(--local-bg)]"
+>
+  <h2 className="font-display text-[var(--local-text)]">Title</h2>
+  <a className="bg-[var(--local-primary)] rounded-[var(--local-radius-md)]">CTA</a>
+</section>
+```
+
+Deterministic compliance checklist:
+
+1. Canonical semantic theme keys exist.
+2. Runtime publication exists.
+3. Section-local color/radius scope exists.
+4. Section-owned color/radius classes consume `var(--local-*)`.
+5. Fonts consume the semantic published font chain.
+6. Primary themed values are not hardcoded.
+
+---
+
+**Validation:** Align with current `@olonjs/core` exports (SectionType, MenuItem, AddSectionConfig, JsonPagesConfig, and in v1.3+ path types for Studio selection), with the deterministic `ThemeConfig` contract, and with the runtime theme publication contract used by tenant CSS.  
+**Distribution:** Core via `.yalc`; tenant projections via `@olonjs/cli`. This annex makes the spec **necessary and sufficient** for tenant code-generation and governance at enterprise grade.

@@ -16,13 +16,14 @@
       "fontFamily": {
         "primary": "'Instrument Sans', system-ui, sans-serif",
         "mono": "'JetBrains Mono', monospace",
-        "display": "'Bricolage Grotesque', system-ui, sans-serif"
+        "display": "'Bricolage Grotesque', system-ui, sans-serif",
+        "display-2":"'Instrument Sans'"
       }
     },
     "borderRadius": {
-      "sm": "5px",
-      "md": "7px",
-      "lg": "8px"
+      "sm": "4px",
+      "md": "8px",
+      "lg": "36px"
     }
   }
 }

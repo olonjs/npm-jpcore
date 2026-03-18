@@ -14,6 +14,9 @@ export const Hero: React.FC<{ data: HeroData; settings?: HeroSettings }> = ({ da
         '--local-cyan':        'var(--color-secondary, #22d3ee)',
         '--local-border':      'var(--border)',
         '--local-surface':     'var(--card)',
+        '--local-radius-sm':   'var(--theme-radius-sm)',
+        '--local-radius-md':   'var(--theme-radius-md)',
+        '--local-radius-lg':   'var(--theme-radius-lg)',
       } as React.CSSProperties}
       className="jp-hero relative min-h-screen flex items-center overflow-hidden pt-24 pb-0 bg-[var(--local-bg)]"
     >
@@ -72,7 +75,7 @@ export const Hero: React.FC<{ data: HeroData; settings?: HeroSettings }> = ({ da
                     data-jp-item-id={cta.id ?? `legacy-${idx}`}
                     data-jp-item-field="ctas"
                     className={cn(
-                      'inline-flex items-center gap-2 px-7 py-3 rounded-[7px] font-semibold text-[0.95rem] transition-all duration-200 no-underline',
+                      'inline-flex items-center gap-2 px-7 py-3 rounded-[var(--local-radius-md)] font-semibold text-[0.95rem] transition-all duration-200 no-underline',
                       cta.variant === 'primary'
                         ? 'bg-[var(--local-primary)] text-white hover:brightness-110 hover:-translate-y-0.5 shadow-[0_0_24px_rgba(59,130,246,0.25)]'
                         : 'bg-transparent text-[var(--local-text)] border border-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.3)] hover:bg-[rgba(255,255,255,0.04)]'
@@ -105,13 +108,13 @@ export const Hero: React.FC<{ data: HeroData; settings?: HeroSettings }> = ({ da
           </div>
 
           {/* RIGHT — ICE mini-mockup */}
-          <div className="jp-animate-in jp-d2 rounded-[12px] overflow-hidden border border-[rgba(255,255,255,0.10)] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_40px_80px_rgba(0,0,0,0.6),0_0_60px_rgba(59,130,246,0.08)]">
+          <div className="jp-animate-in jp-d2 rounded-[var(--local-radius-lg)] overflow-hidden border border-[rgba(255,255,255,0.10)] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_40px_80px_rgba(0,0,0,0.6),0_0_60px_rgba(59,130,246,0.08)]">
             {/* Browser bar */}
             <div className="bg-[#0f1923] px-3 py-2.5 flex items-center gap-1.5 border-b border-[rgba(255,255,255,0.05)]">
               <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-              <span className="mx-auto font-mono text-[0.60rem] text-[rgba(255,255,255,0.20)] bg-[rgba(255,255,255,0.04)] px-3 py-0.5 rounded">localhost:5173 · Studio</span>
+              <span className="mx-auto font-mono text-[0.60rem] text-[rgba(255,255,255,0.20)] bg-[rgba(255,255,255,0.04)] px-3 py-0.5 rounded-[var(--local-radius-sm)]">localhost:5173 · Studio</span>
             </div>
             {/* Split: canvas + inspector */}
             <div className="grid grid-cols-[1fr_260px] h-[360px] bg-[#060d1b]">
@@ -135,8 +138,8 @@ export const Hero: React.FC<{ data: HeroData; settings?: HeroSettings }> = ({ da
                   {data.description?.slice(0, 100)}…
                 </p>
                 <div className="flex gap-1.5">
-                  <span className="text-[0.58rem] font-semibold bg-[#3b82f6] text-white px-2.5 py-1 rounded">Read the Docs</span>
-                  <span className="text-[0.58rem] border border-[rgba(255,255,255,0.15)] text-[#94a3b8] px-2.5 py-1 rounded">View on NPM</span>
+                  <span className="text-[0.58rem] font-semibold bg-[#3b82f6] text-white px-2.5 py-1 rounded-[var(--local-radius-sm)]">Read the Docs</span>
+                  <span className="text-[0.58rem] border border-[rgba(255,255,255,0.15)] text-[#94a3b8] px-2.5 py-1 rounded-[var(--local-radius-sm)]">View on NPM</span>
                 </div>
                 <div className="flex gap-4 mt-3 pt-3 border-t border-[rgba(255,255,255,0.05)]">
                   {(data.metrics ?? []).map((m, i) => (
@@ -183,15 +186,15 @@ export const Hero: React.FC<{ data: HeroData; settings?: HeroSettings }> = ({ da
                 <div className="flex-1 px-3.5 py-3 flex flex-col gap-2.5 overflow-hidden">
                   <div>
                     <div className="font-mono text-[0.50rem] uppercase tracking-widest text-[#334155] mb-1">Title</div>
-                    <div className="bg-[rgba(59,130,246,0.05)] border border-[rgba(59,130,246,0.45)] rounded px-2 py-1.5 font-mono text-[0.58rem] text-[#e2e8f0] truncate">{data.title}</div>
+                    <div className="bg-[rgba(59,130,246,0.05)] border border-[rgba(59,130,246,0.45)] rounded-[var(--local-radius-sm)] px-2 py-1.5 font-mono text-[0.58rem] text-[#e2e8f0] truncate">{data.title}</div>
                   </div>
                   <div>
                     <div className="font-mono text-[0.50rem] uppercase tracking-widest text-[#334155] mb-1">Subtitle</div>
-                    <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.07)] rounded px-2 py-1.5 font-mono text-[0.58rem] text-[#94a3b8] truncate">{data.titleHighlight}</div>
+                    <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.07)] rounded-[var(--local-radius-sm)] px-2 py-1.5 font-mono text-[0.58rem] text-[#94a3b8] truncate">{data.titleHighlight}</div>
                   </div>
                   <div>
                     <div className="font-mono text-[0.50rem] uppercase tracking-widest text-[#334155] mb-1">Badge</div>
-                    <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.07)] rounded px-2 py-1.5 font-mono text-[0.58rem] text-[#94a3b8] truncate">{data.badge}</div>
+                    <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.07)] rounded-[var(--local-radius-sm)] px-2 py-1.5 font-mono text-[0.58rem] text-[#94a3b8] truncate">{data.badge}</div>
                   </div>
                 </div>
                 {/* Bottom bar */}
@@ -199,8 +202,8 @@ export const Hero: React.FC<{ data: HeroData; settings?: HeroSettings }> = ({ da
                   <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" />
                   <span className="font-mono text-[0.50rem] text-[#475569]">All Changes Saved</span>
                   <div className="ml-auto flex gap-1.5">
-                    <span className="font-mono text-[0.48rem] px-1.5 py-0.5 rounded border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.12)] text-[#60a5fa]">⬡ HTML</span>
-                    <span className="font-mono text-[0.48rem] px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[#94a3b8] opacity-50">{ } JSON</span>
+                    <span className="font-mono text-[0.48rem] px-1.5 py-0.5 rounded-[var(--local-radius-sm)] border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.12)] text-[#60a5fa]">⬡ HTML</span>
+                    <span className="font-mono text-[0.48rem] px-1.5 py-0.5 rounded-[var(--local-radius-sm)] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] text-[#94a3b8] opacity-50">{ } JSON</span>
                   </div>
                 </div>
               </div>

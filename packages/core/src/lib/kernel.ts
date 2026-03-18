@@ -80,6 +80,10 @@ export interface SiteConfig {
   pages: SitePageEntry[];
 }
 
+export interface ThemeTokenMap {
+  [key: string]: string;
+}
+
 export interface ThemeColors {
   primary: string;
   secondary: string;
@@ -90,20 +94,25 @@ export interface ThemeColors {
   text: string;
   textMuted: string;
   border: string;
+  [key: string]: string;
+}
+
+export interface ThemeFontFamily {
+  primary: string;
+  mono: string;
+  display?: string;
+  [key: string]: string | undefined;
 }
 
 export interface ThemeTypography {
-  fontFamily: {
-    primary: string;
-    mono: string;
-    display?: string;
-  };
+  fontFamily: ThemeFontFamily;
 }
 
 export interface ThemeBorderRadius {
   sm: string;
   md: string;
   lg: string;
+  [key: string]: string;
 }
 
 export interface ThemeTokens {
