@@ -559,11 +559,11 @@ cat << 'END_OF_FILE_CONTENT' > "index.html"
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="JsonPages - Global Authoring. Global Governance." />
+    <meta name="description" content="Olon — Agentic Content Infrastructure" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet" />
-    <title>JsonPages</title>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <title>Olon</title>
   </head>
   <body>
     <div id="root"></div>
@@ -596,7 +596,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.74",
+    "@olonjs/core": "^1.0.75",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
     "react": "^19.0.0",
@@ -1817,735 +1817,101 @@ export const NotFound: React.FC = () => {
 
 
 END_OF_FILE_CONTENT
-mkdir -p "src/components/arch-layers"
-echo "Creating src/components/arch-layers/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/arch-layers/View.tsx"
-import React from 'react';
-import { cn } from '@/lib/utils';
-import type { ArchLayersData, ArchLayersSettings, ArchLayerLevel, SyntaxTokenType } from './types';
-
-const layerBgStyles: Record<ArchLayerLevel, string> = {
-  l0: 'bg-[var(--local-primary)]',
-  l1: 'bg-[var(--local-accent-strong)]',
-  l2: 'bg-[var(--local-accent-soft)]',
-};
-
-const tokenStyles: Record<SyntaxTokenType, string> = {
-  plain: 'text-[var(--local-demo-text)]',
-  keyword: 'text-[var(--local-accent)]',
-  type: 'text-[var(--local-cyan)]',
-  string: 'text-[var(--local-primary)]',
-  comment: 'text-[var(--local-demo-text-faint)] italic',
-  operator: 'text-[var(--local-accent)]',
-};
-
-export const ArchLayers: React.FC<{ data: ArchLayersData; settings?: ArchLayersSettings }> = ({ data }) => {
-  return (
-    <section
-      style={{
-        '--local-bg': 'var(--card)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary': 'var(--primary)',
-        '--local-accent': 'var(--accent)',
-        '--local-cyan': 'var(--secondary)',
-        '--local-border': 'var(--border)',
-        '--local-deep': 'var(--background)',
-        '--local-radius-md': 'var(--theme-radius-md)',
-        '--local-radius-lg': 'var(--theme-radius-lg)',
-        '--local-panel-bg': 'var(--demo-surface-soft)',
-        '--local-panel-bar': 'var(--demo-surface)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-        '--local-accent-strong': 'var(--demo-accent-strong)',
-        '--local-demo-text': 'var(--demo-text-soft)',
-        '--local-demo-text-faint': 'var(--demo-text-faint)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="max-w-[1200px] mx-auto px-8">
-        <div className="text-center">
-          {data.label && (
-            <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[var(--local-accent)] mb-4" data-jp-field="label">
-              <span className="w-5 h-px bg-[var(--local-primary)]" />
-              {data.label}
-            </div>
-          )}
-          <h2 className="font-display text-[clamp(2rem,4vw,3.2rem)] font-extrabold text-[var(--local-text)] leading-[1.15] tracking-tight mb-4" data-jp-field="title">
-            {data.title}
-          </h2>
-          {data.description && (
-            <p className="text-lg text-[var(--local-text-muted)] max-w-[600px] mx-auto leading-relaxed" data-jp-field="description">
-              {data.description}
-            </p>
-          )}
-        </div>
-        <div className="mt-14 max-w-[740px] mx-auto">
-          {data.layers.map((layer, idx) => (
-            <div
-              key={layer.id ?? idx}
-              className="group border border-[var(--local-panel-border)] rounded-[var(--local-radius-md)] p-8 mb-4 bg-[var(--local-panel-bg)] flex items-start gap-6 transition-all duration-300 hover:border-[var(--local-panel-border-strong)] hover:translate-x-1.5"
-              data-jp-item-id={layer.id ?? `legacy-${idx}`}
-              data-jp-item-field="layers"
-            >
-              <div className={cn(
-                'shrink-0 w-9 h-9 rounded-[var(--local-radius-md)] flex items-center justify-center font-mono text-[0.85rem] font-bold text-white',
-                layerBgStyles[layer.layerLevel]
-              )}>
-                {layer.number}
-              </div>
-              <div>
-                <h4 className="text-[1.05rem] font-bold text-[var(--local-text)] mb-1.5">
-                  {layer.title}
-                </h4>
-                <p className="text-[0.92rem] text-[var(--local-text-muted)] leading-relaxed">
-                  {layer.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-        {data.codeLines && data.codeLines.length > 0 && (
-          <div className="mt-12 max-w-[740px] mx-auto">
-            <div className="border border-[var(--local-panel-border)] rounded-[var(--local-radius-md)] overflow-hidden bg-[var(--local-deep)]">
-              <div className="flex items-center gap-2 px-5 py-3 bg-[var(--local-panel-bar)] border-b border-[var(--local-panel-border)]">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-                {data.codeFilename && (
-                  <span className="ml-3 font-mono text-[0.75rem] text-[var(--local-text-muted)] opacity-60" data-jp-field="codeFilename">
-                    {data.codeFilename}
-                  </span>
-                )}
-              </div>
-              <div className="p-6 font-mono text-[0.82rem] leading-[1.7] overflow-x-auto">
-                {data.codeLines.map((line, idx) => (
-                  <div key={idx} data-jp-item-id={(line as { id?: string }).id ?? `legacy-${idx}`} data-jp-item-field="codeLines">
-                    <span className={tokenStyles[line.tokenType]}>
-                      {line.content}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/arch-layers/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/arch-layers/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/arch-layers/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/arch-layers/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
-
-export const ArchLayerLevelSchema = z.enum(['l0', 'l1', 'l2']);
-export const SyntaxTokenTypeSchema = z.enum(['plain', 'keyword', 'type', 'string', 'comment', 'operator']);
-
-const ArchLayerItemSchema = BaseArrayItem.extend({
-  number: z.string().describe('ui:text'),
-  layerLevel: ArchLayerLevelSchema.describe('ui:select'),
-  title: z.string().describe('ui:text'),
-  description: z.string().describe('ui:textarea'),
-});
-
-const SyntaxLineSchema = z.object({
-  content: z.string().describe('ui:text'),
-  tokenType: SyntaxTokenTypeSchema.default('plain').describe('ui:select'),
-});
-
-export const ArchLayersSchema = BaseSectionData.extend({
-  label: z.string().optional().describe('ui:text'),
-  title: z.string().describe('ui:text'),
-  description: z.string().optional().describe('ui:textarea'),
-  layers: z.array(ArchLayerItemSchema).describe('ui:list'),
-  codeFilename: z.string().optional().describe('ui:text'),
-  codeLines: z.array(SyntaxLineSchema).optional().describe('ui:list'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/arch-layers/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/arch-layers/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { ArchLayersSchema, ArchLayerLevelSchema, SyntaxTokenTypeSchema } from './schema';
-
-export type ArchLayersData = z.infer<typeof ArchLayersSchema>;
-export type ArchLayersSettings = z.infer<typeof BaseSectionSettingsSchema>;
-export type ArchLayerLevel = z.infer<typeof ArchLayerLevelSchema>;
-export type SyntaxTokenType = z.infer<typeof SyntaxTokenTypeSchema>;
-
-END_OF_FILE_CONTENT
-mkdir -p "src/components/cli-section"
-echo "Creating src/components/cli-section/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cli-section/View.tsx"
-import React from 'react';
-import type { CliSectionData, CliSectionSettings } from './types';
-
-export const CliSection: React.FC<{ data: CliSectionData; settings?: CliSectionSettings }> = ({ data }) => {
-  return (
-    <section
-      style={{
-        '--local-bg':         'var(--card)',
-        '--local-text':       'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary':    'var(--primary)',
-        '--local-accent':     'var(--accent)',
-        '--local-border':     'var(--border)',
-        '--local-radius-sm':  'var(--theme-radius-sm)',
-        '--local-radius-lg':  'var(--theme-radius-lg)',
-        '--local-panel-bg':   'var(--demo-surface-strong)',
-        '--local-panel-deep': 'var(--demo-surface-deep)',
-        '--local-panel-bar':  'var(--demo-surface)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-text-soft': 'var(--demo-text-soft)',
-        '--local-panel-text-faint': 'var(--demo-text-faint)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border)] to-transparent" />
-      <div className="max-w-[1200px] mx-auto px-8 grid grid-cols-2 gap-24 items-center">
-
-        {/* LEFT */}
-        <div>
-          {data.label && (
-            <div className="jp-section-label inline-flex items-center gap-2 text-[0.68rem] font-mono font-bold uppercase tracking-[0.14em] text-[var(--local-accent)] mb-5" data-jp-field="label">
-              <span className="w-6 h-px bg-[var(--local-primary)]" />
-              {data.label}
-            </div>
-          )}
-          <h2
-            className="font-display text-[clamp(2rem,4.5vw,3.8rem)] font-black text-[var(--local-text)] leading-[1.05] tracking-tight mb-5"
-            data-jp-field="title"
-          >
-            {data.title}
-          </h2>
-          {data.description && (
-            <p className="text-[1.05rem] text-[var(--local-text-muted)] leading-[1.8] mb-8" data-jp-field="description">
-              {data.description}
-            </p>
-          )}
-          {data.steps && data.steps.length > 0 && (
-            <div className="flex flex-col">
-              {data.steps.map((step, idx) => (
-                <div
-                  key={step.id ?? idx}
-                  className="grid grid-cols-[32px_1fr] gap-4 py-6 border-b border-[var(--local-panel-border)] last:border-b-0 items-start"
-                  data-jp-item-id={step.id ?? `legacy-${idx}`}
-                  data-jp-item-field="steps"
-                >
-                  <div className="font-display text-[1.25rem] font-black text-[var(--local-panel-text-faint)] leading-none mt-0.5">{step.num}</div>
-                  <div>
-                    <div className="font-display font-bold text-[1rem] text-[var(--local-text)] mb-1">{step.title}</div>
-                    <p className="text-[0.85rem] text-[var(--local-text-muted)] leading-[1.6]">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT — terminal */}
-        <div className="rounded-[var(--local-radius-lg)] overflow-hidden border border-[var(--local-panel-border)] shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
-          <div className="bg-[var(--local-panel-bar)] px-4 py-2.5 flex items-center gap-1.5 border-b border-[var(--local-panel-border)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-            <span className="mx-auto font-mono text-[0.60rem] text-[var(--local-panel-text-faint)]">Terminal</span>
-          </div>
-          <div className="bg-[var(--local-panel-deep)] px-7 py-6 font-mono text-[0.78rem] leading-[2.1] overflow-x-auto">
-            <div><span className="text-[var(--local-panel-text-faint)] italic"># Step 1 — install CLI globally</span></div>
-            <div><span className="text-[var(--local-accent)]">$</span> <span className="text-[var(--local-text)]">npm install -g </span><span className="text-[var(--local-panel-text-soft)]">@jsonpages/cli@latest</span></div>
-            <div><span className="text-[var(--local-panel-text-faint)]">added 1 package in 2.3s</span></div>
-            <div><span className="text-[var(--local-primary)]">✓ @jsonpages/cli@1.2.0 installed</span></div>
-            <div>&nbsp;</div>
-            <div><span className="text-[var(--local-panel-text-faint)] italic"># Step 2 — scaffold a new tenant</span></div>
-            <div><span className="text-[var(--local-accent)]">$</span> <span className="text-[var(--local-panel-text-soft)]">npx @jsonpages/cli@latest</span> <span className="text-[var(--local-text)]">new my-tenant</span></div>
-            <div><span className="text-[var(--local-primary)]">  ✓ src/components/hero/</span></div>
-            <div><span className="text-[var(--local-primary)]">  ✓ src/lib/schemas.ts</span></div>
-            <div><span className="text-[var(--local-primary)]">  ✓ src/lib/ComponentRegistry.tsx</span></div>
-            <div><span className="text-[var(--local-primary)]">  ✓ src/data/pages/home.json</span></div>
-            <div><span className="text-[var(--local-primary)]">  ✓ Done in 1.8s</span></div>
-            <div>&nbsp;</div>
-            <div><span className="text-[var(--local-panel-text-faint)] italic"># Step 3 — start Studio</span></div>
-            <div><span className="text-[var(--local-accent)]">$</span> <span className="text-[var(--local-text)]">cd my-tenant && npm run dev</span></div>
-            <div><span className="text-[var(--local-primary)]">  ➜ Studio ready at </span><span className="text-[var(--local-accent)]">http://localhost:5173</span><span className="inline-block w-2 h-[1em] bg-[var(--local-primary)] ml-1 align-text-bottom animate-pulse" /></div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/cli-section/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cli-section/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/cli-section/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cli-section/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
-
-const CliStepSchema = BaseArrayItem.extend({
-  num:         z.string().describe('ui:text'),
-  title:       z.string().describe('ui:text'),
-  description: z.string().describe('ui:textarea'),
-});
-
-export const CliSectionSchema = BaseSectionData.extend({
-  label:       z.string().optional().describe('ui:text'),
-  title:       z.string().describe('ui:text'),
-  description: z.string().optional().describe('ui:textarea'),
-  steps:       z.array(CliStepSchema).optional().describe('ui:list'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/cli-section/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cli-section/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { CliSectionSchema } from './schema';
-
-export type CliSectionData     = z.infer<typeof CliSectionSchema>;
-export type CliSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
-
-END_OF_FILE_CONTENT
-mkdir -p "src/components/cms-ice"
-echo "Creating src/components/cms-ice/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cms-ice/View.tsx"
-import React from 'react';
-import type { CmsIceData, CmsIceSettings } from './types';
-
-export const CmsIce: React.FC<{ data: CmsIceData; settings?: CmsIceSettings }> = ({ data }) => {
-  return (
-    <section
-      style={{
-        '--local-bg':         'var(--background)',
-        '--local-text':       'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary':    'var(--primary)',
-        '--local-accent':     'var(--accent)',
-        '--local-cyan':       'var(--secondary)',
-        '--local-border':     'var(--border)',
-        '--local-surface':    'var(--card)',
-        '--local-radius-sm':  'var(--theme-radius-sm)',
-        '--local-radius-md':  'var(--theme-radius-md)',
-        '--local-radius-lg':  'var(--theme-radius-lg)',
-        '--local-panel-bg': 'var(--demo-surface-soft)',
-        '--local-panel-bar': 'var(--demo-surface)',
-        '--local-panel-deep': 'var(--demo-surface-deep)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-panel-text-soft': 'var(--demo-text-soft)',
-        '--local-panel-text-faint': 'var(--demo-text-faint)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-        '--local-accent-strong': 'var(--demo-accent-strong)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="max-w-[1200px] mx-auto px-8">
-
-        {/* Header */}
-        <div className="grid grid-cols-2 gap-16 items-end mb-16">
-          <div>
-            {data.label && (
-              <div className="jp-section-label inline-flex items-center gap-2 text-[0.68rem] font-mono font-bold uppercase tracking-[0.14em] text-[var(--local-accent)] mb-5" data-jp-field="label">
-                <span className="w-6 h-px bg-[var(--local-primary)]" />
-                {data.label}
-              </div>
-            )}
-            <h2
-              className="font-display text-[clamp(2rem,4.5vw,3.8rem)] font-black text-[var(--local-text)] leading-[1.05] tracking-tight"
-              data-jp-field="title"
-            >
-              {data.title}
-            </h2>
-          </div>
-          {data.description && (
-            <p
-              className="text-[1.05rem] text-[var(--local-text-muted)] leading-[1.8] pb-1"
-              data-jp-field="description"
-            >
-              {data.description}
-            </p>
-          )}
-        </div>
-
-        {/* ICE Mockup — product demo, decorative */}
-        <div className="rounded-[var(--local-radius-lg)] overflow-hidden border border-[var(--local-panel-border)] shadow-[0_0_0_1px_rgba(255,255,255,0.03),0_60px_120px_rgba(0,0,0,0.7),0_0_80px_rgba(59,130,246,0.08)] mb-16">
-          {/* Browser bar */}
-          <div className="bg-[var(--local-panel-bar)] px-4 py-2.5 flex items-center gap-1.5 border-b border-[var(--local-panel-border)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-            <span className="mx-auto font-mono text-[0.62rem] text-[var(--local-panel-text-faint)] bg-[var(--local-panel-bg)] px-8 py-0.5 rounded-[var(--local-radius-sm)]">localhost:5173/admin — JsonPages Studio</span>
-          </div>
-          {/* Split */}
-          <div className="grid grid-cols-[1fr_300px] h-[520px] bg-[var(--local-panel-deep)]">
-            {/* Stage */}
-            <div className="flex flex-col overflow-hidden">
-              {/* Tenant nav sim */}
-              <div className="bg-[var(--local-panel-bg)] px-6 py-3 flex items-center justify-between border-b border-[var(--local-panel-border)] flex-shrink-0">
-                <div className="flex items-center gap-2 font-display font-bold text-[0.9rem] text-white">
-                  <div className="w-5 h-5 bg-gradient-to-br from-[var(--local-primary)] to-[var(--local-cyan)] rounded-[var(--local-radius-sm)] flex items-center justify-center font-mono text-[0.45rem] text-white font-bold">{'{}'}</div>
-                  Json<span className="text-[var(--local-accent)]">Pages</span>
-                </div>
-                <div className="flex gap-6 text-[0.68rem] text-[var(--local-panel-text-faint)] font-sans">
-                  <span>Architecture</span><span>CMS</span><span>Versioning</span><span>Developer</span>
-                </div>
-              </div>
-              {/* Hero section — selected */}
-              <div className="flex-1 relative p-8 flex flex-col justify-center bg-gradient-to-br from-[var(--local-panel-deep)] to-[var(--local-panel-bg)] outline outline-2 outline-[var(--local-primary)] -outline-offset-2">
-                <span className="absolute top-2.5 right-2.5 font-mono text-[0.5rem] font-bold uppercase tracking-widest bg-[var(--local-primary)] text-white px-2 py-0.5 rounded-[var(--local-radius-sm)]">HERO | LOCAL</span>
-                <div className="font-display font-black text-[2.4rem] leading-none text-white mb-0.5">The Sovereign Shell.</div>
-                <div className="font-display font-black text-[2.4rem] leading-none bg-gradient-to-r from-[var(--local-accent)] to-[var(--local-cyan)] bg-clip-text text-transparent mb-4">Zero Runtime Overhead.</div>
-                <p className="text-[0.75rem] text-[var(--local-panel-text-faint)] leading-[1.65] max-w-[360px] mb-5">The @jsonpages/core package is a headless, schema-driven runtime. It handles routing, hydration, and the admin interface.</p>
-                <div className="flex gap-2">
-                  <span className="text-[0.65rem] font-semibold bg-[var(--local-primary)] text-white px-3.5 py-1.5 rounded-[var(--local-radius-md)]">Read the Docs</span>
-                  <span className="text-[0.65rem] border border-[var(--local-panel-border)] text-[var(--local-panel-text-soft)] px-3.5 py-1.5 rounded-[var(--local-radius-md)]">View on NPM</span>
-                </div>
-              </div>
-              {/* Next section visible but dimmed */}
-              <div className="flex-shrink-0 px-6 py-4 bg-[var(--local-panel-bar)] border-t border-[var(--local-panel-border)] flex gap-3 opacity-40">
-                {['The Form Factory', 'The Tenant Protocol', 'The Core Engine'].map((t) => (
-                  <div key={t} className="flex-1 bg-[var(--local-panel-bg)] border border-[var(--local-panel-border)] rounded-[var(--local-radius-sm)] p-2.5">
-                    <div className="w-3.5 h-3.5 rounded-[var(--local-radius-sm)] bg-[var(--local-accent-soft)] mb-1.5" />
-                    <div className="font-display font-bold text-[0.58rem] text-[var(--local-panel-text-soft)]">{t}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Inspector */}
-            <div className="bg-[var(--local-panel-bar)] border-l border-[var(--local-panel-border)] flex flex-col overflow-hidden">
-              <div className="px-4 py-3 border-b border-[var(--local-panel-border)] flex items-start justify-between">
-                <div>
-                  <div className="font-display font-bold text-[0.88rem] text-white">Inspector</div>
-                  <div className="flex items-center gap-1.5 mt-0.5 font-mono text-[0.56rem] text-[var(--local-accent)]">
-                    <span className="font-bold">■ HERO</span>
-                    <span className="text-[var(--local-panel-text-faint)]">|</span>
-                    <span className="text-[var(--local-panel-text-faint)]">LOCAL</span>
-                  </div>
-                </div>
-                <span className="font-mono text-[0.58rem] text-[var(--local-accent)]">+ Add section</span>
-              </div>
-              {/* Layers */}
-              <div className="border-b border-[var(--local-panel-border)]">
-                <div className="px-4 py-1.5 font-mono text-[0.54rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] flex justify-between">
-                  <span>Page Layers</span><span className="text-[var(--local-panel-text-faint)]">(8)</span>
-                </div>
-                {[
-                  { type: 'HERO',  label: 'The Sovereign Shell.',    active: true,  opacity: '' },
-                  { type: 'SOC',   label: 'Separation of Concerns',  active: false, opacity: 'opacity-55' },
-                  { type: 'GIT',   label: 'Your content is code.',   active: false, opacity: 'opacity-45' },
-                  { type: 'DEVEX', label: 'App.tsx is incredibly thin.', active: false, opacity: 'opacity-35' },
-                ].map(({ type, label, active, opacity }) => (
-                  <div key={type} className={`flex items-center gap-2 px-4 py-1.5 ${active ? 'bg-[var(--local-accent-soft)]' : ''} ${opacity}`}>
-                    <span className="text-[var(--local-panel-text-faint)] text-[0.58rem]">⠿</span>
-                    <span className={`font-mono text-[0.52rem] uppercase tracking-wide w-10 flex-shrink-0 ${active ? 'text-[var(--local-accent)]' : 'text-[var(--local-panel-text-faint)]'}`}>{type}</span>
-                    <span className={`font-sans text-[0.65rem] flex-1 truncate ${active ? 'text-[var(--local-text)] font-semibold' : 'text-[var(--local-panel-text-soft)]'}`}>{label}</span>
-                    <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[var(--local-primary)]' : 'bg-[var(--local-panel-border)] opacity-40'}`} />
-                  </div>
-                ))}
-              </div>
-              {/* Context fields */}
-              <div className="flex-1 px-4 py-3 flex flex-col gap-3 overflow-y-auto">
-                {[
-                  { label: 'Title',    val: 'The Sovereign Shell.',      active: true  },
-                  { label: 'Subtitle', val: 'Zero Runtime Overhead.',    active: false },
-                  { label: 'Badge',    val: 'Architecture v1.2',         active: false },
-                ].map(({ label, val, active }) => (
-                  <div key={label}>
-                    <div className="font-mono text-[0.52rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] mb-1">{label}</div>
-                    <div className={`rounded-[var(--local-radius-sm)] px-2.5 py-1.5 font-mono text-[0.60rem] truncate ${active
-                      ? 'bg-[var(--local-accent-soft)] border border-[var(--local-panel-border-strong)] text-[var(--local-text)]'
-                      : 'bg-[var(--local-panel-bg)] border border-[var(--local-panel-border)] text-[var(--local-panel-text-soft)]'}`}
-                    >{val}</div>
-                  </div>
-                ))}
-                <div>
-                  <div className="font-mono text-[0.52rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] mb-1 flex justify-between">
-                    <span>CTAs (2)</span><span className="text-[var(--local-accent)]">+ Add Item</span>
-                  </div>
-                  <div className="border border-[var(--local-panel-border)] rounded-[var(--local-radius-sm)] overflow-hidden">
-                    {[{ lbl: 'Read the Docs', tag: 'primary' }, { lbl: 'View on NPM', tag: 'secondary' }].map(({ lbl, tag }) => (
-                      <div key={lbl} className="flex items-center gap-1.5 px-2.5 py-1.5 border-b border-[var(--local-panel-border)] last:border-b-0">
-                        <span className="text-[var(--local-accent)] text-[0.52rem]">▸</span>
-                        <span className="font-sans text-[0.60rem] text-[var(--local-panel-text-soft)] flex-1">{lbl}</span>
-                        <span className="font-mono text-[0.48rem] px-1 py-0.5 rounded-[var(--local-radius-sm)] bg-[var(--local-accent-soft)] text-[var(--local-accent)]">{tag}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              {/* Bottom bar */}
-              <div className="px-4 py-2.5 border-t border-[var(--local-panel-border)] bg-[var(--local-panel-bg)] flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--local-primary)]" />
-                <span className="font-mono text-[0.52rem] text-[var(--local-panel-text-soft)]">All Changes Saved</span>
-                <div className="flex items-center gap-1.5 ml-1 font-mono text-[0.52rem] text-[var(--local-panel-text-faint)]">
-                  <div className="w-5 h-2.5 bg-[var(--local-primary)] rounded-full relative flex-shrink-0">
-                    <div className="absolute top-[1.5px] right-[1.5px] w-[9px] h-[9px] bg-white rounded-full" />
-                  </div>
-                  Autosave
-                </div>
-                <div className="ml-auto flex gap-1.5">
-                  <span className="font-mono text-[0.50rem] px-1.5 py-0.5 rounded-[var(--local-radius-sm)] border border-[var(--local-panel-border-strong)] bg-[var(--local-accent-soft)] text-[var(--local-accent)] flex items-center gap-1">⬡ HTML</span>
-                  <span className="font-mono text-[0.50rem] px-1.5 py-0.5 rounded-[var(--local-radius-sm)] border border-[var(--local-panel-border)] bg-[var(--local-panel-bg)] text-[var(--local-panel-text-soft)] opacity-50">{'{}'} JSON</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Callouts */}
-        {data.callouts && data.callouts.length > 0 && (
-          <div className="grid grid-cols-3 gap-6">
-            {data.callouts.map((c, idx) => (
-              <div
-                key={c.id ?? idx}
-                className="border border-[var(--local-panel-border)] rounded-[var(--local-radius-lg)] p-8 bg-[var(--local-panel-bg)] hover:border-[var(--local-panel-border-strong)] hover:bg-[var(--local-accent-soft)] transition-all duration-200"
-                data-jp-item-id={c.id ?? `legacy-${idx}`}
-                data-jp-item-field="callouts"
-              >
-                <div className="w-9 h-9 rounded-[var(--local-radius-md)] bg-[var(--local-accent-soft)] flex items-center justify-center text-[1.1rem] mb-4">
-                  {c.icon}
-                </div>
-                <h4 className="font-display font-bold text-[1.05rem] text-[var(--local-text)] mb-2">{c.title}</h4>
-                <p className="text-[0.88rem] text-[var(--local-text-muted)] leading-[1.7]">{c.description}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/cms-ice/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cms-ice/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/cms-ice/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cms-ice/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
-
-const CalloutSchema = BaseArrayItem.extend({
-  icon:        z.string().describe('ui:text'),
-  title:       z.string().describe('ui:text'),
-  description: z.string().describe('ui:textarea'),
-});
-
-export const CmsIceSchema = BaseSectionData.extend({
-  label:       z.string().optional().describe('ui:text'),
-  title:       z.string().describe('ui:text'),
-  description: z.string().optional().describe('ui:textarea'),
-  callouts:    z.array(CalloutSchema).optional().describe('ui:list'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/cms-ice/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/cms-ice/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { CmsIceSchema } from './schema';
-
-export type CmsIceData     = z.infer<typeof CmsIceSchema>;
-export type CmsIceSettings = z.infer<typeof BaseSectionSettingsSchema>;
-
-END_OF_FILE_CONTENT
-mkdir -p "src/components/code-block"
-echo "Creating src/components/code-block/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/code-block/View.tsx"
-import React from 'react';
-import { cn } from '@/lib/utils';
-import { Icon } from '@/lib/IconResolver';
-import type { CodeBlockData, CodeBlockSettings } from './types';
-
-export const CodeBlock: React.FC<{ data: CodeBlockData; settings?: CodeBlockSettings }> = ({ data, settings }) => {
-  const showLineNumbers = settings?.showLineNumbers ?? true;
-
-  return (
-    <section
-      style={{
-        '--local-surface': 'var(--card)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-bg': 'var(--background)',
-        '--local-border': 'var(--border)',
-        '--local-text': 'var(--foreground)',
-        '--local-accent': 'var(--primary)',
-        '--local-radius-lg': 'var(--theme-radius-lg)',
-      } as React.CSSProperties}
-      className="py-16 bg-[var(--local-surface)]"
-    >
-      <div className="container mx-auto px-6 max-w-4xl">
-        {data.label && (
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--local-text-muted)] mb-4" data-jp-field="label">
-            <Icon name="terminal" size={14} />
-            <span>{data.label}</span>
-          </div>
-        )}
-        <div className="rounded-[var(--local-radius-lg)] bg-[var(--local-bg)] border border-[var(--local-border)] overflow-hidden">
-          <div className="p-6 font-mono text-sm overflow-x-auto">
-            {data.lines.map((line, idx) => (
-              <div key={idx} className="flex items-start gap-4 py-1" data-jp-item-id={(line as { id?: string }).id ?? `legacy-${idx}`} data-jp-item-field="lines">
-                {showLineNumbers && (
-                  <span className="select-none w-6 text-right text-[var(--local-text-muted)]/50">
-                    {idx + 1}
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    line.isComment
-                      ? 'text-[var(--local-text-muted)]/60'
-                      : 'text-[var(--local-text)]'
-                  )}
-                >
-                  {!line.isComment && (
-                    <span className="text-[var(--local-accent)] mr-2">$</span>
-                  )}
-                  {line.content}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/code-block/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/code-block/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/code-block/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/code-block/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData } from '@/lib/base-schemas';
-
-export const LegacyCodeLineSchema = z.object({
-  content: z.string().describe('ui:text'),
-  isComment: z.boolean().default(false).describe('ui:checkbox'),
-});
-
-export const CodeBlockSchema = BaseSectionData.extend({
-  label: z.string().optional().describe('ui:text'),
-  lines: z.array(LegacyCodeLineSchema).describe('ui:list'),
-});
-
-export const CodeBlockSettingsSchema = z.object({
-  showLineNumbers: z.boolean().optional().describe('ui:checkbox'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/code-block/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/code-block/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { CodeBlockSchema, CodeBlockSettingsSchema } from './schema';
-
-export type CodeBlockData = z.infer<typeof CodeBlockSchema>;
-export type CodeBlockSettings = z.infer<typeof BaseSectionSettingsSchema> & z.infer<typeof CodeBlockSettingsSchema>;
-
-END_OF_FILE_CONTENT
 mkdir -p "src/components/cta-banner"
 echo "Creating src/components/cta-banner/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/cta-banner/View.tsx"
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { OlonMark } from '@/components/ui/OlonMark';
 import type { CtaBannerData, CtaBannerSettings } from './types';
 
-export const CtaBanner: React.FC<{ data: CtaBannerData; settings?: CtaBannerSettings }> = ({ data }) => {
+export const CtaBanner: React.FC<{
+  data: CtaBannerData;
+  settings?: CtaBannerSettings;
+}> = ({ data }) => {
   return (
     <section
-      style={{
-        '--local-bg':         'var(--card)',
-        '--local-text':       'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary':    'var(--primary)',
-        '--local-accent':     'var(--accent)',
-        '--local-cyan':       'var(--secondary)',
-        '--local-radius-md':  'var(--theme-radius-md)',
-        '--local-radius-lg':  'var(--theme-radius-lg)',
-        '--local-panel-bg':   'var(--demo-surface-deep)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-      } as React.CSSProperties}
-      className="relative py-28 bg-[var(--local-bg)] overflow-hidden text-center"
+      id="get-started"
+      className="jp-cta-banner py-32 text-center relative overflow-hidden"
     >
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[48px] h-[2px] bg-gradient-to-r from-[var(--local-primary)] to-[var(--local-cyan)]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-[radial-gradient(circle,var(--local-accent-soft)_0%,transparent_60%)] pointer-events-none" />
-      <div className="relative max-w-[960px] mx-auto px-8">
+      {/* Radial glow */}
+      <div
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{
+          width: '60vw',
+          height: '60vw',
+          background: 'radial-gradient(circle, rgba(23,99,255,.07) 0%, transparent 60%)',
+        }}
+        aria-hidden
+      />
+
+      <div className="relative max-w-[1040px] mx-auto px-8">
+
+        {/* Spinning OlonMark */}
+        <div
+          className="w-[72px] h-[72px] mx-auto mb-9"
+          style={{ animation: 'spin 22s linear infinite' }}
+          aria-hidden
+        >
+          <OlonMark size={72} />
+        </div>
+
         <h2
-          className="font-display text-[clamp(3rem,7vw,6.5rem)] font-black text-[var(--local-text)] leading-[1.0] tracking-tight mb-6"
+          className="font-display font-bold tracking-[-0.038em] leading-[1.1] text-foreground mx-auto mb-5"
+          style={{ fontSize: 'clamp(28px, 4.5vw, 50px)', maxWidth: '620px' }}
           data-jp-field="title"
         >
           {data.title}
         </h2>
+
         {data.description && (
           <p
-            className="text-[1.15rem] text-[var(--local-text-muted)] max-w-[560px] mx-auto leading-[1.75] mb-10"
+            className="text-[16px] text-muted-foreground leading-[1.65] mx-auto mb-10"
+            style={{ maxWidth: '460px' }}
             data-jp-field="description"
           >
             {data.description}
           </p>
         )}
-        {data.cliCommand && (
-          <div
-            className="inline-flex items-center gap-4 bg-[var(--local-panel-bg)] border border-[var(--local-panel-border)] rounded-[var(--local-radius-lg)] px-6 py-4 font-mono text-[0.88rem] text-[var(--local-text-muted)] mb-10"
-            data-jp-field="cliCommand"
-          >
-            <span className="text-[var(--local-primary)]">$</span>
-            <span className="text-[var(--local-text)]">{data.cliCommand}</span>
-          </div>
-        )}
+
         {data.ctas && data.ctas.length > 0 && (
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex gap-3 justify-center flex-wrap">
             {data.ctas.map((cta, idx) => (
-              <a
+              <Button
                 key={cta.id ?? idx}
-                href={cta.href}
-                data-jp-item-id={cta.id ?? `legacy-${idx}`}
-                data-jp-item-field="ctas"
+                asChild
+                variant={cta.variant === 'primary' ? 'default' : 'outline'}
+                size="lg"
                 className={cn(
-                  'inline-flex items-center gap-2 px-9 py-3.5 rounded-[var(--local-radius-md)] font-semibold text-[1rem] transition-all duration-200 no-underline',
-                  cta.variant === 'primary'
-                    ? 'bg-[var(--local-primary)] text-white hover:brightness-110 hover:-translate-y-0.5 shadow-[0_0_32px_var(--local-accent-soft)]'
-                    : 'bg-transparent text-[var(--local-text)] border border-[var(--local-panel-border)] hover:border-[var(--local-panel-border-strong)] hover:bg-[var(--local-accent-soft)]'
+                  'gap-2 px-7',
+                  cta.variant === 'primary' && 'shadow-[0_0_32px_rgba(23,99,255,.38)]'
                 )}
               >
-                {cta.label}
-              </a>
+                <a
+                  href={cta.href}
+                  data-jp-item-id={cta.id ?? `cta-${idx}`}
+                  data-jp-item-field="ctas"
+                  target={cta.href?.startsWith('http') ? '_blank' : undefined}
+                  rel={cta.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                >
+                  {cta.variant === 'primary' ? (
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.8 }}>
+                      <rect x="2.5" y="2" width="11" height="12" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+                      <path d="M5.5 6h5M5.5 9h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                    </svg>
+                  ) : (
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.7 }}>
+                      <path d="M8 1C4.13 1 1 4.13 1 8c0 3.09 2.01 5.71 4.79 6.63.35.06.48-.15.48-.34v-1.2c-1.95.42-2.36-.94-2.36-.94-.32-.81-.78-1.02-.78-1.02-.64-.43.05-.42.05-.42.7.05 1.07.72 1.07.72.62 1.07 1.64.76 2.04.58.06-.45.24-.76.44-.93-1.56-.18-3.2-.78-3.2-3.47 0-.77.27-1.4.72-1.89-.07-.18-.31-.9.07-1.87 0 0 .59-.19 1.93.72A6.7 6.7 0 0 1 8 5.17c.6 0 1.2.08 1.76.24 1.34-.91 1.93-.72 1.93-.72.38.97.14 1.69.07 1.87.45.49.72 1.12.72 1.89 0 2.7-1.64 3.29-3.2 3.47.25.22.48.65.48 1.31v1.94c0 .19.12.4.48.34C12.99 13.71 15 11.09 15 8c0-3.87-3.13-7-7-7z" fill="currentColor"/>
+                    </svg>
+                  )}
+                  {cta.label}
+                </a>
+              </Button>
             ))}
           </div>
         )}
+
       </div>
     </section>
   );
@@ -2589,101 +1955,132 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/devex/View.tsx"
 import React from 'react';
 import type { DevexData, DevexSettings } from './types';
 
-// The App.tsx snippet is canonical product content — not editable copy.
-const APP_TSX_LINES = [
-  { t: 'cm',  c: '// Your App.tsx is incredibly thin.'                 },
-  { t: 'pl',  c: ''                                                     },
-  { t: 'kw',  c: "import { JsonPagesEngine } from '@jsonpages/core';"  },
-  { t: 'kw',  c: "import { config } from './my-config';"               },
-  { t: 'pl',  c: ''                                                     },
-  { t: 'kw',  c: 'export default function App() {'                     },
-  { t: 'cm',  c: '  // The Engine takes over from here'                },
-  { t: 'fn',  c: '  return <JsonPagesEngine config={config} />;'       },
-  { t: 'pl',  c: '}'                                                    },
+const ENDPOINTS = [
+  '/homepage.json',
+  '/products/shoes.json',
+  '/blog/ai-agents.json',
+  '/contact.json',
 ] as const;
-
-const tokenClass: Record<string, string> = {
-  cm: 'text-[var(--local-panel-text-faint)] italic',
-  kw: 'text-[var(--local-accent)]',
-  fn: 'text-[var(--local-primary)]',
-  pl: 'text-[var(--local-panel-text-soft)]',
-};
 
 export const Devex: React.FC<{ data: DevexData; settings?: DevexSettings }> = ({ data }) => {
   return (
-    <section
-      style={{
-        '--local-bg':         'var(--background)',
-        '--local-text':       'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary':    'var(--primary)',
-        '--local-accent':     'var(--accent)',
-        '--local-border':     'var(--border)',
-        '--local-radius-lg':  'var(--theme-radius-lg)',
-        '--local-panel-bg':   'var(--demo-surface)',
-        '--local-panel-deep': 'var(--demo-surface-deep)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-panel-text-soft': 'var(--demo-text-soft)',
-        '--local-panel-text-faint': 'var(--demo-text-faint)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="max-w-[1200px] mx-auto px-8 grid grid-cols-2 gap-24 items-center">
+    <section id="developer-velocity" className="jp-devex py-24 relative">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="max-w-[1040px] mx-auto px-8 grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
 
         {/* LEFT */}
         <div>
           {data.label && (
-            <div className="jp-section-label inline-flex items-center gap-2 text-[0.68rem] font-mono font-bold uppercase tracking-[0.14em] text-[var(--local-accent)] mb-5" data-jp-field="label">
-              <span className="w-6 h-px bg-[var(--local-primary)]" />
+            <div className="inline-flex items-center gap-2 text-[10.5px] font-mono font-bold uppercase tracking-[.12em] text-muted-foreground/60 mb-5">
+              <span className="w-[18px] h-px bg-border" aria-hidden />
               {data.label}
             </div>
           )}
           <h2
-            className="font-display text-[clamp(2rem,4.5vw,3.8rem)] font-black text-[var(--local-text)] leading-[1.05] tracking-tight mb-5"
+            className="font-display font-bold tracking-[-0.03em] leading-[1.15] text-foreground mb-5"
+            style={{ fontSize: 'clamp(24px, 3.5vw, 36px)' }}
             data-jp-field="title"
           >
             {data.title}
           </h2>
           {data.description && (
-            <p className="text-[1.05rem] text-[var(--local-text-muted)] leading-[1.75] mb-8" data-jp-field="description">
+            <p
+              className="text-[14px] text-muted-foreground leading-[1.78] mb-6"
+              data-jp-field="description"
+            >
               {data.description}
             </p>
           )}
+
           {data.features && data.features.length > 0 && (
-            <ul className="flex flex-col">
+            <ul className="flex flex-col mb-8" data-jp-field="features">
               {data.features.map((f, idx) => (
                 <li
-                  key={f.id ?? idx}
-                  className="flex items-center gap-3.5 text-[0.9rem] text-[var(--local-text-muted)] py-3.5 border-b border-[var(--local-panel-border)] last:border-b-0 hover:text-[var(--local-text)] hover:pl-1.5 transition-all"
-                  data-jp-item-id={f.id ?? `legacy-${idx}`}
+                  key={(f as { id?: string }).id ?? idx}
+                  className="flex items-start gap-2.5 text-[13.5px] text-muted-foreground py-3 border-b border-border last:border-b-0 hover:text-foreground hover:pl-1 transition-all"
+                  data-jp-item-id={(f as { id?: string }).id ?? `f-${idx}`}
                   data-jp-item-field="features"
                 >
-                  <svg className="w-4 h-4 text-[var(--local-primary)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <span className="flex-shrink-0 w-[18px] h-[18px] rounded-sm bg-primary/10 flex items-center justify-center mt-0.5">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary"/>
+                    </svg>
+                  </span>
                   {f.text}
                 </li>
               ))}
             </ul>
           )}
+
+          {data.stats && data.stats.length > 0 && (
+            <div className="flex gap-7 flex-wrap" data-jp-field="stats">
+              {data.stats.map((stat, idx) => (
+                <div
+                  key={(stat as { id?: string }).id ?? idx}
+                  className="flex flex-col gap-0.5"
+                  data-jp-item-id={(stat as { id?: string }).id ?? `st-${idx}`}
+                  data-jp-item-field="stats"
+                >
+                  <span
+                    className="text-[28px] font-bold tracking-[-0.03em] leading-none bg-gradient-to-br from-[#84ABFF] to-[#1763FF] bg-clip-text text-transparent"
+                    data-jp-item-field="value"
+                  >
+                    {stat.value}
+                  </span>
+                  <span className="text-[11.5px] text-muted-foreground/60 font-medium" data-jp-item-field="label">
+                    {stat.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* RIGHT — code window */}
-        <div className="rounded-[var(--local-radius-lg)] overflow-hidden border border-[var(--local-panel-border)] shadow-[0_30px_60px_rgba(0,0,0,0.5),0_0_40px_rgba(59,130,246,0.06)]">
-          <div className="bg-[var(--local-panel-bg)] px-4 py-2.5 flex items-center gap-1.5 border-b border-[var(--local-panel-border)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-            <span className="ml-auto font-mono text-[0.62rem] text-[var(--local-panel-text-faint)]">src/App.tsx</span>
+        {/* RIGHT — Endpoint display window */}
+        <div
+          className="rounded-xl border border-border overflow-hidden"
+          style={{ background: '#060d14', boxShadow: '0 24px 56px rgba(0,0,0,.35)' }}
+        >
+          <div className="flex items-center gap-1.5 px-4 py-3 bg-card border-b border-border">
+            <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+            <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+            <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+            <span className="flex-1 text-center font-mono text-[11px] text-muted-foreground/60">
+              canonical endpoints
+            </span>
+            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500">
+              GET
+            </span>
           </div>
-          <div className="bg-[var(--local-panel-deep)] px-8 py-7 font-mono text-[0.80rem] leading-[2] overflow-x-auto">
-            {APP_TSX_LINES.map((ln, i) => (
-              <div key={i}>
-                <span className={tokenClass[ln.t]}>{ln.c || '\u00A0'}</span>
+          <div className="px-4 py-4">
+            {ENDPOINTS.map((ep, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 px-2.5 py-2 rounded-lg mb-0.5 hover:bg-muted/20 transition-colors"
+              >
+                <span className="font-mono text-[12.5px] text-[#84ABFF] flex-1">{ep}</span>
+                <span className="text-[11px] text-muted-foreground/40">→</span>
+                <span className="font-mono text-[10.5px] text-emerald-500">200 OK</span>
               </div>
             ))}
+            <div className="mt-3.5 mx-2.5 p-3.5 bg-muted/20 rounded-lg border border-border">
+              <div className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-[.08em] mb-2">
+                Contract
+              </div>
+              <div className="font-mono text-[11.5px] text-muted-foreground leading-[1.8]">
+                <span className="text-[#84ABFF]">slug</span>
+                {' · '}
+                <span className="text-[#84ABFF]">meta</span>
+                {' · '}
+                <span className="text-[#84ABFF]">sections[]</span>
+                <br />
+                <span className="text-emerald-500">type-safe</span>
+                {' · '}
+                <span className="text-emerald-500">versioned</span>
+                {' · '}
+                <span className="text-emerald-500">schema-validated</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2709,11 +2106,17 @@ const FeatureSchema = BaseArrayItem.extend({
   text: z.string().describe('ui:text'),
 });
 
+const StatSchema = BaseArrayItem.extend({
+  value: z.string().describe('ui:text'),
+  label: z.string().describe('ui:text'),
+});
+
 export const DevexSchema = BaseSectionData.extend({
   label:       z.string().optional().describe('ui:text'),
   title:       z.string().describe('ui:text'),
   description: z.string().optional().describe('ui:textarea'),
   features:    z.array(FeatureSchema).optional().describe('ui:list'),
+  stats:       z.array(StatSchema).optional().describe('ui:list'),
 });
 
 END_OF_FILE_CONTENT
@@ -2728,449 +2131,78 @@ export type DevexSettings = z.infer<typeof BaseSectionSettingsSchema>;
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/docs-layout"
-echo "Creating src/components/docs-layout/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/docs-layout/View.tsx"
-import React, { useEffect, useRef, useState } from 'react';
-import type { DocsLayoutData, DocsLayoutSettings } from './types';
-
-type Block = DocsLayoutData['groups'][0]['sections'][0]['blocks'][0];
-
-/* ── inline renderer: **bold** and `code` ─────────────────── */
-function renderInline(text: string): React.ReactNode {
-  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>;
-    if (part.startsWith('`')  && part.endsWith('`'))  return <code key={i}>{part.slice(1, -1)}</code>;
-    return part;
-  });
-}
-
-/* ── block renderer ───────────────────────────────────────── */
-function DocBlock({ block, idx }: { block: Block; idx: number }) {
-  const inlineCls = '[&_strong]:text-[var(--local-text)] [&_strong]:font-semibold [&_code]:font-mono [&_code]:text-[0.84em] [&_code]:bg-[var(--local-inline-code-bg)] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-[var(--local-radius-sm)] [&_code]:text-[var(--local-accent)]';
-
-  switch (block.type) {
-    case 'heading':
-      return <h4 key={idx} className="font-display font-bold text-[1.05rem] text-[var(--local-text)] mt-8 mb-3 tracking-tight">{block.content}</h4>;
-
-    case 'paragraph':
-      return <p key={idx} className={`text-[0.93rem] text-[var(--local-text-muted)] leading-[1.9] mb-5 ${inlineCls}`}>{renderInline(block.content)}</p>;
-
-    case 'code':
-      return (
-        <div key={idx} className="mb-6 rounded-[var(--local-radius-lg)] overflow-hidden border border-[var(--local-panel-border)] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
-          {block.codeFilename && (
-            <div className="bg-[var(--local-panel-bar)] px-4 py-2.5 flex items-center gap-2 border-b border-[var(--local-panel-border)]">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-              <span className="ml-3 font-mono text-[0.65rem] text-[var(--local-panel-text-faint)]">{block.codeFilename}</span>
-            </div>
-          )}
-          <pre className="bg-[var(--local-panel-deep)] px-6 py-5 font-mono text-[0.78rem] leading-[1.9] overflow-x-auto text-[var(--local-panel-text-soft)] m-0 whitespace-pre">
-            <code>{block.content}</code>
-          </pre>
-        </div>
-      );
-
-    case 'list':
-      return (
-        <ul key={idx} className="mb-5 flex flex-col gap-2.5">
-          {(block.items ?? []).map((item, i) => (
-            <li key={item.id ?? i} className={`flex items-start gap-3 text-[0.93rem] text-[var(--local-text-muted)] leading-[1.8] ${inlineCls}`}>
-              <span className="font-mono text-[var(--local-primary)] text-[0.72rem] flex-shrink-0 mt-[5px]">→</span>
-              <span>{renderInline(item.text)}</span>
-            </li>
-          ))}
-        </ul>
-      );
-
-    case 'table':
-      return (
-        <div key={idx} className="mb-6 overflow-hidden rounded-[var(--local-radius-lg)] border border-[var(--local-panel-border)]">
-          <table className="w-full text-[0.88rem]">
-            <thead>
-              <tr className="bg-[var(--local-accent-soft)] border-b border-[var(--local-panel-border)]">
-                <th className="px-5 py-3 text-left font-mono text-[0.66rem] uppercase tracking-widest text-[var(--local-accent)] w-[200px]">Cosa</th>
-                <th className="px-5 py-3 text-left font-mono text-[0.66rem] uppercase tracking-widest text-[var(--local-accent)]">Azione</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(block.rows ?? []).map((row, i) => (
-                <tr key={row.id ?? i} className="border-b border-[var(--local-panel-border)] last:border-0 hover:bg-[var(--local-accent-soft)] transition-colors">
-                  <td className={`px-5 py-4 text-[var(--local-text)] font-semibold align-top text-[0.88rem] ${inlineCls}`}>
-                    {renderInline(row.col1)}
-                  </td>
-                  <td className={`px-5 py-4 text-[var(--local-text-muted)] align-top leading-[1.75] text-[0.88rem] ${inlineCls}`}>
-                    {renderInline(row.col2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-
-    case 'callout':
-      return (
-        <div key={idx} className={`mb-5 rounded-[var(--local-radius-lg)] border border-[var(--local-panel-border-strong)] bg-[var(--local-accent-soft)] px-5 py-4 ${inlineCls}`}>
-          <div className="flex items-start gap-3">
-            <span className="text-[var(--local-accent)] font-mono text-[0.9rem] flex-shrink-0 mt-0.5 leading-none">ℹ</span>
-            <p className="text-[0.90rem] text-[var(--local-text-muted)] leading-[1.8] m-0">{renderInline(block.content)}</p>
-          </div>
-        </div>
-      );
-
-    case 'note':
-      return (
-        <div key={idx} className={`mb-5 rounded-[var(--local-radius-lg)] border border-[var(--local-panel-border-strong)] bg-[var(--local-accent-soft)] px-5 py-4 ${inlineCls}`}>
-          <div className="flex items-start gap-3">
-            <span className="text-[var(--local-accent)] font-mono text-[0.9rem] flex-shrink-0 mt-0.5 leading-none">⚠</span>
-            <p className="text-[0.90rem] text-[var(--local-text-muted)] leading-[1.8] m-0">{renderInline(block.content)}</p>
-          </div>
-        </div>
-      );
-
-    default: return null;
-  }
-}
-
-/* ── main component ───────────────────────────────────────── */
-export const DocsLayout: React.FC<{ data: DocsLayoutData; settings?: DocsLayoutSettings }> = ({ data }) => {
-  const [activeAnchor, setActiveAnchor] = useState<string>('');
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // flat list of all anchors in order
-  const allAnchors = data.groups.flatMap((g) => [
-    { anchor: g.anchor, level: 'group' as const,   label: g.label },
-    ...(g.sections ?? []).map((s) => ({ anchor: s.anchor, level: 'section' as const, label: s.title, parent: g.anchor })),
-  ]);
-
-  useEffect(() => {
-    const targets = allAnchors
-      .map((a) => document.getElementById(a.anchor))
-      .filter(Boolean) as HTMLElement[];
-    if (!targets.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (!visible.length) return;
-        const top = visible.reduce((a, b) =>
-          a.boundingClientRect.top < b.boundingClientRect.top ? a : b
-        );
-        setActiveAnchor((top.target as HTMLElement).id);
-      },
-      { rootMargin: '-64px 0px -55% 0px', threshold: 0 }
-    );
-    targets.forEach((t) => observer.observe(t));
-    return () => observer.disconnect();
-  }, [data.groups]);
-
-  const scrollTo = (anchor: string) => (e: React.MouseEvent) => {
-    e.preventDefault();
-    document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  return (
-    <section
-      style={{
-        '--local-bg':         'var(--background)',
-        '--local-text':       'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary':    'var(--primary)',
-        '--local-accent':     'var(--accent)',
-        '--local-cyan':       'var(--secondary)',
-        '--local-border':     'var(--border)',
-        '--local-surface':    'var(--card)',
-        '--local-radius-sm':  'var(--theme-radius-sm)',
-        '--local-radius-md':  'var(--theme-radius-md)',
-        '--local-radius-lg':  'var(--theme-radius-lg)',
-        '--local-panel-bar':  'var(--demo-surface)',
-        '--local-panel-deep': 'var(--demo-surface-deep)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-panel-text-soft': 'var(--demo-text-soft)',
-        '--local-panel-text-faint': 'var(--demo-text-faint)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-        '--local-inline-code-bg': 'var(--demo-surface)',
-      } as React.CSSProperties}
-      className="relative z-0 min-h-screen bg-[var(--local-bg)]"
-    >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-
-      {/* ── Page hero ──────────────────────────────────── */}
-      <div className="max-w-[1200px] mx-auto px-8 pt-28 pb-12">
-        <div
-          className="inline-flex items-center gap-2 bg-[var(--local-accent-soft)] border border-[var(--local-panel-border-strong)] px-3.5 py-1 rounded-full font-mono text-[0.66rem] font-semibold text-[var(--local-accent)] mb-5 tracking-widest uppercase"
-          data-jp-field="version"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--local-primary)]" />
-          {data.version ?? 'v1.2'}
-        </div>
-        <h1
-          className="font-display font-black text-[clamp(2.2rem,4vw,3.5rem)] text-[var(--local-text)] leading-[1.05] tracking-tight mb-4"
-          data-jp-field="pageTitle"
-        >
-          {data.pageTitle}
-        </h1>
-        {data.pageSubtitle && (
-          <p
-            className="text-[1.02rem] text-[var(--local-text-muted)] max-w-[680px] leading-[1.85]"
-            data-jp-field="pageSubtitle"
-          >
-            {data.pageSubtitle}
-          </p>
-        )}
-        <div className="mt-8 h-px bg-gradient-to-r from-[var(--local-panel-border-strong)] via-[var(--local-accent-soft)] to-transparent" />
-      </div>
-
-      {/* ── Sidebar + Content ──────────────────────────── */}
-      <div className="max-w-[1200px] mx-auto px-8 pb-40 flex gap-14 items-start">
-
-        {/* SIDEBAR */}
-        <aside className="w-[216px] flex-shrink-0 sticky top-[80px] self-start">
-          <nav className="flex flex-col">
-            {data.groups.map((group) => {
-              const groupActive = activeAnchor === group.anchor ||
-                (group.sections ?? []).some((s) => s.anchor === activeAnchor);
-              return (
-                <div key={group.anchor} className="mb-0.5">
-                  {/* Group */}
-                  <a
-                    href={`#${group.anchor}`}
-                    onClick={scrollTo(group.anchor)}
-                    className={`
-                      flex items-center gap-2 px-3 py-2 rounded-[var(--local-radius-md)] font-display font-bold text-[0.80rem]
-                      transition-all duration-150 no-underline
-                      ${groupActive
-                        ? 'text-[var(--local-text)] bg-[var(--local-panel-bar)]'
-                        : 'text-[var(--local-text-muted)] hover:text-[var(--local-text)] hover:bg-[var(--local-panel-bar)]'}
-                      ${activeAnchor === group.anchor ? 'border-l-2 border-[var(--local-primary)] pl-[10px] text-[var(--local-accent)]' : ''}
-                    `}
-                  >
-                    {group.label}
-                  </a>
-                  {/* Sub-sections */}
-                  <div className={`overflow-hidden transition-all duration-200 ${groupActive ? 'max-h-96' : 'max-h-0'}`}>
-                    {(group.sections ?? []).map((s) => (
-                      <a
-                        key={s.anchor}
-                        href={`#${s.anchor}`}
-                        onClick={scrollTo(s.anchor)}
-                        className={`
-                          flex items-center gap-2.5 pl-[22px] pr-3 py-1.5 rounded-[var(--local-radius-sm)]
-                          font-sans text-[0.76rem] transition-all duration-120 no-underline ml-0.5
-                          ${activeAnchor === s.anchor
-                            ? 'text-[var(--local-accent)] font-semibold bg-[var(--local-accent-soft)]'
-                            : 'text-[var(--local-text-muted)] hover:text-[var(--local-text)] hover:bg-[var(--local-panel-bar)]'}
-                        `}
-                      >
-                        <span className={`w-[5px] h-[5px] rounded-full flex-shrink-0 transition-colors ${activeAnchor === s.anchor ? 'bg-[var(--local-accent)]' : 'bg-[var(--local-panel-border)]'}`} />
-                        {s.title}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </nav>
-
-          {/* Divider + back to top */}
-          <div className="mt-6 pt-5 border-t border-[var(--local-panel-border)]">
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="flex items-center gap-2 font-mono text-[0.62rem] uppercase tracking-widest text-[var(--local-text-muted)] hover:text-[var(--local-accent)] transition-colors px-3"
-            >
-              ↑ Back to top
-            </button>
-          </div>
-        </aside>
-
-        {/* CONTENT */}
-        <div ref={contentRef} className="flex-1 min-w-0 pt-2">
-          {data.groups.map((group, gi) => (
-            <div key={group.anchor} className={gi > 0 ? 'mt-20' : ''}>
-
-              {/* Group header */}
-              <div id={group.anchor} className="scroll-mt-[88px] flex items-center gap-3 mb-2">
-                <div className="w-7 h-7 rounded-[var(--local-radius-md)] bg-[var(--local-accent-soft)] border border-[var(--local-panel-border-strong)] flex items-center justify-center flex-shrink-0">
-                  <span className="font-mono text-[var(--local-accent)] text-[0.66rem] font-bold">{gi + 1}</span>
-                </div>
-                <h2
-                  className="font-display font-black text-[1.55rem] text-[var(--local-text)] tracking-tight"
-                  data-jp-item-id={group.id ?? `g-${gi}`}
-                  data-jp-item-field="groups"
-                >
-                  {group.label}
-                </h2>
-              </div>
-              <div className="h-px bg-[var(--local-panel-border)] mb-10 ml-10" />
-
-              {/* Sections */}
-              {(group.sections ?? []).map((section, si) => (
-                <div
-                  key={section.anchor}
-                  id={section.anchor}
-                  className="scroll-mt-[88px] mb-14"
-                  data-jp-item-id={section.id ?? `s-${gi}-${si}`}
-                  data-jp-item-field="sections"
-                >
-                  {/* Section title */}
-                  <div className="flex items-center gap-2.5 mb-6">
-                    {section.tag && (
-                      <span className="font-mono text-[0.60rem] uppercase tracking-widest text-[var(--local-accent)] bg-[var(--local-accent-soft)] border border-[var(--local-panel-border-strong)] px-2 py-0.5 rounded-[var(--local-radius-sm)] flex-shrink-0">
-                        {section.tag}
-                      </span>
-                    )}
-                    <h3
-                      className="font-display font-bold text-[1.2rem] text-[var(--local-text)] leading-tight tracking-tight"
-                      data-jp-field="title"
-                    >
-                      {section.title}
-                    </h3>
-                  </div>
-
-                  {/* Blocks */}
-                  {(section.blocks ?? []).map((block, bi) => (
-                    <DocBlock key={block.id ?? bi} block={block} idx={bi} />
-                  ))}
-
-                  {/* Section divider */}
-                  {si < (group.sections ?? []).length - 1 && (
-                    <div className="mt-12 h-px bg-[var(--local-panel-border)]" />
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-
-          {/* EOF marker */}
-          <div className="mt-16 flex items-center gap-4 opacity-30">
-            <div className="flex-1 h-px bg-[var(--local-panel-border)]" />
-            <span className="font-mono text-[0.60rem] uppercase tracking-widest text-[var(--local-text-muted)]">End of document</span>
-            <div className="flex-1 h-px bg-[var(--local-panel-border)]" />
-          </div>
-        </div>
-
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/docs-layout/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/docs-layout/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/docs-layout/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/docs-layout/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
-
-const DocBlockSchema = BaseArrayItem.extend({
-  type:         z.enum(['paragraph', 'code', 'list', 'table', 'callout', 'note', 'heading']).default('paragraph'),
-  content:      z.string().describe('ui:textarea'),
-  codeFilename: z.string().optional().describe('ui:text'),
-  items: z.array(z.object({ id: z.string().optional(), text: z.string() })).optional().describe('ui:list'),
-  rows:  z.array(z.object({ id: z.string().optional(), col1: z.string(), col2: z.string() })).optional().describe('ui:list'),
-});
-
-const DocSectionSchema = BaseArrayItem.extend({
-  anchor:  z.string().describe('ui:text'),
-  title:   z.string().describe('ui:text'),
-  tag:     z.string().optional().describe('ui:text'),
-  blocks:  z.array(DocBlockSchema).describe('ui:list'),
-});
-
-const DocGroupSchema = BaseArrayItem.extend({
-  anchor:   z.string().describe('ui:text'),
-  label:    z.string().describe('ui:text'),
-  sections: z.array(DocSectionSchema).describe('ui:list'),
-});
-
-export const DocsLayoutSchema = BaseSectionData.extend({
-  pageTitle:    z.string().describe('ui:text'),
-  pageSubtitle: z.string().optional().describe('ui:textarea'),
-  version:      z.string().optional().describe('ui:text'),
-  groups:       z.array(DocGroupSchema).describe('ui:list'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/docs-layout/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/docs-layout/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { DocsLayoutSchema } from './schema';
-
-export type DocsLayoutData     = z.infer<typeof DocsLayoutSchema>;
-export type DocsLayoutSettings = z.infer<typeof BaseSectionSettingsSchema>;
-
-END_OF_FILE_CONTENT
 mkdir -p "src/components/feature-grid"
 echo "Creating src/components/feature-grid/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/feature-grid/View.tsx"
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Icon } from '@/lib/IconResolver';
 import type { FeatureGridData, FeatureGridSettings } from './types';
 
-const columnsMap: Record<2 | 3 | 4, string> = {
-  2: 'md:grid-cols-2',
-  3: 'md:grid-cols-3',
-  4: 'md:grid-cols-4',
-};
-
-export const FeatureGrid: React.FC<{ data: FeatureGridData; settings?: FeatureGridSettings }> = ({ data, settings }) => {
-  const colKey = settings?.columns ?? 3;
-  const cols = (colKey === 2 || colKey === 3 || colKey === 4) ? columnsMap[colKey] : columnsMap[3];
-  const isBordered = settings?.cardStyle === 'bordered';
-
-  const localStyles = {
-    '--local-bg': 'var(--background)',
-    '--local-text': 'var(--foreground)',
-    '--local-text-muted': 'var(--muted-foreground)',
-    '--local-surface': 'var(--card)',
-    '--local-surface-alt': 'var(--muted)',
-    '--local-border': 'var(--border)',
-    '--local-radius-lg': 'var(--theme-radius-lg)',
-    '--local-radius-md': 'var(--theme-radius-md)',
-  } as React.CSSProperties;
-
+export const FeatureGrid: React.FC<{
+  data: FeatureGridData;
+  settings?: FeatureGridSettings;
+}> = ({ data }) => {
   return (
-    <section style={localStyles} className="py-20 bg-[var(--local-bg)] relative z-0">
-      <div className="container mx-auto px-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-[var(--local-text)] mb-16" data-jp-field="sectionTitle">
-          {data.sectionTitle}
-        </h2>
-        <div className={cn('grid grid-cols-1 gap-6', cols)}>
+    <section id="architecture" className="jp-feature-grid py-24">
+      <div className="max-w-[1040px] mx-auto px-8">
+
+        {/* Section header */}
+        <header className="text-center mb-14">
+          {data.label && (
+            <div className="inline-flex items-center gap-2 text-[10.5px] font-mono font-bold uppercase tracking-[.12em] text-muted-foreground/60 mb-5">
+              <span className="w-[18px] h-px bg-border" aria-hidden />
+              {data.label}
+            </div>
+          )}
+          <h2
+            className="font-display font-bold tracking-[-0.03em] leading-[1.15] text-foreground mb-4"
+            style={{ fontSize: 'clamp(26px, 3.8vw, 40px)' }}
+            data-jp-field="sectionTitle"
+          >
+            {data.sectionTitle}
+          </h2>
+          {data.sectionLead && (
+            <p
+              className="text-[15.5px] text-muted-foreground leading-[1.7] mx-auto"
+              style={{ maxWidth: '500px' }}
+              data-jp-field="sectionLead"
+            >
+              {data.sectionLead}
+            </p>
+          )}
+        </header>
+
+        {/* 3-col feature grid */}
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 rounded-xl overflow-hidden border border-border"
+          style={{ gap: '1px', background: 'var(--border)' }}
+          data-jp-field="cards"
+        >
           {data.cards.map((card, idx) => (
             <div
               key={card.id ?? idx}
               className={cn(
-                'p-6 rounded-[var(--local-radius-lg)] bg-[var(--local-surface)]',
-                isBordered && 'border border-[var(--local-border)]'
+                'p-8 transition-colors hover:bg-muted/60',
+                idx % 2 === 0 ? 'bg-background' : 'bg-card'
               )}
               data-jp-item-id={card.id ?? `legacy-${idx}`}
               data-jp-item-field="cards"
             >
-              {card.icon && (
-                <div className="w-10 h-10 rounded-[var(--local-radius-md)] bg-[var(--local-surface-alt)] flex items-center justify-center mb-4">
-                  <Icon name={card.icon} size={20} className="text-[var(--local-text-muted)]" />
+              {card.emoji && (
+                <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/18 flex items-center justify-center text-[18px] mb-5">
+                  {card.emoji}
                 </div>
               )}
-              <h3 className="text-lg font-semibold text-[var(--local-text)] mb-2">
-                {card.emoji && <span className="mr-2">{card.emoji}</span>}
+              <h3 className="text-[14px] font-semibold text-foreground mb-2">
                 {card.title}
               </h3>
-              <p className="text-sm text-[var(--local-text-muted)] leading-relaxed">
+              <p className="text-[13px] text-muted-foreground leading-[1.7]">
                 {card.description}
               </p>
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );
@@ -3197,7 +2229,9 @@ export const FeatureCardSchema = BaseArrayItem.extend({
 });
 
 export const FeatureGridSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
   sectionTitle: z.string().describe('ui:text'),
+  sectionLead: z.string().optional().describe('ui:textarea'),
   cards: z.array(FeatureCardSchema).describe('ui:list'),
 });
 
@@ -3221,6 +2255,7 @@ mkdir -p "src/components/footer"
 echo "Creating src/components/footer/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/footer/View.tsx"
 import React from 'react';
+import { OlonMark } from '@/components/ui/OlonMark';
 import type { FooterData, FooterSettings } from './types';
 
 export const Footer: React.FC<{ data: FooterData; settings?: FooterSettings }> = ({ data }) => {
@@ -3237,11 +2272,9 @@ export const Footer: React.FC<{ data: FooterData; settings?: FooterSettings }> =
     >
       <div className="max-w-[1200px] mx-auto px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 font-bold text-[0.9rem] text-[var(--local-text-muted)]" data-jp-field="brandText">
-            {data.brandText}
-            {data.brandHighlight && (
-              <span className="text-[var(--local-accent)]" data-jp-field="brandHighlight">{data.brandHighlight}</span>
-            )}
+          <div className="flex items-center gap-2.5 font-bold text-[0.9rem] text-[var(--local-text-muted)]">
+            <OlonMark size={20} />
+            <span data-jp-field="brandText">{data.brandText}{data.brandHighlight && <span className="text-[var(--local-accent)]" data-jp-field="brandHighlight">{data.brandHighlight}</span>}</span>
           </div>
           {data.links && data.links.length > 0 && (
             <nav className="flex gap-6">
@@ -3307,129 +2340,76 @@ mkdir -p "src/components/git-section"
 echo "Creating src/components/git-section/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/git-section/View.tsx"
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import type { GitSectionData, GitSectionSettings } from './types';
 
-export const GitSection: React.FC<{ data: GitSectionData; settings?: GitSectionSettings }> = ({ data }) => {
+export const GitSection: React.FC<{
+  data: GitSectionData;
+  settings?: GitSectionSettings;
+}> = ({ data }) => {
   return (
-    <section
-      style={{
-        '--local-bg':         'var(--card)',
-        '--local-text':       'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary':    'var(--primary)',
-        '--local-accent':     'var(--accent)',
-        '--local-cyan':       'var(--secondary)',
-        '--local-border':     'var(--border)',
-        '--local-radius-sm':  'var(--theme-radius-sm)',
-        '--local-radius-lg':  'var(--theme-radius-lg)',
-        '--local-panel-bg': 'var(--demo-surface-soft)',
-        '--local-panel-bar': 'var(--demo-surface)',
-        '--local-panel-deep': 'var(--demo-surface-deep)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-panel-text-soft': 'var(--demo-text-soft)',
-        '--local-panel-text-faint': 'var(--demo-text-faint)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
+    <div
+      id="why"
+      className="jp-git-section border-y border-border bg-card py-20"
     >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="max-w-[1200px] mx-auto px-8 grid grid-cols-2 gap-24 items-center">
+      <div className="max-w-[1040px] mx-auto px-8">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-16 items-center">
 
-        {/* LEFT — copy */}
-        <div>
-          {data.label && (
-            <div className="jp-section-label inline-flex items-center gap-2 text-[0.68rem] font-mono font-bold uppercase tracking-[0.14em] text-[var(--local-accent)] mb-5" data-jp-field="label">
-              <span className="w-6 h-px bg-[var(--local-primary)]" />
-              {data.label}
-            </div>
-          )}
-          <h2 className="font-display text-[clamp(2rem,4.5vw,3.8rem)] font-black text-[var(--local-text)] leading-[1.05] tracking-tight mb-4" data-jp-field="title">
-            {data.title}
-            {data.titleHighlight && (
-              <>
-                <br />
-                <em className="not-italic bg-gradient-to-br from-[var(--local-accent)] to-[var(--local-cyan)] bg-clip-text text-transparent" data-jp-field="titleHighlight">
-                  {data.titleHighlight}
-                </em>
-              </>
+          {/* Left: title */}
+          <div>
+            {data.label && (
+              <div className="inline-flex items-center gap-2 text-[10.5px] font-mono font-bold uppercase tracking-[.12em] text-muted-foreground/60 mb-4">
+                <span className="w-[18px] h-px bg-border" aria-hidden />
+                {data.label}
+              </div>
             )}
-          </h2>
-          {data.description && (
-            <p className="text-[1.05rem] text-[var(--local-text-muted)] leading-[1.8] mb-8" data-jp-field="description">
-              {data.description}
-            </p>
-          )}
-          {data.points && data.points.length > 0 && (
-            <ul className="flex flex-col">
-              {data.points.map((p, idx) => (
-                <li
-                  key={p.id ?? idx}
-                  className="flex items-start gap-3.5 text-[0.9rem] text-[var(--local-text-muted)] py-3.5 border-b border-[var(--local-panel-border)] last:border-b-0 hover:text-[var(--local-text)] transition-colors leading-[1.5]"
-                  data-jp-item-id={p.id ?? `legacy-${idx}`}
-                  data-jp-item-field="points"
-                >
-                  <span className="font-mono text-[var(--local-primary)] text-[0.75rem] flex-shrink-0 mt-0.5">→</span>
-                  {p.text}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+            <h2
+              className="font-display font-bold tracking-[-0.03em] leading-[1.2] text-foreground"
+              style={{ fontSize: 'clamp(26px, 3.5vw, 34px)' }}
+              data-jp-field="title"
+            >
+              {data.title}
+              {data.titleAccent && (
+                <>
+                  <br />
+                  <span
+                    className="bg-gradient-to-br from-[#84ABFF] to-[#1763FF] bg-clip-text text-transparent"
+                    data-jp-field="titleAccent"
+                  >
+                    {data.titleAccent}
+                  </span>
+                </>
+              )}
+            </h2>
+          </div>
 
-        {/* RIGHT — git diff panel (decorative, content-driven commits) */}
-        <div className="rounded-[var(--local-radius-lg)] overflow-hidden border border-[var(--local-panel-border)] shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
-          <div className="bg-[var(--local-panel-bar)] px-4 py-2.5 flex items-center gap-1.5 border-b border-[var(--local-panel-border)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-            <span className="ml-auto font-mono text-[0.62rem] text-[var(--local-panel-text-faint)]">src/data/pages/home.json</span>
-          </div>
-          {/* Tabs */}
-          <div className="bg-[var(--local-panel-bg)] border-b border-[var(--local-panel-border)] flex">
-            <div className="font-mono text-[0.60rem] px-4 py-2 text-[var(--local-text)] border-b-2 border-[var(--local-primary)]">Changes</div>
-            <div className="font-mono text-[0.60rem] px-4 py-2 text-[var(--local-panel-text-faint)]">History</div>
-            <div className="font-mono text-[0.60rem] px-4 py-2 text-[var(--local-panel-text-faint)]">Blame</div>
-          </div>
-          {/* Diff */}
-          <div className="bg-[var(--local-panel-deep)] px-4 py-4 font-mono text-[0.73rem] leading-[1.9] overflow-x-auto">
-            {[
-              { t: 'ctx', g: '12', s: ' ', c: '  "type": "hero",'                                },
-              { t: 'ctx', g: '13', s: ' ', c: '  "data": {'                                       },
-              { t: 'del', g: '14', s: '-', c: '    "title": "Local Authoring.hh",'                },
-              { t: 'add', g: '14', s: '+', c: '    "title": "The Sovereign Shell.",'              },
-              { t: 'del', g: '15', s: '-', c: '    "titleHighlight": "Global Governance.",'       },
-              { t: 'add', g: '15', s: '+', c: '    "titleHighlight": "Zero Runtime Overhead.",'   },
-              { t: 'ctx', g: '16', s: ' ', c: '    "badge": "Architecture v1.2",'                },
-              { t: 'ctx', g: '17', s: ' ', c: '  }'                                               },
-            ].map((ln, i) => (
-              <div key={i} className={`flex gap-3 px-1 rounded-[var(--local-radius-sm)] ${
-                ln.t === 'add' ? 'bg-[var(--local-panel-bg)]' :
-                ln.t === 'del' ? 'bg-[var(--local-panel-bg)]' :
-                'opacity-45'}`}
+          {/* Right: 2×2 card grid */}
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+            data-jp-field="cards"
+          >
+            {data.cards?.map((card, idx) => (
+              <Card
+                key={(card as { id?: string }).id ?? idx}
+                className="bg-background border-border p-5"
+                data-jp-item-id={(card as { id?: string }).id ?? `wc-${idx}`}
+                data-jp-item-field="cards"
               >
-                <span className="text-[var(--local-panel-text-faint)] min-w-[18px] text-right select-none">{ln.g}</span>
-                <span className={`min-w-[12px] ${ln.t === 'add' ? 'text-[var(--local-primary)]' : ln.t === 'del' ? 'text-[var(--local-accent)]' : 'text-[var(--local-panel-text-faint)]'}`}>{ln.s}</span>
-                <span className={`whitespace-pre ${ln.t === 'add' ? 'text-[var(--local-primary)]' : ln.t === 'del' ? 'text-[var(--local-accent)]' : 'text-[var(--local-panel-text-soft)]'}`}>{ln.c}</span>
-              </div>
+                <CardContent className="p-0">
+                  <div className="text-[13px] font-semibold text-foreground mb-1.5">
+                    {card.title}
+                  </div>
+                  <p className="text-[12.5px] text-muted-foreground leading-[1.6]">
+                    {card.description}
+                  </p>
+                </CardContent>
+              </Card>
             ))}
           </div>
-          {/* Commits */}
-          <div className="bg-[var(--local-panel-bg)] border-t border-[var(--local-panel-border)] px-4 py-3 flex flex-col gap-2.5">
-            {[
-              { hash: 'a3f9c12', msg: 'feat(home): update hero headline copy',      time: '2m ago',  op: 1   },
-              { hash: '8b21e04', msg: 'content(home): add 3 metrics to hero',        time: '1h ago',  op: 0.6 },
-              { hash: 'cc70a91', msg: 'feat(home): initial page structure',           time: '2d ago',  op: 0.4 },
-            ].map(({ hash, msg, time, op }) => (
-              <div key={hash} className="flex items-center gap-3" style={{ opacity: op }}>
-                <span className="font-mono text-[0.58rem] text-[var(--local-accent)] min-w-[52px]">{hash}</span>
-                <span className="font-sans text-[0.70rem] text-[var(--local-panel-text-soft)] flex-1 truncate">{msg}</span>
-                <span className="font-mono text-[0.56rem] text-[var(--local-panel-text-faint)]">{time}</span>
-              </div>
-            ))}
-          </div>
+
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
@@ -3446,16 +2426,16 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/git-section/schema.ts"
 import { z } from 'zod';
 import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
 
-const PointSchema = BaseArrayItem.extend({
-  text: z.string().describe('ui:text'),
+const WhyCardSchema = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
 });
 
 export const GitSectionSchema = BaseSectionData.extend({
-  label:          z.string().optional().describe('ui:text'),
-  title:          z.string().describe('ui:text'),
-  titleHighlight: z.string().optional().describe('ui:text'),
-  description:    z.string().optional().describe('ui:textarea'),
-  points:         z.array(PointSchema).optional().describe('ui:list'),
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  titleAccent: z.string().optional().describe('ui:text'),
+  cards: z.array(WhyCardSchema).describe('ui:list'),
 });
 
 END_OF_FILE_CONTENT
@@ -3474,6 +2454,9 @@ echo "Creating src/components/header/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/header/View.tsx"
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { OlonMark } from '@/components/ui/OlonMark';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { MenuItem } from '@olonjs/core';
 import type { HeaderData, HeaderSettings } from './types';
 
@@ -3486,103 +2469,119 @@ export const Header: React.FC<{
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <header
-      style={{
-        '--local-bg': 'color-mix(in oklch, var(--background) 88%, transparent)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary': 'var(--primary)',
-        '--local-accent': 'var(--accent)',
-        '--local-border': 'color-mix(in oklch, var(--primary) 18%, transparent)',
-        '--local-radius-md': 'var(--theme-radius-md)',
-      } as React.CSSProperties}
-      className={cn(
-        'w-full py-4 transition-all duration-300 z-0',
-        scrolled
-          ? 'bg-[var(--local-bg)] backdrop-blur-[20px] border-b border-[var(--local-border)]'
-          : 'bg-transparent border-b border-transparent'
-      )}
-    >
-      <div className="max-w-[1200px] mx-auto px-8 flex justify-between items-center">
-        <a
-          href="/"
-          className="flex items-center gap-2.5 no-underline font-bold text-xl tracking-tight text-[var(--local-text)]"
-        >
-          {data.logoIconText && (
-            <div className="w-8 h-8 rounded-md bg-gradient-to-br from-[var(--local-primary)] to-[var(--local-accent)] flex items-center justify-center font-mono text-[0.8rem] font-bold text-[var(--background)]" data-jp-field="logoIconText">
-              {data.logoIconText}
-            </div>
-          )}
-          <span data-jp-field="logoText">
-            {data.logoText}
-            {data.logoHighlight && (
-              <span className="text-[var(--local-accent)]" data-jp-field="logoHighlight">{data.logoHighlight}</span>
-            )}
-          </span>
-        </a>
+    <>
+      <div style={{ height: '56px' }} aria-hidden />
+      <header
+        className={cn(
+          'fixed top-0 left-0 right-0 w-full h-14 z-50 transition-all duration-300',
+          'flex items-center',
+          scrolled
+            ? 'bg-background/88 backdrop-blur-[16px] border-b border-border/60'
+            : 'bg-transparent border-b border-transparent'
+        )}
+      >
+        <div className="max-w-[1040px] w-full mx-auto px-8 flex items-center gap-3">
 
-        <nav className="hidden md:flex items-center gap-10">
-          {menu.map((item, idx) => (
-            <a
-              key={(item as { id?: string }).id ?? idx}
-              href={item.href}
-              data-jp-item-id={(item as { id?: string }).id ?? `legacy-${idx}`}
-              data-jp-item-field="links"
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noopener noreferrer' : undefined}
-              className={cn(
-                'no-underline text-sm font-medium transition-colors',
-                item.isCta
-                  ? 'bg-[var(--local-primary)] text-white px-5 py-2 rounded-[var(--local-radius-md)] font-semibold hover:brightness-110 hover:-translate-y-px'
-                  : 'text-[var(--local-text-muted)] hover:text-[var(--local-text)]'
-              )}
+          <a
+            href="/"
+            className="flex items-center gap-2 no-underline shrink-0"
+            aria-label="OlonJS home"
+          >
+            <OlonMark size={26} />
+            <span
+              className="text-lg font-bold tracking-tight text-foreground"
+              data-jp-field="logoText"
             >
-              {item.label}
-            </a>
-          ))}
-        </nav>
+              {data.logoText}
+              {data.logoHighlight && (
+                <span className="text-primary" data-jp-field="logoHighlight">
+                  {data.logoHighlight}
+                </span>
+              )}
+            </span>
+          </a>
 
-        <button
-          type="button"
-          className="md:hidden p-2 text-[var(--local-text-muted)] hover:text-[var(--local-text)]"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {mobileMenuOpen ? (
-              <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
-            ) : (
-              <><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></>
-            )}
-          </svg>
-        </button>
-      </div>
+          {data.badge && (
+            <>
+              <span className="w-px h-4 bg-border" aria-hidden />
+              <Badge variant="brand" data-jp-field="badge">
+                {data.badge}
+              </Badge>
+            </>
+          )}
 
-      {mobileMenuOpen && (
-        <nav className="md:hidden border-t border-[var(--local-border)] bg-[var(--local-bg)] backdrop-blur-[20px]">
-          <div className="max-w-[1200px] mx-auto px-8 py-4 flex flex-col gap-4">
+          <div className="flex-1" />
+
+          <nav className="hidden md:flex items-center gap-0.5" aria-label="Site">
             {menu.map((item, idx) => (
-              <a
+              <Button
                 key={(item as { id?: string }).id ?? idx}
-                href={item.href}
-                className="text-base font-medium text-[var(--local-text-muted)] hover:text-[var(--local-text)] transition-colors py-2 no-underline"
-                onClick={() => setMobileMenuOpen(false)}
-                data-jp-item-id={(item as { id?: string }).id ?? `legacy-${idx}`}
-                data-jp-item-field="links"
+                asChild
+                variant={item.isCta ? 'default' : 'ghost'}
+                size="sm"
+                className={cn(
+                  'text-[13px]',
+                  !item.isCta && 'text-muted-foreground hover:text-foreground'
+                )}
               >
-                {item.label}
-              </a>
+                <a
+                  href={item.href}
+                  data-jp-item-id={(item as { id?: string }).id ?? `legacy-${idx}`}
+                  data-jp-item-field="links"
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noopener noreferrer' : undefined}
+                >
+                  {item.label}
+                </a>
+              </Button>
             ))}
-          </div>
-        </nav>
-      )}
-    </header>
+          </nav>
+
+          <button
+            type="button"
+            className="md:hidden p-2 rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {mobileMenuOpen ? (
+                <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+              ) : (
+                <><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></>
+              )}
+            </svg>
+          </button>
+        </div>
+
+        {mobileMenuOpen && (
+          <nav
+            className="absolute top-14 left-0 right-0 md:hidden border-b border-border bg-background/95 backdrop-blur-[16px]"
+            aria-label="Mobile menu"
+          >
+            <div className="max-w-[1040px] mx-auto px-8 py-4 flex flex-col gap-1">
+              {menu.map((item, idx) => (
+                <a
+                  key={(item as { id?: string }).id ?? idx}
+                  href={item.href}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2.5 no-underline"
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-jp-item-id={(item as { id?: string }).id ?? `legacy-${idx}`}
+                  data-jp-item-field="links"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </nav>
+        )}
+      </header>
+    </>
   );
 };
 
@@ -3605,10 +2604,12 @@ export const HeaderSchema = z.object({
   logoText: z.string().describe('ui:text'),
   logoHighlight: z.string().optional().describe('ui:text'),
   logoIconText: z.string().optional().describe('ui:text'),
+  badge: z.string().optional().describe('ui:text'),
   links: z.array(z.object({
     label: z.string().describe('ui:text'),
     href: z.string().describe('ui:text'),
     isCta: z.boolean().default(false).describe('ui:checkbox'),
+    external: z.boolean().default(false).optional().describe('ui:checkbox'),
   })).describe('ui:list'),
 });
 
@@ -3643,225 +2644,188 @@ mkdir -p "src/components/hero"
 echo "Creating src/components/hero/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/hero/View.tsx"
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { HeroData, HeroSettings } from './types';
 
+const CODE_LINES = [
+  { type: 'p', text: '{' },
+  { type: 'k', text: '  "slug"',   after: ': ', val: '"homepage"', comma: ',' },
+  { type: 'k', text: '  "meta"',   after: ': ', val: '{ "title": "Acme Corp" }', comma: ',' },
+  { type: 'k', text: '  "sections"', after: ': [' },
+  { type: 'p', text: '    {' },
+  { type: 'k', text: '      "type"', after: ':  ', val: '"hero"', comma: ',' },
+  { type: 'k', text: '      "data"', after: ': {' },
+  { type: 'k', text: '        "title"', after: ': ', val: '"Ship faster with agents"', comma: ',' },
+  { type: 'k', text: '        "cta"',   after: ':   ', val: '"Get started"' },
+  { type: 'p', text: '      }' },
+  { type: 'p', text: '    },' },
+  { type: 'c', text: '    { "type": "features" /* ... */ }' },
+  { type: 'p', text: '  ]' },
+  { type: 'p', text: '}' },
+] as const;
+
+const tokenColor: Record<string, string> = {
+  k: 'text-[#84ABFF]',
+  s: 'text-[#86efac]',
+  c: 'text-[#4b5563]',
+  p: 'text-[#9ca3af]',
+};
+
 export const Hero: React.FC<{ data: HeroData; settings?: HeroSettings }> = ({ data }) => {
+  const primaryCta = data.ctas?.find(c => c.variant === 'primary') ?? data.ctas?.[0];
+  const secondaryCta = data.ctas?.find(c => c.variant === 'secondary') ?? data.ctas?.[1];
+
   return (
-    <section
-      style={{
-        '--local-bg':          'var(--background)',
-        '--local-text':        'var(--foreground)',
-        '--local-text-muted':  'var(--muted-foreground)',
-        '--local-primary':     'var(--primary)',
-        '--local-accent':      'var(--accent)',
-        '--local-cyan':        'var(--secondary)',
-        '--local-border':      'var(--border)',
-        '--local-surface':     'var(--card)',
-        '--local-radius-sm':   'var(--theme-radius-sm)',
-        '--local-radius-md':   'var(--theme-radius-md)',
-        '--local-radius-lg':   'var(--theme-radius-lg)',
-        '--local-panel-bg':    'var(--demo-surface)',
-        '--local-panel-deep':  'var(--demo-surface-deep)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-panel-text-soft': 'var(--demo-text-soft)',
-        '--local-panel-text-faint': 'var(--demo-text-faint)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-      } as React.CSSProperties}
-      className="jp-hero relative min-h-screen flex items-center overflow-hidden pt-24 pb-0 bg-[var(--local-bg)]"
-    >
-      {/* Background glows */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[650px] bg-[radial-gradient(ellipse_at_50%_0%,var(--local-accent-soft),transparent_65%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[image:linear-gradient(var(--local-accent-soft)_1px,transparent_1px),linear-gradient(90deg,var(--local-accent-soft)_1px,transparent_1px)] bg-[size:80px_80px] [mask-image:radial-gradient(ellipse_at_50%_0%,black_25%,transparent_75%)] pointer-events-none" />
+    <section className="jp-hero relative pt-[156px] pb-28 text-center overflow-hidden">
 
-      <div className="relative z-0 max-w-[1200px] mx-auto px-8 w-full">
-        <div className="grid grid-cols-2 gap-16 items-center pb-20">
+      {/* Background glow — absolute, scoped to hero section */}
+      <div
+        className="pointer-events-none absolute z-0 rounded-full"
+        style={{
+          width: '900px',
+          height: '700px',
+          background: 'radial-gradient(ellipse at center, rgba(23,99,255,.10) 0%, transparent 68%)',
+          top: '-160px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }}
+        aria-hidden
+      />
+      {/* Grid background — absolute, scoped to hero section */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 opacity-40"
+        style={{
+          backgroundImage:
+            'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(ellipse 80% 55% at 50% 0%, black 0%, transparent 100%)',
+        }}
+        aria-hidden
+      />
 
-          {/* LEFT — copy */}
-          <div>
-            {data.badge && (
-              <div
-                className="inline-flex items-center gap-2 bg-[var(--local-accent-soft)] border border-[var(--local-panel-border-strong)] px-4 py-1.5 rounded-full text-[0.70rem] font-mono font-semibold text-[var(--local-accent)] mb-8 tracking-widest uppercase jp-animate-in"
-                data-jp-field="badge"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--local-primary)] jp-pulse-dot" />
-                {data.badge}
-              </div>
-            )}
+      <div className="relative z-10 max-w-[1040px] mx-auto px-8">
 
-            <h1
-              className="font-display font-black text-[clamp(3rem,6vw,5.5rem)] text-[var(--local-text)] leading-[1.0] tracking-tight mb-6 jp-animate-in jp-d1"
-              data-jp-field="title"
+        {/* Eyebrow badge */}
+        {data.badge && (
+          <div className="inline-flex items-center gap-2 mb-8">
+            <Badge
+              variant="brand"
+              className="gap-2 py-1.5 px-4 text-[12px] tracking-[.05em] font-mono"
+              data-jp-field="badge"
             >
-              {data.title}
-              {data.titleHighlight && (
-                <>
-                  <br />
-                  <em
-                    className="not-italic bg-gradient-to-br from-[var(--local-accent)] to-[var(--local-cyan)] bg-clip-text text-transparent"
-                    data-jp-field="titleHighlight"
-                  >
-                    {data.titleHighlight}
-                  </em>
-                </>
-              )}
-            </h1>
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
+                aria-hidden
+              />
+              {data.badge}
+            </Badge>
+          </div>
+        )}
 
-            {data.description && (
-              <p
-                className="text-[1.05rem] text-[var(--local-text-muted)] max-w-[500px] leading-[1.75] mb-10 jp-animate-in jp-d2"
-                data-jp-field="description"
+        {/* Headline */}
+        <h1
+          className="font-display font-bold tracking-[-0.038em] leading-[1.06] text-foreground mb-2 mx-auto"
+          style={{ fontSize: 'clamp(44px, 6.5vw, 74px)', maxWidth: '840px' }}
+          data-jp-field="title"
+        >
+          {data.title}
+          {data.titleHighlight && (
+            <>
+              {' '}
+              <span
+                className="bg-gradient-to-br from-[#84ABFF] via-[#1763FF] to-[#0F52E0] bg-clip-text text-transparent"
+                data-jp-field="titleHighlight"
               >
-                {data.description}
-              </p>
-            )}
+                {data.titleHighlight}
+              </span>
+            </>
+          )}
+        </h1>
 
-            {data.ctas && data.ctas.length > 0 && (
-              <div className="flex gap-4 flex-wrap jp-animate-in jp-d3">
-                {data.ctas.map((cta, idx) => (
-                  <a
-                    key={cta.id ?? idx}
-                    href={cta.href}
-                    data-jp-item-id={cta.id ?? `legacy-${idx}`}
-                    data-jp-item-field="ctas"
-                    className={cn(
-                      'inline-flex items-center gap-2 px-7 py-3 rounded-[var(--local-radius-md)] font-semibold text-[0.95rem] transition-all duration-200 no-underline',
-                      cta.variant === 'primary'
-                        ? 'bg-[var(--local-primary)] text-white hover:brightness-110 hover:-translate-y-0.5 shadow-[0_0_24px_var(--local-accent-soft)]'
-                        : 'bg-transparent text-[var(--local-text)] border border-[var(--local-panel-border)] hover:border-[var(--local-panel-border-strong)] hover:bg-[var(--local-panel-bg)]'
-                    )}
-                  >
-                    {cta.label}
-                  </a>
-                ))}
-              </div>
-            )}
+        {/* Subtitle */}
+        {data.description && (
+          <p
+            className="text-muted-foreground leading-[1.7] mx-auto mt-6 mb-12"
+            style={{ fontSize: 'clamp(15px, 2vw, 18px)', maxWidth: '560px' }}
+            data-jp-field="description"
+          >
+            {data.description}
+          </p>
+        )}
 
-            {data.metrics && data.metrics.length > 0 && (
-              <div className="flex gap-10 mt-14 pt-10 border-t border-[var(--local-panel-border)] flex-wrap jp-animate-in jp-d4">
-                {data.metrics.map((metric, idx) => (
-                  <div
-                    key={(metric as { id?: string }).id ?? idx}
-                    data-jp-item-id={(metric as { id?: string }).id ?? `legacy-${idx}`}
-                    data-jp-item-field="metrics"
-                  >
-                    <div className="font-display text-[2.2rem] font-black text-[var(--local-text)] leading-none">
-                      {metric.val}
-                    </div>
-                    <div className="text-[0.72rem] font-mono uppercase tracking-[0.1em] text-[var(--local-text-muted)] mt-1 opacity-70">
-                      {metric.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* CTAs */}
+        {(primaryCta || secondaryCta) && (
+          <div className="flex items-center justify-center gap-3 flex-wrap mb-0">
+            {primaryCta && (
+              <Button asChild variant="default" size="lg" className="gap-2 px-7 shadow-[0_0_32px_rgba(23,99,255,.38)]">
+                <a
+                  href={primaryCta.href}
+                  data-jp-item-id={primaryCta.id}
+                  data-jp-item-field="ctas"
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.8 }}>
+                    <rect x="2.5" y="2" width="11" height="12" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+                    <path d="M5.5 6h5M5.5 9h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                  </svg>
+                  {primaryCta.label}
+                </a>
+              </Button>
+            )}
+            {secondaryCta && (
+              <Button asChild variant="outline" size="lg" className="gap-2 px-7">
+                <a
+                  href={secondaryCta.href}
+                  data-jp-item-id={secondaryCta.id}
+                  data-jp-item-field="ctas"
+                  target={secondaryCta.href?.startsWith('http') ? '_blank' : undefined}
+                  rel={secondaryCta.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.7 }}>
+                    <path d="M8 1C4.13 1 1 4.13 1 8c0 3.09 2.01 5.71 4.79 6.63.35.06.48-.15.48-.34v-1.2c-1.95.42-2.36-.94-2.36-.94-.32-.81-.78-1.02-.78-1.02-.64-.43.05-.42.05-.42.7.05 1.07.72 1.07.72.62 1.07 1.64.76 2.04.58.06-.45.24-.76.44-.93-1.56-.18-3.2-.78-3.2-3.47 0-.77.27-1.4.72-1.89-.07-.18-.31-.9.07-1.87 0 0 .59-.19 1.93.72A6.7 6.7 0 0 1 8 5.17c.6 0 1.2.08 1.76.24 1.34-.91 1.93-.72 1.93-.72.38.97.14 1.69.07 1.87.45.49.72 1.12.72 1.89 0 2.7-1.64 3.29-3.2 3.47.25.22.48.65.48 1.31v1.94c0 .19.12.4.48.34C12.99 13.71 15 11.09 15 8c0-3.87-3.13-7-7-7z" fill="currentColor"/>
+                  </svg>
+                  {secondaryCta.label}
+                </a>
+              </Button>
             )}
           </div>
+        )}
 
-          {/* RIGHT — ICE mini-mockup */}
-          <div className="jp-animate-in jp-d2 rounded-[var(--local-radius-lg)] overflow-hidden border border-[var(--local-panel-border)] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_40px_80px_rgba(0,0,0,0.6),0_0_60px_rgba(59,130,246,0.08)]">
-            {/* Browser bar */}
-            <div className="bg-[var(--local-panel-bg)] px-3 py-2.5 flex items-center gap-1.5 border-b border-[var(--local-panel-border)]">
+        {/* Code window */}
+        <div className="mt-[68px] mx-auto" style={{ maxWidth: '540px' }}>
+          <div
+            className="rounded-xl border border-border text-left overflow-hidden"
+            style={{ background: '#060d14', boxShadow: '0 32px 64px rgba(0,0,0,.44), 0 0 0 1px rgba(255,255,255,.04)' }}
+          >
+            <div className="flex items-center gap-1.5 px-4 py-3 bg-card border-b border-border">
               <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
-              <span className="mx-auto font-mono text-[0.60rem] text-[var(--local-panel-text-faint)] bg-[var(--local-panel-deep)] px-3 py-0.5 rounded-[var(--local-radius-sm)]">localhost:5173 · Studio</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
+              <span className="flex-1 text-center font-mono text-[11px] text-muted-foreground/60">
+                GET /homepage.json
+              </span>
             </div>
-            {/* Split: canvas + inspector */}
-            <div className="grid grid-cols-[1fr_260px] h-[360px] bg-[var(--local-panel-deep)]">
-              {/* Canvas */}
-              <div className="relative bg-gradient-to-br from-[var(--local-panel-deep)] to-[var(--local-panel-bg)] p-8 flex flex-col justify-center">
-                <span className="absolute top-2 right-2 font-mono text-[0.48rem] font-bold tracking-widest uppercase bg-[var(--local-primary)] text-white px-1.5 py-0.5 rounded-[var(--local-radius-sm)]">HERO | LOCAL</span>
-                <div className="absolute inset-0 border-2 border-[var(--local-primary)] pointer-events-none" />
-                <div className="inline-flex items-center gap-1.5 bg-[var(--local-panel-bg)] border border-[var(--local-panel-border)] rounded-full px-2.5 py-1 font-mono text-[0.52rem] text-[var(--local-panel-text-soft)] mb-3 w-fit">
-                  <span className="w-1 h-1 rounded-full bg-[var(--local-primary)]" />
-                  {data.badge ?? 'Architecture v1.2'}
+            <div className="px-6 py-5 font-mono text-[12.5px] leading-[1.8] overflow-x-auto">
+              {CODE_LINES.map((ln, i) => (
+                <div key={i}>
+                  {ln.type === 'k' ? (
+                    <span>
+                      <span className={tokenColor.k}>{ln.text}</span>
+                      {'after' in ln && <span className={tokenColor.p}>{ln.after}</span>}
+                      {'val' in ln && <span className="text-[#86efac]">{ln.val}</span>}
+                      {'comma' in ln && <span className={tokenColor.p}>{ln.comma}</span>}
+                    </span>
+                  ) : ln.type === 'c' ? (
+                    <span className={tokenColor.c}>{ln.text}</span>
+                  ) : (
+                    <span className={tokenColor.p}>{ln.text}</span>
+                  )}
                 </div>
-                <div className="font-display font-black text-[1.5rem] leading-none text-white mb-0.5">
-                  {data.title}
-                </div>
-                {data.titleHighlight && (
-                  <div className="font-display font-black text-[1.5rem] leading-none bg-gradient-to-r from-[var(--local-accent)] to-[var(--local-cyan)] bg-clip-text text-transparent mb-3">
-                    {data.titleHighlight}
-                  </div>
-                )}
-                <p className="text-[0.65rem] text-[var(--local-panel-text-faint)] leading-[1.6] max-w-[220px] mb-3">
-                  {data.description?.slice(0, 100)}…
-                </p>
-                <div className="flex gap-1.5">
-                  <span className="text-[0.58rem] font-semibold bg-[var(--local-primary)] text-white px-2.5 py-1 rounded-[var(--local-radius-sm)]">Read the Docs</span>
-                  <span className="text-[0.58rem] border border-[var(--local-panel-border)] text-[var(--local-panel-text-soft)] px-2.5 py-1 rounded-[var(--local-radius-sm)]">View on NPM</span>
-                </div>
-                <div className="flex gap-4 mt-3 pt-3 border-t border-[var(--local-panel-border)]">
-                  {(data.metrics ?? []).map((m, i) => (
-                    <div key={i}>
-                      <div className="font-display font-black text-[1rem] text-white leading-none">{m.val}</div>
-                      <div className="font-mono text-[0.44rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] mt-0.5">{m.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Inspector */}
-              <div className="bg-[var(--local-panel-bg)] border-l border-[var(--local-panel-border)] flex flex-col">
-                <div className="px-3.5 py-2.5 border-b border-[var(--local-panel-border)] flex items-start justify-between">
-                  <div>
-                    <div className="font-display font-bold text-[0.80rem] text-white">Inspector</div>
-                    <div className="flex items-center gap-1.5 mt-0.5 font-mono text-[0.54rem] text-[var(--local-accent)]">
-                      <span className="font-bold">■ HERO</span>
-                      <span className="text-[var(--local-panel-text-faint)]">|</span>
-                      <span className="text-[var(--local-panel-text-faint)]">LOCAL</span>
-                    </div>
-                  </div>
-                  <span className="font-mono text-[0.55rem] text-[var(--local-accent)]">+ Add section</span>
-                </div>
-                {/* Layers */}
-                <div className="border-b border-[var(--local-panel-border)]">
-                  <div className="px-3.5 py-1.5 font-mono text-[0.50rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] flex justify-between">
-                    <span>Page Layers</span><span className="text-[var(--local-panel-text-faint)]">(8)</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[var(--local-accent-soft)]">
-                    <span className="font-mono text-[0.50rem] uppercase tracking-wide text-[var(--local-accent)] w-9">HERO</span>
-                    <span className="font-sans text-[0.60rem] text-[var(--local-text)] font-semibold flex-1 truncate">{data.title}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--local-primary)]" />
-                  </div>
-                  <div className="flex items-center gap-2 px-3.5 py-1.5 opacity-50">
-                    <span className="font-mono text-[0.50rem] uppercase tracking-wide text-[var(--local-panel-text-faint)] w-9">SOC</span>
-                    <span className="font-sans text-[0.60rem] text-[var(--local-panel-text-faint)] flex-1 truncate">Separation of Concerns</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3.5 py-1.5 opacity-35">
-                    <span className="font-mono text-[0.50rem] uppercase tracking-wide text-[var(--local-panel-text-faint)] w-9">CMS</span>
-                    <span className="font-sans text-[0.60rem] text-[var(--local-panel-text-faint)] flex-1 truncate">In-Context Editing</span>
-                  </div>
-                </div>
-                {/* Fields */}
-                <div className="flex-1 px-3.5 py-3 flex flex-col gap-2.5 overflow-hidden">
-                  <div>
-                    <div className="font-mono text-[0.50rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] mb-1">Title</div>
-                    <div className="bg-[var(--local-accent-soft)] border border-[var(--local-panel-border-strong)] rounded-[var(--local-radius-sm)] px-2 py-1.5 font-mono text-[0.58rem] text-[var(--local-text)] truncate">{data.title}</div>
-                  </div>
-                  <div>
-                    <div className="font-mono text-[0.50rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] mb-1">Subtitle</div>
-                    <div className="bg-[var(--local-panel-bg)] border border-[var(--local-panel-border)] rounded-[var(--local-radius-sm)] px-2 py-1.5 font-mono text-[0.58rem] text-[var(--local-panel-text-soft)] truncate">{data.titleHighlight}</div>
-                  </div>
-                  <div>
-                    <div className="font-mono text-[0.50rem] uppercase tracking-widest text-[var(--local-panel-text-faint)] mb-1">Badge</div>
-                    <div className="bg-[var(--local-panel-bg)] border border-[var(--local-panel-border)] rounded-[var(--local-radius-sm)] px-2 py-1.5 font-mono text-[0.58rem] text-[var(--local-panel-text-soft)] truncate">{data.badge}</div>
-                  </div>
-                </div>
-                {/* Bottom bar */}
-                <div className="px-3.5 py-2 border-t border-[var(--local-panel-border)] bg-[var(--local-panel-bg)] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--local-primary)]" />
-                  <span className="font-mono text-[0.50rem] text-[var(--local-panel-text-soft)]">All Changes Saved</span>
-                  <div className="ml-auto flex gap-1.5">
-                    <span className="font-mono text-[0.48rem] px-1.5 py-0.5 rounded-[var(--local-radius-sm)] border border-[var(--local-panel-border-strong)] bg-[var(--local-accent-soft)] text-[var(--local-accent)]">⬡ HTML</span>
-                    <span className="font-mono text-[0.48rem] px-1.5 py-0.5 rounded-[var(--local-radius-sm)] border border-[var(--local-panel-border)] bg-[var(--local-panel-bg)] text-[var(--local-panel-text-soft)] opacity-50">{ } JSON</span>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-
         </div>
+
       </div>
     </section>
   );
@@ -3905,548 +2869,87 @@ export type HeroData = z.infer<typeof HeroSchema>;
 export type HeroSettings = z.infer<typeof BaseSectionSettingsSchema>;
 
 END_OF_FILE_CONTENT
-mkdir -p "src/components/image-break"
-echo "Creating src/components/image-break/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/image-break/View.tsx"
-import React from 'react';
-import { resolveAssetUrl, useConfig } from '@olonjs/core';
-import type { ImageBreakData, ImageBreakSettings } from './types';
-
-export const ImageBreak: React.FC<{ data: ImageBreakData; settings?: ImageBreakSettings }> = ({ data }) => {
-  const { tenantId = 'default' } = useConfig();
-  const imageUrl = data.image?.url ? resolveAssetUrl(data.image.url, tenantId) : '';
-
-  return (
-    <section
-      style={{
-        '--local-bg': 'var(--background)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-surface-overlay': 'color-mix(in oklch, var(--background) 78%, transparent)',
-      } as React.CSSProperties}
-      className="relative z-0 bg-[var(--local-bg)]"
-    >
-      {imageUrl ? (
-        <>
-          <div className="relative w-full aspect-[21/9] min-h-[200px]">
-            <img
-              src={imageUrl}
-              alt={data.image?.alt ?? ''}
-              className="w-full h-full object-cover"
-              data-jp-field="image"
-            />
-            {data.caption && (
-              <div
-                className="absolute bottom-0 inset-x-0 bg-[var(--local-surface-overlay)] backdrop-blur-sm px-6 py-4"
-                data-jp-field="caption"
-              >
-                <p className="text-sm text-[var(--local-text-muted)] italic">{data.caption}</p>
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-24 text-[var(--local-text-muted)]">
-          <span className="text-sm">Nessuna immagine</span>
-          <span className="text-xs mt-1">Seleziona la section e usa Image Picker nell’Inspector</span>
-        </div>
-      )}
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/image-break/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/image-break/index.ts"
-export { ImageBreak } from './View';
-export { ImageBreakSchema } from './schema';
-export type { ImageBreakData, ImageBreakSettings } from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/image-break/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/image-break/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData, ImageSelectionSchema } from '@/lib/base-schemas';
-
-export const ImageBreakSchema = BaseSectionData.extend({
-  image: ImageSelectionSchema.default({ url: '', alt: '' }),
-  caption: z.string().optional().describe('ui:text'),
-});
-
-export const ImageBreakSettingsSchema = z.object({
-  height: z.enum(['sm', 'md', 'lg', 'full']).default('md').describe('ui:select'),
-});
-END_OF_FILE_CONTENT
-echo "Creating src/components/image-break/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/image-break/types.ts"
-import type { z } from 'zod';
-import type { ImageBreakSchema } from './schema';
-
-export type ImageBreakData = z.infer<typeof ImageBreakSchema>;
-export type ImageBreakSettings = Record<string, unknown>;
-
-END_OF_FILE_CONTENT
-mkdir -p "src/components/image-test"
-mkdir -p "src/components/pa-section"
-echo "Creating src/components/pa-section/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pa-section/View.tsx"
-import React from 'react';
-import type { PaSectionData, PaSectionSettings } from './types';
-
-export const PaSection: React.FC<{ data: PaSectionData; settings?: PaSectionSettings }> = ({ data }) => {
-  return (
-    <section
-      style={{
-        '--local-bg': 'var(--card)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary': 'var(--primary)',
-        '--local-accent': 'var(--accent)',
-        '--local-deep': 'var(--background)',
-        '--local-radius-md': 'var(--theme-radius-md)',
-        '--local-radius-lg': 'var(--theme-radius-lg)',
-        '--local-panel-bg': 'var(--demo-surface-soft)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="max-w-[1200px] mx-auto px-8">
-        {data.label && (
-          <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[var(--local-accent)] mb-4" data-jp-field="label">
-            <span className="w-5 h-px bg-[var(--local-primary)]" />
-            {data.label}
-          </div>
-        )}
-        <h2 className="font-display text-[clamp(2rem,4vw,3.2rem)] font-extrabold text-[var(--local-text)] leading-[1.15] tracking-tight mb-4" data-jp-field="title">
-          {data.title}
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mt-12">
-          <div>
-            <h3 className="text-2xl font-bold text-[var(--local-text)] mb-4" data-jp-field="subtitle">
-              {data.subtitle}
-            </h3>
-            {data.paragraphs.map((p, idx) => (
-              <p key={idx} className="text-[var(--local-text-muted)] mb-5 text-[1.05rem] leading-relaxed" data-jp-item-id={(p as { id?: string }).id ?? `legacy-${idx}`} data-jp-item-field="paragraphs">
-                {p.text}
-              </p>
-            ))}
-            {data.badges && data.badges.length > 0 && (
-              <div className="flex gap-2.5 flex-wrap mt-4">
-                {data.badges.map((badge, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 bg-[var(--local-accent-soft)] border border-[var(--local-panel-border-strong)] text-[var(--local-accent)] px-3 py-1.5 rounded-[var(--local-radius-md)] text-[0.78rem] font-semibold"
-                    data-jp-item-id={(badge as { id?: string }).id ?? `legacy-${idx}`}
-                    data-jp-item-field="badges"
-                  >
-                    {badge.label}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="border border-[var(--local-panel-border)] rounded-[var(--local-radius-lg)] p-12 bg-[var(--local-panel-bg)] text-center">
-            {data.engines && data.engines.length >= 2 && (
-              <div className="flex items-center justify-center gap-6 mb-8">
-                {data.engines.map((engine, idx) => (
-                  <React.Fragment key={idx}>
-                    {idx > 0 && (
-                      <span className="text-[var(--local-text-muted)] text-2xl opacity-50">⇄</span>
-                    )}
-                    <div
-                      className={
-                        engine.variant === 'tailwind'
-                          ? 'px-6 py-4 rounded-[var(--local-radius-md)] font-bold text-[0.95rem] border bg-[var(--local-accent-soft)] border-[var(--local-panel-border-strong)] text-[var(--local-accent)]'
-                          : 'px-6 py-4 rounded-[var(--local-radius-md)] font-bold text-[0.95rem] border bg-[var(--local-panel-bg)] border-[var(--local-panel-border)] text-[var(--local-primary)]'
-                      }
-                      data-jp-item-id={(engine as { id?: string }).id ?? `legacy-${idx}`}
-                      data-jp-item-field="engines"
-                    >
-                      {engine.label}
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
-            )}
-            {data.codeSnippet && (
-              <div className="font-mono text-[0.85rem] text-[var(--local-text-muted)] bg-[var(--local-deep)] p-4 rounded-[var(--local-radius-lg)] text-left border border-[var(--local-panel-border)]" data-jp-field="codeSnippet">
-                <pre className="whitespace-pre-wrap m-0">{data.codeSnippet}</pre>
-                <div className="mt-4 text-[0.75rem] text-center opacity-50">
-                  Same JSON. Different Render Engine.
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/pa-section/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pa-section/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/pa-section/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pa-section/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData } from '@/lib/base-schemas';
-
-const PaBadgeSchema = z.object({
-  label: z.string().describe('ui:text'),
-});
-
-const PaEngineSchema = z.object({
-  label: z.string().describe('ui:text'),
-  variant: z.enum(['tailwind', 'bootstrap']).describe('ui:select'),
-});
-
-export const PaSectionSchema = BaseSectionData.extend({
-  label: z.string().optional().describe('ui:text'),
-  title: z.string().describe('ui:text'),
-  subtitle: z.string().describe('ui:text'),
-  paragraphs: z.array(z.object({ text: z.string().describe('ui:textarea') })).describe('ui:list'),
-  badges: z.array(PaBadgeSchema).optional().describe('ui:list'),
-  engines: z.array(PaEngineSchema).optional().describe('ui:list'),
-  codeSnippet: z.string().optional().describe('ui:textarea'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/pa-section/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pa-section/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { PaSectionSchema } from './schema';
-
-export type PaSectionData = z.infer<typeof PaSectionSchema>;
-export type PaSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
-
-END_OF_FILE_CONTENT
-mkdir -p "src/components/philosophy"
-echo "Creating src/components/philosophy/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/philosophy/View.tsx"
-import React from 'react';
-import type { PhilosophyData, PhilosophySettings } from './types';
-
-export const Philosophy: React.FC<{ data: PhilosophyData; settings?: PhilosophySettings }> = ({ data }) => {
-  const renderQuote = () => {
-    if (!data.quoteHighlightWord) {
-      return <>{data.quote}</>;
-    }
-    const parts = data.quote.split(data.quoteHighlightWord);
-    return (
-      <>
-        {parts.map((part, idx) => (
-          <React.Fragment key={idx}>
-            {part}
-            {idx < parts.length - 1 && (
-              <em className="not-italic text-[var(--local-accent)]">
-                {data.quoteHighlightWord}
-              </em>
-            )}
-          </React.Fragment>
-        ))}
-      </>
-    );
-  };
-
-  return (
-    <section
-      style={{
-        '--local-bg': 'var(--background)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-accent': 'var(--accent)',
-        '--local-primary': 'var(--primary)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="max-w-[1200px] mx-auto px-8">
-        <div className="max-w-[760px] mx-auto text-center">
-          {data.label && (
-            <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[var(--local-accent)] mb-4" data-jp-field="label">
-              <span className="w-5 h-px bg-[var(--local-primary)]" />
-              {data.label}
-            </div>
-          )}
-          <h2 className="font-display text-[clamp(2rem,4vw,3.2rem)] font-extrabold text-[var(--local-text)] leading-[1.15] tracking-tight mb-4" data-jp-field="title">
-            {data.title}
-          </h2>
-          <blockquote className="font-display text-[clamp(1.6rem,3vw,2.4rem)] text-[var(--local-text)] font-bold leading-[1.35] my-8" data-jp-field="quote">
-            &ldquo;{renderQuote()}&rdquo;
-          </blockquote>
-          {data.description && (
-            <p className="text-[1.05rem] text-[var(--local-text-muted)] max-w-[560px] mx-auto leading-relaxed" data-jp-field="description">
-              {data.description}
-            </p>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/philosophy/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/philosophy/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/philosophy/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/philosophy/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData } from '@/lib/base-schemas';
-
-export const PhilosophySchema = BaseSectionData.extend({
-  label: z.string().optional().describe('ui:text'),
-  title: z.string().describe('ui:text'),
-  quote: z.string().describe('ui:textarea'),
-  quoteHighlightWord: z.string().optional().describe('ui:text'),
-  description: z.string().optional().describe('ui:textarea'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/philosophy/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/philosophy/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { PhilosophySchema } from './schema';
-
-export type PhilosophyData = z.infer<typeof PhilosophySchema>;
-export type PhilosophySettings = z.infer<typeof BaseSectionSettingsSchema>;
-
-END_OF_FILE_CONTENT
-mkdir -p "src/components/pillars-grid"
-echo "Creating src/components/pillars-grid/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pillars-grid/View.tsx"
-import React from 'react';
-import { cn } from '@/lib/utils';
-import { Icon, isIconName } from '@/lib/IconResolver';
-import type { PillarsGridData, PillarsGridSettings, PillarIconVariant, PillarTagVariant } from './types';
-
-const iconVariantStyles: Record<PillarIconVariant, string> = {
-  split: 'bg-[var(--local-accent-soft)] text-[var(--local-accent)]',
-  registry: 'bg-[var(--local-cyan-soft)] text-[var(--local-cyan)]',
-  federation: 'bg-[var(--local-panel-bg)] text-[var(--local-primary)]',
-};
-
-const tagVariantStyles: Record<PillarTagVariant, string> = {
-  core: 'bg-[var(--local-accent-soft)] text-[var(--local-accent)]',
-  pattern: 'bg-[var(--local-cyan-soft)] text-[var(--local-cyan)]',
-  enterprise: 'bg-[var(--local-panel-bg)] text-[var(--local-primary)]',
-};
-
-export const PillarsGrid: React.FC<{ data: PillarsGridData; settings?: PillarsGridSettings }> = ({ data }) => {
-  return (
-    <section
-      style={{
-        '--local-bg': 'var(--background)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary': 'var(--primary)',
-        '--local-accent': 'var(--accent)',
-        '--local-cyan': 'var(--secondary)',
-        '--local-border': 'var(--border)',
-        '--local-radius-md': 'var(--theme-radius-md)',
-        '--local-radius-lg': 'var(--theme-radius-lg)',
-        '--local-panel-bg': 'var(--demo-surface-soft)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-        '--local-cyan-soft': 'color-mix(in oklch, var(--secondary) 14%, transparent)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-px bg-gradient-to-r from-transparent via-[var(--local-panel-border-strong)] to-transparent" />
-      <div className="max-w-[1200px] mx-auto px-8">
-        {data.label && (
-          <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[var(--local-accent)] mb-4" data-jp-field="label">
-            <span className="w-5 h-px bg-[var(--local-primary)]" />
-            {data.label}
-          </div>
-        )}
-        <h2 className="font-display text-[clamp(2rem,4vw,3.2rem)] font-extrabold text-[var(--local-text)] leading-[1.15] tracking-tight mb-4" data-jp-field="title">
-          {data.title}
-        </h2>
-        {data.description && (
-          <p className="text-lg text-[var(--local-text-muted)] max-w-[600px] leading-relaxed" data-jp-field="description">
-            {data.description}
-          </p>
-        )}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-14">
-          {data.pillars.map((pillar, idx) => (
-            <div
-              key={pillar.id ?? idx}
-              className="jp-pillar-card group relative border border-[var(--local-panel-border)] rounded-[var(--local-radius-lg)] p-10 bg-[var(--local-panel-bg)] transition-all duration-300 overflow-hidden hover:border-[var(--local-panel-border-strong)] hover:-translate-y-1 hover:bg-[var(--local-accent-soft)]"
-              data-jp-item-id={pillar.id ?? `legacy-${idx}`}
-              data-jp-item-field="pillars"
-            >
-              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[var(--local-primary)] to-[var(--local-cyan)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className={cn(
-                'w-12 h-12 rounded-[var(--local-radius-md)] flex items-center justify-center mb-6 text-xl font-bold',
-                iconVariantStyles[pillar.iconVariant]
-              )}>
-                {pillar.icon && isIconName(pillar.icon) ? (
-                  <Icon name={pillar.icon} size={24} className="shrink-0" />
-                ) : pillar.icon ? (
-                  <span>{pillar.icon}</span>
-                ) : null}
-              </div>
-              <h3 className="text-xl font-bold text-[var(--local-text)] mb-3">
-                {pillar.title}
-              </h3>
-              <p className="text-[0.95rem] text-[var(--local-text-muted)] leading-relaxed">
-                {pillar.description}
-              </p>
-              <span className={cn(
-                'inline-block text-[0.7rem] font-semibold uppercase tracking-wide px-3 py-1 rounded mt-4',
-                tagVariantStyles[pillar.tagVariant]
-              )}>
-                {pillar.tag}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/pillars-grid/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pillars-grid/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/pillars-grid/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pillars-grid/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
-
-export const PillarIconVariantSchema = z.enum(['split', 'registry', 'federation']);
-export const PillarTagVariantSchema = z.enum(['core', 'pattern', 'enterprise']);
-
-const PillarCardSchema = BaseArrayItem.extend({
-  icon: z.string().describe('ui:icon-picker'),
-  iconVariant: PillarIconVariantSchema.describe('ui:select'),
-  title: z.string().describe('ui:text'),
-  description: z.string().describe('ui:textarea'),
-  tag: z.string().describe('ui:text'),
-  tagVariant: PillarTagVariantSchema.describe('ui:select'),
-});
-
-export const PillarsGridSchema = BaseSectionData.extend({
-  label: z.string().optional().describe('ui:text'),
-  title: z.string().describe('ui:text'),
-  description: z.string().optional().describe('ui:textarea'),
-  pillars: z.array(PillarCardSchema).describe('ui:list'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/pillars-grid/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/pillars-grid/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { PillarsGridSchema, PillarIconVariantSchema, PillarTagVariantSchema } from './schema';
-
-export type PillarsGridData = z.infer<typeof PillarsGridSchema>;
-export type PillarsGridSettings = z.infer<typeof BaseSectionSettingsSchema>;
-export type PillarIconVariant = z.infer<typeof PillarIconVariantSchema>;
-export type PillarTagVariant = z.infer<typeof PillarTagVariantSchema>;
-
-END_OF_FILE_CONTENT
 mkdir -p "src/components/problem-statement"
 echo "Creating src/components/problem-statement/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/problem-statement/View.tsx"
 import React from 'react';
-import { cn } from '@/lib/utils';
-import type { ProblemStatementData, ProblemStatementSettings, SiloBlockVariant } from './types';
+import type { ProblemStatementData, ProblemStatementSettings } from './types';
 
-const variantStyles: Record<SiloBlockVariant, string> = {
-  red: 'bg-[var(--local-panel-bg)] border-[var(--local-panel-border)] text-[var(--local-text-muted)]',
-  amber: 'bg-[var(--local-panel-bg)] border-[var(--local-panel-border)] text-[var(--local-text-muted)]',
-  green: 'bg-[var(--local-accent-soft)] border-[var(--local-panel-border-strong)] text-[var(--local-accent)]',
-  blue: 'bg-[var(--local-accent-soft)] border-[var(--local-panel-border-strong)] text-[var(--local-accent)]',
-};
-
-export const ProblemStatement: React.FC<{ data: ProblemStatementData; settings?: ProblemStatementSettings }> = ({ data }) => {
+export const ProblemStatement: React.FC<{
+  data: ProblemStatementData;
+  settings?: ProblemStatementSettings;
+}> = ({ data }) => {
   return (
-    <section
-      style={{
-        '--local-bg': 'var(--background)',
-        '--local-surface': 'var(--card)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-border': 'var(--border)',
-        '--local-radius-md': 'var(--theme-radius-md)',
-        '--local-radius-lg': 'var(--theme-radius-lg)',
-        '--local-panel-bg': 'var(--demo-surface-soft)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-accent': 'var(--accent)',
-        '--local-accent-soft': 'var(--demo-accent-soft)',
-      } as React.CSSProperties}
-      className="jp-problem relative z-0 py-28 bg-gradient-to-b from-[var(--local-bg)] to-[var(--local-surface)]"
-    >
-      <div className="max-w-[1200px] mx-auto px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="relative h-[360px] border border-[var(--local-panel-border)] rounded-[var(--local-radius-lg)] bg-[var(--local-panel-bg)] overflow-hidden flex items-center justify-center">
-            <div className="text-center p-8">
-              {data.siloGroups.map((group, gIdx) => (
-                <div
-                  key={gIdx}
-                  className="mb-4"
-                  data-jp-item-id={(group as { id?: string }).id ?? `legacy-${gIdx}`}
-                  data-jp-item-field="siloGroups"
-                >
-                  <div className="flex flex-wrap justify-center gap-1.5">
-                    {group.blocks.map((block, bIdx) => (
-                      <span
-                        key={(block as { id?: string }).id ?? bIdx}
-                        className={cn(
-                          'inline-block px-4 py-2 rounded-[var(--local-radius-md)] text-[0.8rem] font-semibold border',
-                          variantStyles[block.variant]
-                        )}
-                        data-jp-item-id={(block as { id?: string }).id ?? `legacy-${bIdx}`}
-                        data-jp-item-field="blocks"
-                      >
-                        {block.label}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-[0.7rem] text-[var(--local-text-muted)] uppercase tracking-widest mt-2 block opacity-60">
-                    {group.label}
-                  </span>
-                </div>
-              ))}
-            </div>
+    <section id="problem" className="jp-problem py-24">
+      <div className="max-w-[1040px] mx-auto px-8">
+
+        {data.label && (
+          <div className="inline-flex items-center gap-2 text-[10.5px] font-mono font-bold uppercase tracking-[.12em] text-muted-foreground/60 mb-5">
+            <span className="w-[18px] h-px bg-border" aria-hidden />
+            {data.label}
           </div>
-          <div>
-            <h3 className="text-2xl font-bold text-[var(--local-text)] mb-4" data-jp-field="title">
-              {data.title}
+        )}
+
+        {/* Split grid */}
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 rounded-xl overflow-hidden border border-border"
+          style={{ gap: '1px', background: 'var(--border)' }}
+        >
+          {/* Problem cell */}
+          <div className="bg-background p-10 md:p-[40px_42px]" data-jp-field="problemTitle">
+            <div className="text-[10.5px] font-bold tracking-[.10em] uppercase text-red-500 mb-5">
+              {data.problemTag}
+            </div>
+            <h3 className="text-[21px] font-bold tracking-[-0.02em] leading-[1.2] text-foreground mb-6">
+              {data.problemTitle}
             </h3>
-            {data.paragraphs.map((p, idx) => (
-              <p
-                key={idx}
-                className="text-[var(--local-text-muted)] mb-5 text-[1.05rem] leading-relaxed"
-                data-jp-item-id={(p as { id?: string }).id ?? `legacy-${idx}`}
-                data-jp-item-field="paragraphs"
-              >
-                {p.isBold ? <strong className="text-[var(--local-text)]">{p.text}</strong> : p.text}
-              </p>
-            ))}
+            <ul className="flex flex-col gap-3.5" data-jp-field="problemItems">
+              {data.problemItems?.map((item, idx) => (
+                <li
+                  key={(item as { id?: string }).id ?? idx}
+                  className="flex gap-2.5 text-[13.5px] text-muted-foreground leading-[1.65]"
+                  data-jp-item-id={(item as { id?: string }).id ?? `p-${idx}`}
+                  data-jp-item-field="problemItems"
+                >
+                  <span className="flex-shrink-0 w-5 h-5 rounded-sm bg-red-500/10 text-red-500 flex items-center justify-center text-[10px] font-bold mt-0.5">
+                    ✕
+                  </span>
+                  <span>{item.text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Solution cell */}
+          <div className="bg-card p-10 md:p-[40px_42px]" data-jp-field="solutionTitle">
+            <div className="text-[10.5px] font-bold tracking-[.10em] uppercase text-emerald-500 mb-5">
+              {data.solutionTag}
+            </div>
+            <h3 className="text-[21px] font-bold tracking-[-0.02em] leading-[1.2] text-foreground mb-6">
+              {data.solutionTitle}
+            </h3>
+            <ul className="flex flex-col gap-3.5" data-jp-field="solutionItems">
+              {data.solutionItems?.map((item, idx) => (
+                <li
+                  key={(item as { id?: string }).id ?? idx}
+                  className="flex gap-2.5 text-[13.5px] text-muted-foreground leading-[1.65]"
+                  data-jp-item-id={(item as { id?: string }).id ?? `s-${idx}`}
+                  data-jp-item-field="solutionItems"
+                >
+                  <span className="flex-shrink-0 w-5 h-5 rounded-sm bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-[10px] font-bold mt-0.5">
+                    ✓
+                  </span>
+                  <span>
+                    {item.text}
+                    {item.code && (
+                      <> <code className="font-mono text-[11px] bg-muted border border-border rounded px-1.5 py-0.5 text-primary">
+                        {item.code}
+                      </code></>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
@@ -4467,27 +2970,19 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/problem-statement/schema.ts"
 import { z } from 'zod';
 import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
 
-export const SiloBlockVariantSchema = z.enum(['red', 'amber', 'green', 'blue']);
-const SiloBlockSchema = BaseArrayItem.extend({
-  label: z.string().describe('ui:text'),
-  variant: SiloBlockVariantSchema.describe('ui:select'),
-});
-
-const SiloGroupSchema = BaseArrayItem.extend({
-  blocks: z.array(SiloBlockSchema).describe('ui:list'),
-  label: z.string().describe('ui:text'),
-});
-
-const ProblemParagraphSchema = BaseArrayItem.extend({
-  text: z.string().describe('ui:textarea'),
-  isBold: z.boolean().default(false).describe('ui:checkbox'),
+const ProblemItemSchema = BaseArrayItem.extend({
+  text: z.string().describe('ui:text'),
+  code: z.string().optional().describe('ui:text'),
 });
 
 export const ProblemStatementSchema = BaseSectionData.extend({
-  siloGroups: z.array(SiloGroupSchema).describe('ui:list'),
-  title: z.string().describe('ui:text'),
-  paragraphs: z.array(ProblemParagraphSchema).describe('ui:list'),
-  highlight: z.string().optional().describe('ui:text'),
+  label: z.string().optional().describe('ui:text'),
+  problemTag: z.string().describe('ui:text'),
+  problemTitle: z.string().describe('ui:text'),
+  problemItems: z.array(ProblemItemSchema).describe('ui:list'),
+  solutionTag: z.string().describe('ui:text'),
+  solutionTitle: z.string().describe('ui:text'),
+  solutionItems: z.array(ProblemItemSchema).describe('ui:list'),
 });
 
 END_OF_FILE_CONTENT
@@ -4495,171 +2990,10 @@ echo "Creating src/components/problem-statement/types.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/problem-statement/types.ts"
 import { z } from 'zod';
 import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { ProblemStatementSchema, SiloBlockVariantSchema } from './schema';
+import { ProblemStatementSchema } from './schema';
 
 export type ProblemStatementData = z.infer<typeof ProblemStatementSchema>;
 export type ProblemStatementSettings = z.infer<typeof BaseSectionSettingsSchema>;
-export type SiloBlockVariant = z.infer<typeof SiloBlockVariantSchema>;
-
-END_OF_FILE_CONTENT
-mkdir -p "src/components/product-triad"
-echo "Creating src/components/product-triad/View.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/product-triad/View.tsx"
-import React from 'react';
-import { cn } from '@/lib/utils';
-import type { ProductTriadData, ProductTriadSettings } from './types';
-
-export const ProductTriad: React.FC<{ data: ProductTriadData; settings?: ProductTriadSettings }> = ({ data }) => {
-  return (
-    <section
-      style={{
-        '--local-bg': 'var(--background)',
-        '--local-text': 'var(--foreground)',
-        '--local-text-muted': 'var(--muted-foreground)',
-        '--local-primary': 'var(--primary)',
-        '--local-accent': 'var(--accent)',
-        '--local-border': 'var(--border)',
-        '--local-radius-sm': 'var(--theme-radius-sm)',
-        '--local-radius-md': 'var(--theme-radius-md)',
-        '--local-radius-lg': 'var(--theme-radius-lg)',
-        '--local-panel-bg': 'var(--demo-surface-soft)',
-        '--local-panel-bg-featured': 'var(--demo-accent-soft)',
-        '--local-panel-border': 'var(--demo-border-soft)',
-        '--local-panel-border-strong': 'var(--demo-border-strong)',
-        '--local-panel-hover': 'var(--demo-accent-soft)',
-        '--local-panel-text-soft': 'var(--demo-text-soft)',
-      } as React.CSSProperties}
-      className="relative z-0 py-28 bg-[var(--local-bg)]"
-    >
-      <div className="max-w-[1200px] mx-auto px-8">
-        <div className="text-center">
-          {data.label && (
-            <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[var(--local-accent)] mb-4" data-jp-field="label">
-              <span className="w-5 h-px bg-[var(--local-primary)]" />
-              {data.label}
-            </div>
-          )}
-          <h2 className="font-display text-[clamp(2rem,4vw,3.2rem)] font-extrabold text-[var(--local-text)] leading-[1.15] tracking-tight mb-4" data-jp-field="title">
-            {data.title}
-          </h2>
-          {data.description && (
-            <p className="text-lg text-[var(--local-text-muted)] max-w-[600px] mx-auto leading-relaxed" data-jp-field="description">
-              {data.description}
-            </p>
-          )}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-14">
-          {data.products.map((product, idx) => (
-            <div
-              key={product.id ?? idx}
-              className={cn(
-                'relative border rounded-[var(--local-radius-lg)] p-10 transition-all duration-300 hover:-translate-y-1',
-                product.featured
-                  ? 'border-[var(--local-panel-border-strong)] bg-[var(--local-panel-bg-featured)] hover:border-[var(--local-accent)]'
-                  : 'border-[var(--local-panel-border)] bg-[var(--local-panel-bg)] hover:border-[var(--local-panel-border-strong)]'
-              )}
-              data-jp-item-id={product.id ?? `legacy-${idx}`}
-              data-jp-item-field="products"
-            >
-              {product.featured && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--local-primary)] text-white text-[0.7rem] font-bold px-4 py-1 rounded-full uppercase tracking-wide">
-                  Most Popular
-                </div>
-              )}
-              <div className="text-[0.75rem] font-bold uppercase tracking-[0.1em] text-[var(--local-accent)] mb-2">
-                {product.tier}
-              </div>
-              <div className="text-2xl font-extrabold text-[var(--local-text)] mb-2">
-                {product.name}
-              </div>
-              <div className="font-display text-[2.2rem] font-extrabold text-[var(--local-text)] mb-1">
-                {product.price}
-                {product.priceSuffix && (
-                  <span className="text-[0.9rem] font-normal text-[var(--local-text-muted)]">
-                    {product.priceSuffix}
-                  </span>
-                )}
-              </div>
-              <div className="text-[0.85rem] text-[var(--local-text-muted)] mb-6 pb-6 border-b border-[var(--local-panel-border)]">
-                {product.delivery}
-              </div>
-              <ul className="mb-8 space-y-0">
-                {product.features.map((feature, fIdx) => (
-                  <li
-                    key={fIdx}
-                    className="text-[0.9rem] text-[var(--local-panel-text-soft)] py-1.5 pl-6 relative before:content-['✓'] before:absolute before:left-0 before:text-[var(--local-accent)] before:font-bold before:text-[0.8rem]"
-                  >
-                    {feature.text}
-                  </li>
-                ))}
-              </ul>
-              {product.ctaLabel && product.ctaHref && (
-                <a
-                  href={product.ctaHref}
-                  className={cn(
-                    'block text-center py-3 rounded-[var(--local-radius-md)] no-underline font-semibold text-[0.95rem] transition-all duration-200',
-                    product.ctaVariant === 'primary'
-                      ? 'bg-[var(--local-primary)] text-white hover:brightness-110 hover:-translate-y-px'
-                      : 'bg-[var(--local-panel-bg)] text-[var(--local-panel-text-soft)] border border-[var(--local-panel-border)] hover:bg-[var(--local-panel-hover)] hover:border-[var(--local-panel-border-strong)]'
-                  )}
-                >
-                  {product.ctaLabel}
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/product-triad/index.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/product-triad/index.ts"
-export * from './View';
-export * from './schema';
-export * from './types';
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/product-triad/schema.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/product-triad/schema.ts"
-import { z } from 'zod';
-import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
-
-const ProductFeatureSchema = z.object({
-  text: z.string().describe('ui:text'),
-});
-
-const ProductCardSchema = BaseArrayItem.extend({
-  tier: z.string().describe('ui:text'),
-  name: z.string().describe('ui:text'),
-  price: z.string().describe('ui:text'),
-  priceSuffix: z.string().optional().describe('ui:text'),
-  delivery: z.string().describe('ui:text'),
-  features: z.array(ProductFeatureSchema).describe('ui:list'),
-  featured: z.boolean().default(false).describe('ui:checkbox'),
-  ctaLabel: z.string().optional().describe('ui:text'),
-  ctaHref: z.string().optional().describe('ui:text'),
-  ctaVariant: z.enum(['primary', 'secondary']).default('secondary').describe('ui:select'),
-});
-
-export const ProductTriadSchema = BaseSectionData.extend({
-  label: z.string().optional().describe('ui:text'),
-  title: z.string().describe('ui:text'),
-  description: z.string().optional().describe('ui:textarea'),
-  products: z.array(ProductCardSchema).describe('ui:list'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/components/product-triad/types.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/components/product-triad/types.ts"
-import { z } from 'zod';
-import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
-import { ProductTriadSchema } from './schema';
-
-export type ProductTriadData = z.infer<typeof ProductTriadSchema>;
-export type ProductTriadSettings = z.infer<typeof BaseSectionSettingsSchema>;
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/save-drawer"
@@ -5994,6 +4328,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
+import type { Components, ExtraProps } from 'react-markdown';
 import { useEditor, EditorContent } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -6009,6 +4344,90 @@ import {
 } from 'lucide-react';
 import { STUDIO_EVENTS, useConfig, useStudio } from '@olonjs/core';
 import type { TiptapData, TiptapSettings } from './types';
+
+// ── TOC helpers ───────────────────────────────────────────────────────────────
+
+type TocEntry = { id: string; text: string; level: 2 | 3 };
+
+function slugify(raw: string): string {
+  return raw
+    .replace(/[\u{1F300}-\u{1FFFF}]/gu, '')
+    .replace(/[*_`#[\]()]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s.-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function extractToc(markdown: string): TocEntry[] {
+  const entries: TocEntry[] = [];
+  for (const line of markdown.split('\n')) {
+    const h2 = line.match(/^## (.+)/);
+    const h3 = line.match(/^### (.+)/);
+    if (h2) {
+      const text = h2[1].replace(/[*_`#[\]]/g, '').replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+      entries.push({ id: slugify(h2[1]), text, level: 2 });
+    } else if (h3) {
+      const text = h3[1].replace(/[*_`#[\]]/g, '').trim();
+      entries.push({ id: slugify(h3[1]), text, level: 3 });
+    }
+  }
+  return entries;
+}
+
+// ── Sidebar (always rendered, both in Studio and Public) ──────────────────────
+
+const DocsSidebar: React.FC<{
+  toc: TocEntry[];
+  activeId: string;
+  onNav: (id: string) => void;
+}> = ({ toc, activeId, onNav }) => (
+  <aside className="w-[200px] flex-shrink-0 sticky top-[72px] self-start hidden lg:block">
+    <div className="text-[9px] font-mono font-bold uppercase tracking-[.14em] text-[var(--local-toolbar-text)] mb-3 px-3">
+      On this page
+    </div>
+    <nav className="flex flex-col">
+      {toc.map((entry) => (
+        <button
+          key={entry.id}
+          type="button"
+          onClick={() => onNav(entry.id)}
+          className={[
+            'text-left rounded-[var(--local-radius-sm)] transition-all duration-150 no-underline',
+            entry.level === 3
+              ? 'pl-[22px] pr-3 py-1.5 text-[0.72rem] ml-0.5'
+              : 'px-3 py-2 font-bold text-[0.76rem]',
+            activeId === entry.id
+              ? entry.level === 2
+                ? 'text-[var(--local-primary)] bg-[var(--local-toolbar-hover-bg)] border-l-2 border-[var(--local-primary)] pl-[10px]'
+                : 'text-[var(--local-primary)] font-semibold bg-[var(--local-toolbar-active-bg)]'
+              : 'text-[var(--local-text-muted)] hover:text-[var(--local-text)] hover:bg-[var(--local-toolbar-hover-bg)]',
+          ].join(' ')}
+        >
+          {entry.level === 3 && (
+            <span
+              className={`inline-block w-[5px] h-[5px] rounded-full mr-2 align-middle mb-px flex-shrink-0 ${
+                activeId === entry.id ? 'bg-[var(--local-primary)]' : 'bg-[var(--local-border)]'
+              }`}
+            />
+          )}
+          {entry.text}
+        </button>
+      ))}
+    </nav>
+    <div className="mt-5 pt-4 border-t border-[var(--local-border)]">
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="flex items-center gap-2 font-mono text-[0.58rem] uppercase tracking-widest text-[var(--local-text-muted)] hover:text-[var(--local-primary)] transition-colors px-3"
+      >
+        ↑ Back to top
+      </button>
+    </div>
+  </aside>
+);
 
 // ── UI primitives ─────────────────────────────────────────────────────────────
 
@@ -6661,9 +5080,29 @@ const StudioTiptapEditor: React.FC<{ data: TiptapData }> = ({ data }) => {
 
 // ── Public view ───────────────────────────────────────────────────────────────
 
+type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & ExtraProps;
+
+const mdHeading =
+  (level: 2 | 3) =>
+  ({ children, node: _node, ...rest }: HeadingProps) => {
+    const text = String(children ?? '');
+    const id = slugify(text);
+    const Tag = `h${level}` as 'h2' | 'h3';
+    return <Tag id={id} {...rest}>{children}</Tag>;
+  };
+
+const MD_COMPONENTS: Components = {
+  h2: mdHeading(2),
+  h3: mdHeading(3),
+};
+
 const PublicTiptapContent: React.FC<{ content: string }> = ({ content }) => (
   <article className="jp-tiptap-content" data-jp-field="content">
-    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeSanitize]}
+      components={MD_COMPONENTS}
+    >
       {content}
     </ReactMarkdown>
   </article>
@@ -6671,8 +5110,64 @@ const PublicTiptapContent: React.FC<{ content: string }> = ({ content }) => (
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
-export const Tiptap: React.FC<{ data: TiptapData; settings?: TiptapSettings }> = ({ data }) => {
+export const Tiptap: React.FC<{ data: TiptapData; settings?: TiptapSettings }> = ({ data, settings: _settings }) => {
   const { mode } = useStudio();
+  const isStudio = mode === 'studio';
+
+  const toc = React.useMemo(() => extractToc(data.content ?? ''), [data.content]);
+  const [activeId, setActiveId] = React.useState<string>('');
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+
+  // IntersectionObserver to track active heading (public mode and studio mode)
+  React.useEffect(() => {
+    if (toc.length === 0) return;
+    const ids = toc.map((e) => e.id);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          const id = visible[0].target.getAttribute('id') ?? '';
+          if (id) setActiveId(id);
+        }
+      },
+      { rootMargin: '-60px 0px -60% 0px', threshold: 0 }
+    );
+    const scan = () => {
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+    };
+    // Delay slightly so the DOM is ready (especially in Studio with Tiptap rendering)
+    const t = setTimeout(scan, 300);
+    return () => {
+      clearTimeout(t);
+      observer.disconnect();
+    };
+  }, [toc, isStudio]);
+
+  const handleNav = React.useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveId(id);
+      return;
+    }
+    // Studio mode: headings are in ProseMirror, no IDs — find by text in editor DOM
+    if (contentRef.current) {
+      const headings = Array.from(
+        contentRef.current.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6')
+      );
+      const target = headings.find((h) => slugify(h.textContent ?? '') === id);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setActiveId(id);
+      }
+    }
+  }, []);
+
   return (
     <section
       style={{
@@ -6693,12 +5188,19 @@ export const Tiptap: React.FC<{ data: TiptapData; settings?: TiptapSettings }> =
       } as React.CSSProperties}
       className="w-full py-12 bg-[var(--local-bg)]"
     >
-      <div className="container mx-auto px-6 max-w-3xl">
-        {mode === 'studio' ? (
-          <StudioTiptapEditor data={data} />
-        ) : (
-          <PublicTiptapContent content={data.content ?? ''} />
-        )}
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="flex gap-8">
+          {toc.length > 0 && (
+            <DocsSidebar toc={toc} activeId={activeId} onNav={handleNav} />
+          )}
+          <div ref={contentRef} className="flex-1 min-w-0">
+            {isStudio ? (
+              <StudioTiptapEditor data={data} />
+            ) : (
+              <PublicTiptapContent content={data.content ?? ''} />
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -6734,6 +5236,286 @@ export type TiptapSettings = z.infer<typeof TiptapSettingsSchema>;
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/ui"
+echo "Creating src/components/ui/OlonMark.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/OlonMark.tsx"
+import { cn } from '@/lib/utils'
+
+interface OlonMarkProps {
+  size?: number
+  /** mono: uses currentColor — for single-colour print/emboss contexts */
+  variant?: 'default' | 'mono'
+  className?: string
+}
+
+export function OlonMark({ size = 32, variant = 'default', className }: OlonMarkProps) {
+  const gid = `olon-ring-${size}`
+
+  if (variant === 'mono') {
+    return (
+      <svg
+        viewBox="0 0 100 100"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        aria-label="Olon mark"
+        className={cn('flex-shrink-0', className)}
+      >
+        <circle cx="50" cy="50" r="38" stroke="currentColor" strokeWidth="20"/>
+        <circle cx="50" cy="50" r="15" fill="currentColor"/>
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      aria-label="Olon mark"
+      className={cn('flex-shrink-0', className)}
+    >
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="var(--olon-ring-top)"/>
+          <stop offset="100%" stopColor="var(--olon-ring-bottom)"/>
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="38" stroke={`url(#${gid})`} strokeWidth="20"/>
+      <circle cx="50" cy="50" r="15" fill="var(--olon-nucleus)"/>
+    </svg>
+  )
+}
+
+interface OlonLogoProps {
+  markSize?: number
+  fontSize?: number
+  variant?: 'default' | 'mono'
+  className?: string
+}
+
+export function OlonLogo({
+  markSize = 32,
+  fontSize = 24,
+  variant = 'default',
+  className,
+}: OlonLogoProps) {
+  return (
+    <div className={cn('flex items-center gap-3', className)}>
+      <OlonMark size={markSize} variant={variant}/>
+      <span
+        style={{
+          fontFamily: "'Instrument Sans', Helvetica, Arial, sans-serif",
+          fontWeight: 700,
+          fontSize,
+          letterSpacing: '-0.02em',
+          color: 'hsl(var(--foreground))',
+          lineHeight: 1,
+        }}
+      >
+        Olon
+      </span>
+    </div>
+  )
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/badge.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/badge.tsx"
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+export type BadgeVariant = "default" | "secondary" | "outline" | "brand"
+
+const variantClasses: Record<BadgeVariant, string> = {
+  default:
+    "bg-primary/10 border border-primary/30 text-primary",
+  secondary:
+    "bg-muted border border-border text-muted-foreground",
+  outline:
+    "bg-transparent border border-border text-muted-foreground",
+  brand:
+    "bg-primary/10 border border-primary/30 text-primary font-mono",
+}
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: BadgeVariant
+}
+
+function Badge({ className, variant = "default", ...props }: BadgeProps) {
+  return (
+    <span
+      data-slot="badge"
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium",
+        variantClasses[variant ?? "default"],
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Badge }
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/button.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/button.tsx"
+import * as React from "react"
+import { Slot } from "radix-ui"
+import { cn } from "@/lib/utils"
+
+export type ButtonVariant = "default" | "outline" | "ghost" | "secondary"
+export type ButtonSize = "default" | "sm" | "lg" | "icon"
+
+const variantClasses: Record<ButtonVariant, string> = {
+  default:
+    "bg-primary text-primary-foreground shadow hover:brightness-110 active:scale-[0.98]",
+  outline:
+    "border border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+  ghost:
+    "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+  secondary:
+    "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+}
+
+const sizeClasses: Record<ButtonSize, string> = {
+  default: "h-10 px-5 py-2.5 text-sm",
+  sm: "h-8 px-3 py-1.5 text-xs rounded-md",
+  lg: "h-11 px-7 py-3 text-base",
+  icon: "h-9 w-9",
+}
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant = "default",
+      size = "default",
+      asChild = false,
+      ...props
+    },
+    ref
+  ) => {
+    const Comp = asChild ? Slot.Root : "button"
+    return (
+      <Comp
+        data-slot="button"
+        ref={ref}
+        className={cn(
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-semibold transition-all duration-200",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+          "disabled:pointer-events-none disabled:opacity-50",
+          "[&_svg]:pointer-events-none [&_svg]:shrink-0",
+          variantClasses[variant ?? "default"],
+          sizeClasses[size ?? "default"],
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button }
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/card.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/card.tsx"
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      data-slot="card"
+      className={cn(
+        "rounded-xl border border-border bg-card text-card-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardHeader({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn("flex flex-col gap-1.5 p-6", className)}
+      {...props}
+    />
+  )
+}
+
+function CardTitle({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <h3
+      data-slot="card-title"
+      className={cn("text-base font-semibold leading-snug text-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+function CardDescription({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <p
+      data-slot="card-description"
+      className={cn("text-sm text-muted-foreground leading-relaxed", className)}
+      {...props}
+    />
+  )
+}
+
+function CardContent({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("p-6 pt-0", className)}
+      {...props}
+    />
+  )
+}
+
+function CardFooter({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn("flex items-center p-6 pt-0", className)}
+      {...props}
+    />
+  )
+}
+
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
+
+END_OF_FILE_CONTENT
 echo "Creating src/components/ui/checkbox.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/checkbox.tsx"
 "use client"
@@ -7357,6 +6139,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
       "logoText": "Olon",
       "logoHighlight": "JS",
       "logoIconText": "",
+      "badge": "v1.4.0",
       "links": [
         {
           "label": "Architecture",
@@ -7384,25 +6167,21 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "id": "global-footer",
     "type": "footer",
     "data": {
-      "brandText": "Json",
-      "brandHighlight": "Pages",
-      "copyright": "© 2026 JsonPages. Source-available · Free to use.",
+      "brandText": "Olon",
+      "brandHighlight": "JS",
+      "copyright": "© 2026 OlonJS · Guido Serio",
       "links": [
         {
           "label": "Docs",
           "href": "/docs"
         },
         {
-          "label": "NPM",
-          "href": "#"
-        },
-        {
           "label": "GitHub",
-          "href": "#"
+          "href": "https://github.com/olonjs/npm-jpcore"
         },
         {
-          "label": "Changelog",
-          "href": "#"
+          "label": "MIT License",
+          "href": "https://github.com/olonjs/npm-jpcore/blob/main/LICENSE"
         }
       ]
     },
@@ -7415,31 +6194,30 @@ END_OF_FILE_CONTENT
 echo "Creating src/data/config/theme.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/theme.json"
 {
-  "name": "JsonPages Landing",
+  "name": "Olon",
   "tokens": {
     "colors": {
-      "primary": "#3b82f6",
-      "secondary": "#22d3ee",
-      "accent": "#60a5fa",
-      "background": "#0f1115",
-      "surface": "#0b1529",
-      "surfaceAlt": "#101e38",
-      "text": "#e2e8f0",
-      "textMuted": "#94a3b8",
-      "border": "#162a4d"
+      "primary": "#1763FF",
+      "secondary": "#0F52E0",
+      "accent": "#84ABFF",
+      "background": "#0d1117",
+      "surface": "#0d1421",
+      "surfaceAlt": "#141b24",
+      "text": "#c8d6e8",
+      "textMuted": "#8fa3c4",
+      "border": "#253044"
     },
     "typography": {
       "fontFamily": {
-        "primary": "'Instrument Sans', system-ui, sans-serif",
-        "mono": "'JetBrains Mono', monospace",
-        "display": "'Bricolage Grotesque', system-ui, sans-serif",
-        "display-2": "'Instrument Sans'"
+        "primary": "'Instrument Sans', Helvetica, Arial, sans-serif",
+        "mono": "'JetBrains Mono', 'Fira Code', monospace",
+        "display": "'Instrument Sans', Helvetica, Arial, sans-serif"
       }
     },
     "borderRadius": {
-      "sm": "3px",
-      "md": "6px",
-      "lg": "12px"
+      "sm": "0.25rem",
+      "md": "0.5rem",
+      "lg": "0.75rem"
     }
   }
 }
@@ -7451,354 +6229,20 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/docs.json"
   "id": "docs-page",
   "slug": "docs",
   "meta": {
-    "title": "JsonPages Docs — Onboarding Governance",
-    "description": "Percorso Governance completo: capsule, IDAC, registry, schema, overlay e checklist per integrare il CMS con governance piena."
+    "title": "OlonJS Architecture Specifications v1.3",
+    "description": "Mandatory Standard — Sovereign Core Edition. Architecture, Studio/ICE UX, Path-Deterministic Nested Editing."
   },
   "sections": [
     {
       "id": "docs-main",
-      "type": "docs-layout",
+      "type": "tiptap",
       "data": {
-        "pageTitle": "Onboarding — Percorso Governance",
-        "pageSubtitle": "Per chi vuole il CMS (Studio, ICE, Form Factory): authoring in-app, tipizzazione forte, governance dei contenuti e dei componenti. Riferimento spec: JSONPAGES Architecture Specifications v1.2 + Appendix A.",
-        "version": "Spec v1.2",
-        "groups": [
-          {
-            "id": "g-1",
-            "anchor": "governance",
-            "label": "1. Governance",
-            "sections": [
-              {
-                "id": "s-1-1",
-                "anchor": "cosa-implica",
-                "title": "Cosa implica \"governance\"",
-                "blocks": [
-                  {
-                    "id": "b-1-1",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "i-1", "text": "**Tipi:** Ogni section type è dichiarato in `SectionDataRegistry` / `SectionSettingsRegistry` (module augmentation) e in `SectionComponentPropsMap`. Registry e config sono tipizzati." },
-                      { "id": "i-2", "text": "**Schema:** Ogni section type ha uno schema Zod (data, e opzionalmente settings) usato dal Form Factory per generare l'editor nell'Inspector. Gli schema sono aggregati in `SECTION_SCHEMAS`." },
-                      { "id": "i-3", "text": "**Studio/ICE:** L'editor (Inspector) si aggancia al DOM tramite `data-jp-field` e `data-jp-item-id` / `data-jp-item-field`. L'overlay di selezione in iframe richiede che il tenant fornisca il CSS (TOCC)." },
-                      { "id": "i-4", "text": "**Add Section:** Il tenant espone **AddSectionConfig** (tipi addabili, label, default data) così in Studio l'utente può aggiungere section dalla libreria." },
-                      { "id": "i-5", "text": "**Design tokens:** Le View usano variabili CSS (`--local-*`) e nessuna utility nuda (CIP) per coerenza e compatibilità con tema e overlay." }
-                    ]
-                  },
-                  {
-                    "id": "b-1-2",
-                    "type": "callout",
-                    "content": "**Perché servono (in sintesi):** Tipi e schema permettono al Core e al Form Factory di operare senza conoscere i dettagli del Tenant; IDAC permette all'Inspector di legare click in Stage e riga attiva nella sidebar; TOCC rende visibile l'overlay; AddSectionConfig definisce la libreria Aggiungi sezione; token e z-index evitano conflitti con l'UI di editing."
-                  }
-                ]
-              },
-              {
-                "id": "s-1-2",
-                "anchor": "tipizzazione",
-                "title": "Valore della tipizzazione: governance e CMS UX",
-                "tag": "§1.1",
-                "blocks": [
-                  {
-                    "id": "b-2-1",
-                    "type": "paragraph",
-                    "content": "La tipizzazione (tipi TypeScript + schema Zod) serve a **due livelli**: governance (sviluppatore/architettura) e **UX del CMS** (autore che usa Studio). Spesso si menziona solo il primo."
-                  },
-                  {
-                    "id": "b-2-2",
-                    "type": "paragraph",
-                    "content": "**Governance:** registry tipizzato, SectionComponentPropsMap, forma di SiteConfig/PageConfig, audit, code-generation → coerenza tra tenant, niente drift, refactor sicuro, tooling basato su spec."
-                  },
-                  {
-                    "id": "b-2-3",
-                    "type": "paragraph",
-                    "content": "**CMS UX:** lo schema Zod guida il **Form Factory** (quali widget per ogni campo: text, textarea, select, list, icon-picker, **image-picker**); `data-jp-field` e `data-jp-item-id/field` legano click in Stage e form nell'Inspector; **AddSectionConfig** dà tipi addabili, label e default."
-                  },
-                  {
-                    "id": "b-2-4",
-                    "type": "callout",
-                    "content": "Per la governance la tipizzazione garantisce **contratti**; per la CMS UX definisce l'**esperienza di editing** (controlli, label, default, binding). Va specificato entrambi."
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "g-2",
-            "anchor": "struttura",
-            "label": "2. Struttura progetto",
-            "sections": [
-              {
-                "id": "s-2-1",
-                "anchor": "file-layout",
-                "title": "File e cartelle (completa)",
-                "blocks": [
-                  {
-                    "id": "b-3-1",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "f-1",  "text": "`src/data/config/site.json` — SiteConfig (identity, pages[], header block, footer block)." },
-                      { "id": "f-2",  "text": "`src/data/config/menu.json` — MenuConfig (`main: MenuItem[]`)." },
-                      { "id": "f-3",  "text": "`src/data/config/theme.json` — ThemeConfig (tokens)." },
-                      { "id": "f-4",  "text": "`src/data/pages/<slug>.json` — PageConfig (slug, meta, sections[])." },
-                      { "id": "f-5",  "text": "`src/components/<sectionType>/` — **Capsula piena:** View.tsx, schema.ts, types.ts, index.ts." },
-                      { "id": "f-6",  "text": "`src/lib/base-schemas.ts` — BaseSectionData, BaseArrayItem, BaseSectionSettingsSchema." },
-                      { "id": "f-7",  "text": "`src/lib/schemas.ts` — SECTION_SCHEMAS (aggregato degli schema data per tipo) + export SectionType." },
-                      { "id": "f-8",  "text": "`src/lib/ComponentRegistry.tsx` — Registry tipizzato: `{ [K in SectionType]: React.FC<SectionComponentPropsMap[K]> }`." },
-                      { "id": "f-9",  "text": "`src/lib/addSectionConfig.ts` — AddSectionConfig (addableSectionTypes, sectionTypeLabels, getDefaultSectionData)." },
-                      { "id": "f-10", "text": "`src/types.ts` — SectionComponentPropsMap, PageConfig, SiteConfig, MenuConfig, ThemeConfig; **module augmentation** per SectionDataRegistry e SectionSettingsRegistry; re-export da `@jsonpages/core`." },
-                      { "id": "f-11", "text": "`src/App.tsx` — Bootstrap: config (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss, addSection); `<JsonPagesEngine config={config} />`." },
-                      { "id": "f-12", "text": "**CSS globale** — Include i selettori TOCC per overlay (hover/selected/type label)." }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "g-3",
-            "anchor": "componenti",
-            "label": "3. Componenti",
-            "sections": [
-              {
-                "id": "s-3-1",
-                "anchor": "capsule-idac",
-                "title": "Capsule + IDAC + token",
-                "blocks": [
-                  {
-                    "id": "b-4-1",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "c-1", "text": "**Capsula:** Ogni section type ha View, schema (Zod), types (inferiti), index. Lo schema **data** estende BaseSectionData; gli item degli array estendono BaseArrayItem." },
-                      { "id": "c-2", "text": "**View:** Riceve `data` e `settings` (e `menu` per header). Non importa Zod. Usa **solo** variabili CSS per colori/raggi (`bg-[var(--local-bg)]`), sezione root con `z-index` ≤ 1." },
-                      { "id": "c-3", "text": "**IDAC (ICE):** Su ogni campo scalare editabile: `data-jp-field=\"<fieldKey>\"`. Su ogni item di array: `data-jp-item-id=\"<stableId>\"` e `data-jp-item-field=\"<arrayKey>\"`." },
-                      { "id": "c-4", "text": "**Schema:** Usa il vocabolario UI (ECIP): `.describe('ui:text')`, `ui:textarea`, `ui:select`, `ui:number`, `ui:list`, `ui:icon-picker`, `ui:image-picker`. Array di oggetti editabili: ogni oggetto con `id` (BaseArrayItem)." }
-                    ]
-                  },
-                  {
-                    "id": "b-4-2",
-                    "type": "callout",
-                    "content": "**Perché servono:** `data-jp-field` e `data-jp-item-*` servono perché lo Stage è in un iframe e il Core deve sapere quale campo/item corrisponde al click senza conoscere il DOM del Tenant. Senza IDAC, click sul canvas non si riflette nella sidebar. Vedi spec §6 (IDAC), §5 (ECIP), §4 (CIP)."
-                  }
-                ]
-              },
-              {
-                "id": "s-3-2",
-                "anchor": "image-picker",
-                "title": "Image Picker: uso corretto nello schema",
-                "tag": "§3.1",
-                "blocks": [
-                  {
-                    "id": "b-5-1",
-                    "type": "paragraph",
-                    "content": "Per i **campi immagine** il Form Factory espone il widget **Image Picker** solo se lo schema è modellato correttamente."
-                  },
-                  {
-                    "id": "b-5-2",
-                    "type": "heading",
-                    "content": "Regola"
-                  },
-                  {
-                    "id": "b-5-3",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "r-1", "text": "Il campo immagine non è una stringa (`z.string()`), ma un **oggetto** con almeno `url` e, opzionalmente, `alt`." },
-                      { "id": "r-2", "text": "Lo **schema di questo oggetto** va marcato con **`.describe('ui:image-picker')`**. Il Form Factory riconosce `ui:image-picker` solo su **ZodObject**, non su campi stringa." }
-                    ]
-                  },
-                  {
-                    "id": "b-5-4",
-                    "type": "heading",
-                    "content": "Esempio (capsula image-break)"
-                  },
-                  {
-                    "id": "b-5-5",
-                    "type": "code",
-                    "codeFilename": "src/components/image-break/schema.ts",
-                    "content": "import { z } from 'zod';\nimport { BaseSectionData } from '@/lib/base-schemas';\n\nconst ImageSelectionSchema = z\n  .object({\n    url: z.string(),\n    alt: z.string().optional(),\n  })\n  .describe('ui:image-picker');\n\nexport const ImageBreakSchema = BaseSectionData.extend({\n  label:   z.string().optional().describe('ui:text'),\n  image:   ImageSelectionSchema.default({ url: '', alt: '' }),\n  caption: z.string().optional().describe('ui:textarea'),\n});"
-                  },
-                  {
-                    "id": "b-5-6",
-                    "type": "paragraph",
-                    "content": "In **View.tsx**: usa `resolveAssetUrl(data.image.url, tenantId)` per il `src` dell'immagine. Aggiungi `data-jp-field=\"image\"` sul nodo corrispondente nel DOM."
-                  },
-                  {
-                    "id": "b-5-7",
-                    "type": "note",
-                    "content": "**Cosa evitare:** Non usare `.describe('ui:image-picker')` su un campo stringa: il widget Image Picker si aspetta un oggetto `{ url, alt? }`. Non dimenticare `data-jp-field=\"image\"` nel DOM, altrimenti il binding Inspector ↔ Stage non funziona."
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "g-4",
-            "anchor": "dati",
-            "label": "4. Dati",
-            "sections": [
-              {
-                "id": "s-4-1",
-                "anchor": "forma-dati",
-                "title": "Forma e responsabilità",
-                "blocks": [
-                  {
-                    "id": "b-6-1",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "d-1", "text": "`site.json` / `menu.json` / `theme.json` / `pages/*.json` — Forma esatta come in Appendix A. Sono la source of truth quando l'utente salva da Studio." },
-                      { "id": "d-2", "text": "**Studio** aggiorna il Working Draft; il sync con l'iframe e il Bake usano la stessa struttura. I dati passati a JsonPagesEngine devono essere compatibili con ciò che l'editor modifica." }
-                    ]
-                  },
-                  {
-                    "id": "b-6-2",
-                    "type": "callout",
-                    "content": "Se i dati arrivano da un CMS esterno tocca a te sincronizzare. In ogni caso la **forma** delle pagine (sections con id, type, data, settings) resta quella della spec."
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "g-5",
-            "anchor": "registry",
-            "label": "5. Registry & Types",
-            "sections": [
-              {
-                "id": "s-5-1",
-                "anchor": "registry-detail",
-                "title": "Registry, schemas, types, addSection",
-                "blocks": [
-                  {
-                    "id": "b-7-1",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "re-1", "text": "**types.ts:** Unico punto di **module augmentation** e definizione di SectionComponentPropsMap, PageConfig, SiteConfig, MenuConfig, ThemeConfig. Header: `{ data, settings?, menu: MenuItem[] }`; tutti gli altri: `{ data, settings? }`." },
-                      { "id": "re-2", "text": "**ComponentRegistry:** Ogni chiave di SectionType ha il componente corrispondente; tipo: `{ [K in SectionType]: React.FC<SectionComponentPropsMap[K]> }`." },
-                      { "id": "re-3", "text": "**SECTION_SCHEMAS:** Ogni chiave di SectionType ha lo **schema Zod della data** (stesso ordine del registry). Base schemas re-exportati da base-schemas.ts." },
-                      { "id": "re-4", "text": "**addSectionConfig:** addableSectionTypes (solo i tipi che l'utente può aggiungere dalla libreria), sectionTypeLabels, getDefaultSectionData(type) che restituisce `data` valido per quello schema." }
-                    ]
-                  },
-                  {
-                    "id": "b-7-2",
-                    "type": "callout",
-                    "content": "Un solo punto di augmentation (types.ts) e un solo SECTION_SCHEMAS evita duplicazioni. AddSectionConfig è l'unica fonte di verità per quali section si possono aggiungere e con quali default. Vedi spec §9 (ASC), Appendix A.2–A.3."
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "g-6",
-            "anchor": "overlay",
-            "label": "6. Overlay CSS (TOCC)",
-            "sections": [
-              {
-                "id": "s-6-1",
-                "anchor": "tocc-detail",
-                "title": "Selettori TOCC richiesti",
-                "blocks": [
-                  {
-                    "id": "b-8-1",
-                    "type": "paragraph",
-                    "content": "Il Core inietta il markup dell'overlay (wrapper con `data-section-id`, sibling con `data-jp-section-overlay`). Il **tenant** deve fornire il CSS nel proprio `index.css` per renderlo visibile."
-                  },
-                  {
-                    "id": "b-8-2",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "t-1", "text": "`[data-jp-section-overlay]` copra la section, `pointer-events: none`, z-index alto (es. 9999)." },
-                      { "id": "t-2", "text": "Hover e selected siano visibili (bordo tratteggiato / pieno, eventuale tint)." },
-                      { "id": "t-3", "text": "Il type label (`[data-jp-section-overlay] > .jp-section-type-label`) sia posizionato e visibile su hover/selected." }
-                    ]
-                  },
-                  {
-                    "id": "b-8-3",
-                    "type": "code",
-                    "codeFilename": "src/index.css — TOCC selectors",
-                    "content": "/* ── TOCC — Tenant Overlay CSS Contract ── */\n[data-jp-section-overlay] {\n  position: absolute;\n  inset: 0;\n  pointer-events: none;\n  z-index: 9999;\n  border: 1.5px dashed transparent;\n  transition: border-color 0.15s, background 0.15s;\n}\n\n[data-jp-section-wrapper]:hover > [data-jp-section-overlay] {\n  border-color: rgba(59, 130, 246, 0.5);\n  background: rgba(59, 130, 246, 0.03);\n}\n\n[data-jp-section-wrapper].jp-selected > [data-jp-section-overlay] {\n  border-color: #3b82f6;\n  border-style: solid;\n  background: rgba(59, 130, 246, 0.05);\n}\n\n[data-jp-section-overlay] > .jp-section-type-label {\n  position: absolute;\n  top: 6px;\n  right: 8px;\n  font-family: 'JetBrains Mono', monospace;\n  font-size: 0.55rem;\n  font-weight: 700;\n  letter-spacing: 0.1em;\n  text-transform: uppercase;\n  background: #3b82f6;\n  color: white;\n  padding: 2px 6px;\n  opacity: 0;\n  transition: opacity 0.15s;\n}\n\n[data-jp-section-wrapper]:hover > [data-jp-section-overlay] > .jp-section-type-label,\n[data-jp-section-wrapper].jp-selected > [data-jp-section-overlay] > .jp-section-type-label {\n  opacity: 1;\n}"
-                  },
-                  {
-                    "id": "b-8-4",
-                    "type": "callout",
-                    "content": "**Perché servono (TOCC):** L'iframe dello Stage carica solo il CSS del Tenant; il Core inietta il markup dell'overlay ma non gli stili. Senza i selettori TOCC, bordo hover/selected e type label non sono visibili. Vedi spec §7 (TOCC)."
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "g-7",
-            "anchor": "checklist",
-            "label": "7. Checklist",
-            "sections": [
-              {
-                "id": "s-7-1",
-                "anchor": "checklist-table",
-                "title": "Checklist rapida — sviluppo grafico e dati (con CMS)",
-                "blocks": [
-                  {
-                    "id": "b-9-1",
-                    "type": "table",
-                    "content": "",
-                    "rows": [
-                      { "id": "r-1",  "col1": "**Layout / grafico**",   "col2": "View con variabili `--local-*`, z-index ≤ 1, nessuna utility naked." },
-                      { "id": "r-2",  "col1": "**Dati (forma)**",        "col2": "SiteConfig, MenuConfig, ThemeConfig, PageConfig come in Appendix A; JSON in `data/config` e `data/pages`." },
-                      { "id": "r-3",  "col1": "**Capsule**",             "col2": "View + schema (con `ui:*`) + types + index; data schema estende BaseSectionData; array item con id." },
-                      { "id": "r-4",  "col1": "**IDAC**",                "col2": "`data-jp-field` su campi scalari editabili; `data-jp-item-id` e `data-jp-item-field` su item di array." },
-                      { "id": "r-5",  "col1": "**Image Picker**",        "col2": "Campo immagine = oggetto `{ url, alt? }` con sub-schema `.describe('ui:image-picker')`; `resolveAssetUrl` + `data-jp-field` in View." },
-                      { "id": "r-6",  "col1": "**types.ts**",            "col2": "SectionComponentPropsMap (header con menu), augmentation, PageConfig, SiteConfig, MenuConfig, ThemeConfig." },
-                      { "id": "r-7",  "col1": "**Registry**",            "col2": "Tutti i tipi mappati al componente; tipo registry come in Appendix A." },
-                      { "id": "r-8",  "col1": "**SECTION_SCHEMAS**",     "col2": "Un entry per tipo (schema data); re-export base schemas." },
-                      { "id": "r-9",  "col1": "**addSectionConfig**",    "col2": "addableSectionTypes, sectionTypeLabels, getDefaultSectionData." },
-                      { "id": "r-10", "col1": "**Config**",              "col2": "tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss, addSection." },
-                      { "id": "r-11", "col1": "**TOCC**",                "col2": "CSS overlay per `[data-jp-section-overlay]`, hover, selected, type label." }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "g-8",
-            "anchor": "riferimenti",
-            "label": "8. Riferimenti spec",
-            "sections": [
-              {
-                "id": "s-8-1",
-                "anchor": "spec-refs",
-                "title": "Documenti di riferimento",
-                "blocks": [
-                  {
-                    "id": "b-10-1",
-                    "type": "list",
-                    "content": "",
-                    "items": [
-                      { "id": "sp-1", "text": "**Architettura e ICE:** §1–§10 (MTRP, JSP, TBP, CIP, ECIP, IDAC, TOCC, BSDS, ASC, JEB)." },
-                      { "id": "sp-2", "text": "**Tipi e code-generation:** Appendix A (Core types, Tenant types, Schema contract, File paths, Integration checklist)." },
-                      { "id": "sp-3", "text": "**Admin:** JAP (Studio topology, Working Draft, Bake, overlay, Green Build)." }
-                    ]
-                  },
-                  {
-                    "id": "b-10-2",
-                    "type": "callout",
-                    "content": "Usando questo percorso hai **governance** piena: tipi, schema, editor, Add Section e overlay allineati alle spec v1.2. Per le versioni con tutti i Perché servono usa il file **JSONPAGES_Specs_v1.2_completo.md**."
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        "content": "# 📐 OlonJS Architecture Specifications v1.3\n\n**Status:** Mandatory Standard\\\n**Version:** 1.3.0 (Sovereign Core Edition — Architecture + Studio/ICE UX, Path-Deterministic Nested Editing)\\\n**Target:** Senior Architects / AI Agents / Enterprise Governance\n\n**Scope v1.3:** This edition preserves the complete v1.2 architecture (MTRP, JSP, TBP, CIP, ECIP, JAP + Studio/ICE UX contract: IDAC, TOCC, BSDS, ASC, JEB + Tenant Type & Code-Generation Annex) as a **faithful superset**, and adds strict path-based/nested-array behavior for Studio selection and Inspector expansion.\\\n**Scope note (breaking):** In strict v1.3 Studio semantics, the legacy flat protocol (`itemField` / `itemId`) is removed in favor of `itemPath` (root-to-leaf path segments).\n\n---\n\n## 1. 📐 Modular Type Registry Pattern (MTRP) v1.2\n\n**Objective:** Establish a strictly typed, open-ended protocol for extending content data structures where the **Core Engine** is the orchestrator and the **Tenant** is the provider.\n\n### 1.1 The Sovereign Dependency Inversion\n\nThe **Core** defines the empty `SectionDataRegistry`. The **Tenant** \"injects\" its specific definitions using **Module Augmentation**. This allows the Core to be distributed as a compiled NPM package while remaining aware of Tenant-specific types at compile-time.\n\n### 1.2 Technical Implementation (`@olonjs/core/kernel`)\n\n```typescript\nexport interface SectionDataRegistry {} // Augmented by Tenant\nexport interface SectionSettingsRegistry {} // Augmented by Tenant\n\nexport interface BaseSection<K extends keyof SectionDataRegistry> {\n  id: string;\n  type: K;\n  data: SectionDataRegistry[K];\n  settings?: K extends keyof SectionSettingsRegistry\n    ? SectionSettingsRegistry[K]\n    : BaseSectionSettings;\n}\n\nexport type Section = {\n  [K in keyof SectionDataRegistry]: BaseSection<K>\n}[keyof SectionDataRegistry];\n```\n\n**SectionType:** Core exports (or Tenant infers) `SectionType` as `keyof SectionDataRegistry`. After Tenant module augmentation, this is the union of all section type keys (e.g. `'header' | 'footer' | 'hero' | ...`). The Tenant uses this type for the ComponentRegistry and SECTION_SCHEMAS keys.\n\n**Perché servono:** Il Core deve poter renderizzare section senza conoscere i tipi concreti a compile-time; il Tenant deve poter aggiungere nuovi tipi senza modificare il Core. I registry vuoti + module augmentation permettono di distribuire Core come pacchetto NPM e mantenere type-safety end-to-end (Section, registry, config). Senza MTRP, ogni nuovo tipo richiederebbe cambi nel Core o tipi deboli (`any`).\n\n---\n\n## 2. 📐 JsonPages Site Protocol (JSP) v1.8\n\n**Objective:** Define the deterministic file system and the **Sovereign Projection Engine** (CLI).\n\n### 2.1 The File System Ontology (The Silo Contract)\n\nEvery site must reside in an isolated directory. Global Governance is physically separated from Local Content.\n\n- `/config/site.json` — Global Identity & Reserved System Blocks (Header/Footer). See Appendix A for typed shape.\n- `/config/menu.json` — Navigation Tree (SSOT for System Header). See Appendix A.\n- `/config/theme.json` — Theme tokens (optional but recommended). See Appendix A.\n- `/pages/[slug].json` — Local Body Content per page. See Appendix A (PageConfig).\n\n**Application path convention:** The runtime app typically imports these via an alias (e.g. `@/data/config/` and `@/data/pages/`). The physical silo may be `src/data/config/` and `src/data/pages/` so that `site.json`, `menu.json`, `theme.json` live under `src/data/config/`, and page JSONs under `src/data/pages/`. The CLI or projection script may use `/config/` and `/pages/` at repo root; the **contract** is that the app receives **siteConfig**, **menuConfig**, **themeConfig**, and **pages** as defined in JEB (§10) and Appendix A.\n\n### 2.2 Deterministic Projection (CLI Workflow)\n\nThe CLI (`@olonjs/cli`) creates new tenants by:\n\n1. **Infra Projection:** Generating `package.json`, `tsconfig.json`, and `vite.config.ts` (The Shell).\n2. **Source Projection:** Executing a deterministic script (`src_tenant_alpha.sh`) to reconstruct the `src` folder (The DNA).\n3. **Dependency Resolution:** Enforcing specific versions of React, Radix, and Tailwind v4.\n\n**Perché servono:** Una struttura file deterministica (config vs pages) separa governance globale (site, menu, theme) dal contenuto per pagina; il CLI può rigenerare tenant e tooling può trovare dati e schemi sempre negli stessi path. Senza JSP, ogni tenant sarebbe una struttura ad hoc e ingestione/export/Bake sarebbero fragili.\n\n---\n\n## 3. 🧱 Tenant Block Protocol (TBP) v1.0\n\n**Objective:** Standardize the \"Capsule\" structure for components to enable automated ingestion (Pull) by the SaaS.\n\n### 3.1 The Atomic Capsule Structure\n\nComponents are self-contained directories under `src/components/<sectionType>/`:\n\n- `View.tsx` — The pure React component (Dumb View). Props: see Appendix A (SectionComponentPropsMap).\n- `schema.ts` — Zod schema(s) for the **data** contract (and optionally **settings**). Exports at least one schema (e.g. `HeroSchema`) used as the **data** schema for that type. Must extend BaseSectionData (§8) for data; array items must extend BaseArrayItem (§8).\n- `types.ts` — TypeScript interfaces inferred from the schema (e.g. `HeroData`, `HeroSettings`). Export types with names `<SectionType>Data` and `<SectionType>Settings` (or equivalent) so the Tenant can aggregate them in a single types module.\n- `index.ts` — Public API: re-exports View, schema(s), and types.\n\n### 3.2 Reserved System Types\n\n- `type: 'header'` — Reserved for `site.json`. Receives `menu: MenuItem[]` in addition to `data` and `settings`. Menu is sourced from `menu.json` (see Appendix A). The Tenant **must** type `SectionComponentPropsMap['header']` as `{ data: HeaderData; settings?: HeaderSettings; menu: MenuItem[] }`.\n- `type: 'footer'` — Reserved for `site.json`. Props: `{ data: FooterData; settings?: FooterSettings }` only (no `menu`).\n- `type: 'sectionHeader'` — A standard local block. Must define its own `links` array in its local schema if used.\n\n**Perché servono:** La capsula (View + schema + types + index) è l’unità di estensione: il Core e il Form Factory possono scoprire tipi e contratti per tipo senza convenzioni ad hoc. Header/footer riservati evitano conflitti tra globale e locale. Senza TBP, aggregazione di SECTION_SCHEMAS e registry sarebbe incoerente e l’ingestion da SaaS non sarebbe automatizzabile.\n\n---\n\n## 4. 🧱 Component Implementation Protocol (CIP) v1.5\n\n**Objective:** Ensure system-wide stability and Admin UI integrity.\n\n1. **The \"Sovereign View\" Law:** Components receive `data` and `settings` (and `menu` for header only) and return JSX. They are metadata-blind (never import Zod schemas).\n2. **Z-Index Neutrality:** Components must not use `z-index > 1`. Layout delegation (sticky/fixed) is managed by the `SectionRenderer`.\n3. **Agnostic Asset Protocol:** Use `resolveAssetUrl(path, tenantId)` for all media. Resolved URLs are under `/assets/...` with no tenantId segment in the path (e.g. relative `img/hero.jpg` → `/assets/img/hero.jpg`).\n\n### 4.4 Local Design Tokens (v1.2)\n\nSection Views that control their own background, text, borders, or radii **shall** define a **local scope** via an inline `style` object on the section root: e.g. `--local-bg`, `--local-text`, `--local-text-muted`, `--local-surface`, `--local-border`, `--local-radius-lg`, `--local-accent`, mapped to theme variables. All Tailwind classes that affect color or radius in that section **must** use these variables (e.g. `bg-[var(--local-bg)]`, `text-[var(--local-text)]`). No naked utilities (e.g. `bg-blue-500`). An optional `label` in section data may be rendered with class `jp-section-label` for overlay type labels.\n\n### 4.5 Z-Index & Overlay Governance (v1.2)\n\nSection content root **must** stay at `z-index` **≤ 1** (prefer `z-0`) so the Sovereign Overlay can sit above with high z-index in Tenant CSS (§7). Header/footer may use a higher z-index (e.g. 50) only as a documented exception for global chrome.\n\n**Perché servono (CIP):** View “dumb” (solo data/settings) e senza import di Zod evita accoppiamento e permette al Form Factory di essere l’unica fonte di verità sugli schemi. Z-index basso evita che il contenuto copra l’overlay di selezione in Studio. Asset via `resolveAssetUrl`: i path relativi vengono risolti in `/assets/...` (senza segmento tenantId nel path). Token locali (`--local-*`) rendono le section temabili e coerenti con overlay e tema; senza, stili “nudi” creano drift visivo e conflitti con l’UI di editing.\n\n---\n\n## 5. 🛠️ Editor Component Implementation Protocol (ECIP) v1.5\n\n**Objective:** Standardize the Polymorphic ICE engine.\n\n1. **Recursive Form Factory:** The Admin UI builds forms by traversing the Zod ontology.\n2. **UI Metadata:** Use `.describe('ui:[widget]')` in schemas to pass instructions to the Form Factory.\n3. **Deterministic IDs:** Every object in a `ZodArray` must extend `BaseArrayItem` (containing an `id`) to ensure React reconciliation stability during reordering.\n\n### 5.4 UI Metadata Vocabulary (v1.2)\n\nStandard keys for the Form Factory:\n\nKey Use case `ui:text` Single-line text input. `ui:textarea` Multi-line text. `ui:select` Enum / single choice. `ui:number` Numeric input. `ui:list` Array of items; list editor (add/remove/reorder). `ui:icon-picker` Icon selection.\n\nUnknown keys may be treated as `ui:text`. Array fields must use `BaseArrayItem` for items.\n\n### 5.5 Path-Only Nested Selection & Expansion (v1.3, breaking)\n\nIn strict v1.3 Studio/Inspector behavior, nested editing targets are represented by **path segments from root to leaf**.\n\n```typescript\nexport type SelectionPathSegment = { fieldKey: string; itemId?: string };\nexport type SelectionPath = SelectionPathSegment[];\n```\n\nRules:\n\n- Expansion and focus for nested arrays **must** be computed from `SelectionPath` (root → leaf), not from a single flat pair.\n- Matching by `fieldKey` alone is non-compliant for nested structures.\n- Legacy flat payload fields `itemField` and `itemId` are removed from strict v1.3 selection protocol.\n\n**Perché servono (ECIP):** Il Form Factory deve sapere quale widget usare (text, textarea, select, list, …) senza hardcodare per tipo; `.describe('ui:...')` è il contratto. BaseArrayItem con `id` su ogni item di array garantisce chiavi stabili in React e reorder/delete corretti nell’Inspector. In v1.3 la selezione/espansione path-only elimina ambiguità su array annidati: senza path completo root→leaf, la sidebar può aprire il ramo sbagliato o non aprire il target.\n\n---\n\n## 6. 🎯 ICE Data Attribute Contract (IDAC) v1.1\n\n**Objective:** Mandatory data attributes so the Stage (iframe) and Inspector can bind selection and field/item editing without coupling to Tenant DOM.\n\n### 6.1 Section-Level Markup (Core-Provided)\n\n**SectionRenderer** (Core) wraps each section root with:\n\n- `data-section-id` — Section instance ID (e.g. UUID). On the wrapper that contains content + overlay.\n- Sibling overlay element `data-jp-section-overlay` — Selection ring and type label. **Tenant does not add this;** Core injects it.\n\nTenant Views render the **content** root only (e.g. `<section>` or `<div>`), placed **inside** the Core wrapper.\n\n### 6.2 Field-Level Binding (Tenant-Provided)\n\nFor every **editable scalar field** the View **must** attach `data-jp-field=\"<fieldKey>\"` (key matches schema path: e.g. `title`, `description`, `sectionTitle`, `label`).\n\n### 6.3 Array-Item Binding (Tenant-Provided)\n\nFor every **editable array item** the View **must** attach:\n\n- `data-jp-item-id=\"<stableId>\"` — Prefer `item.id`; fallback e.g. `legacy-${index}` only outside strict mode.\n- `data-jp-item-field=\"<arrayKey>\"` — e.g. `cards`, `layers`, `products`, `paragraphs`.\n\n### 6.4 Compliance\n\n**Reserved types** (`header`, `footer`): ICE attributes optional unless Studio edits them. **All other section types** in the Stage and in `SECTION_SCHEMAS` **must** implement §6.2 and §6.3 for every editable field and array item.\n\n### 6.5 Strict Path Extraction for Nested Arrays (v1.3, breaking)\n\nFor nested array targets, the Core/Inspector contract is path-based:\n\n- The runtime selection target is expressed as `itemPath: SelectionPath` (root → leaf).\n- Flat identity (`itemField` + `itemId`) is not sufficient for nested structures and is removed in strict v1.3 payloads.\n- In strict mode, index-based identity fallback is non-compliant for editable object arrays.\n\n**Perché servono (IDAC):** Lo Stage è in un iframe e l’Inspector deve sapere **quale campo o item** corrisponde al click (o alla selezione) senza conoscere la struttura DOM del Tenant. `data-jp-field` associa un nodo DOM al path dello schema (es. `title`, `description`): così il Core può evidenziare la riga giusta nella sidebar, applicare opacità attivo/inattivo e aprire il form sul campo corretto. `data-jp-item-id` e `data-jp-item-field` fanno lo stesso per gli item di array (liste, reorder, delete). In v1.3, `itemPath` rende deterministico anche il caso nested (array dentro array), eliminando mismatch tra selezione canvas e ramo aperto in sidebar.\n\n---\n\n## 7. 🎨 Tenant Overlay CSS Contract (TOCC) v1.0\n\n**Objective:** The Stage iframe loads only Tenant HTML/CSS. Core injects overlay **markup** but does **not** ship overlay styles. The Tenant **must** supply CSS so overlay is visible.\n\n### 7.1 Required Selectors (Tenant global CSS)\n\n1. `[data-jp-section-overlay]` — `position: absolute; inset: 0`; `pointer-events: none`; base state transparent.\n2. `[data-section-id]:hover [data-jp-section-overlay]` — Hover: e.g. dashed border, subtle tint.\n3. `[data-section-id][data-jp-selected] [data-jp-section-overlay]` — Selected: solid border, optional tint.\n4. `[data-jp-section-overlay] > div` (type label) — Position and visibility (e.g. visible on hover/selected).\n\n### 7.2 Z-Index\n\nOverlay **z-index** high (e.g. 9999). Section content at or below CIP limit (§4.5).\n\n### 7.3 Responsibility\n\n**Core:** Injects wrapper and overlay DOM; sets `data-jp-selected`. **Tenant:** All overlay **visual** rules.\n\n**Perché servono (TOCC):** L’iframe dello Stage carica solo HTML/CSS del Tenant; il Core inietta il markup dell’overlay ma non gli stili. Senza CSS Tenant per i selettori TOCC, bordo hover/selected e type label non sarebbero visibili: l’autore non vedrebbe quale section è selezionata né il label del tipo. TOCC chiarisce la responsabilità (Core = markup, Tenant = aspetto) e garantisce UX uniforme tra tenant.\n\n---\n\n## 8. 📦 Base Section Data & Settings (BSDS) v1.0\n\n**Objective:** Standardize base schema fragments for anchors, array items, and section settings.\n\n### 8.1 BaseSectionData\n\nEvery section data schema **must** extend a base with at least `anchorId` (optional string). Canonical Zod (Tenant `lib/base-schemas.ts` or equivalent):\n\n```typescript\nexport const BaseSectionData = z.object({\n  anchorId: z.string().optional().describe('ui:text'),\n});\n```\n\n### 8.2 BaseArrayItem\n\nEvery array item schema editable in the Inspector **must** include `id` (optional string minimum). Canonical Zod:\n\n```typescript\nexport const BaseArrayItem = z.object({\n  id: z.string().optional(),\n});\n```\n\nRecommended: required UUID for new items. Used by `data-jp-item-id` and React reconciliation.\n\n### 8.3 BaseSectionSettings (Optional)\n\nCommon section-level settings. Canonical Zod (name **BaseSectionSettingsSchema** or as exported by Core):\n\n```typescript\nexport const BaseSectionSettingsSchema = z.object({\n  paddingTop: z.enum(['none', 'sm', 'md', 'lg', 'xl', '2xl']).default('md').describe('ui:select'),\n  paddingBottom: z.enum(['none', 'sm', 'md', 'lg', 'xl', '2xl']).default('md').describe('ui:select'),\n  theme: z.enum(['dark', 'light', 'accent']).default('dark').describe('ui:select'),\n  container: z.enum(['boxed', 'fluid']).default('boxed').describe('ui:select'),\n});\n```\n\nCapsules may extend this for type-specific settings. Core may export **BaseSectionSettings** as the TypeScript type inferred from this or a superset.\n\n**Perché servono (BSDS):** anchorId permette deep-link e navigazione in-page; id sugli array item è necessario per `data-jp-item-id`, reorder e React reconciliation. BaseSectionSettings comuni (padding, theme, container) evitano ripetizione e allineano il Form Factory tra capsule. Senza base condivisi, ogni capsule inventa convenzioni e validazione/add-section diventano fragili.\n\n---\n\n## 9. 📌 AddSectionConfig (ASC) v1.0\n\n**Objective:** Formalize the \"Add Section\" contract used by the Studio.\n\n**Type (Core exports** `AddSectionConfig`**):**\n\n```typescript\ninterface AddSectionConfig {\n  addableSectionTypes: readonly string[];\n  sectionTypeLabels: Record<string, string>;\n  getDefaultSectionData(sectionType: string): Record<string, unknown>;\n}\n```\n\n**Shape:** Tenant provides one object (e.g. `addSectionConfig`) with:\n\n- `addableSectionTypes` — Readonly array of section type keys. Only these types appear in the Add Section Library. Must be a subset of (or equal to) the keys in SectionDataRegistry.\n- `sectionTypeLabels` — Map type key → display string (e.g. `{ hero: 'Hero', 'cta-banner': 'CTA Banner' }`).\n- `getDefaultSectionData(sectionType: string): Record<string, unknown>` — Returns default `data` for a new section. Must conform to the capsule’s data schema so the new section validates.\n\nCore creates a new section with deterministic UUID, `type`, and `data` from `getDefaultSectionData(type)`.\n\n**Perché servono (ASC):** Lo Studio deve mostrare una libreria “Aggiungi sezione” con nomi leggibili e, alla scelta, creare una section con dati iniziali validi. addableSectionTypes, sectionTypeLabels e getDefaultSectionData sono il contratto: il Tenant è l’unica fonte di verità su quali tipi sono addabili e con quali default. Senza ASC, il Core non saprebbe cosa mostrare in modal né come popolare i dati della nuova section.\n\n---\n\n## 10. ⚙️ JsonPagesConfig & Engine Bootstrap (JEB) v1.1\n\n**Objective:** Bootstrap contract between Tenant app and `@olonjs/core`.\n\n### 10.1 JsonPagesConfig (required fields)\n\nThe Tenant passes a single **config** object to **JsonPagesEngine**. Required fields:\n\nField Type Description **tenantId** string Passed to `resolveAssetUrl(path, tenantId)`; resolved asset URLs are `/assets/...` with no tenantId segment in the path. **registry** `{ [K in SectionType]: React.FC<SectionComponentPropsMap[K]> }` Component registry. Must match MTRP keys. See Appendix A. **schemas** `Record<SectionType, ZodType>` or equivalent SECTION_SCHEMAS: type → **data** Zod schema. Form Factory uses this. See Appendix A. **pages** `Record<string, PageConfig>` Slug → page config. See Appendix A. **siteConfig** SiteConfig Global site (identity, header/footer blocks). See Appendix A. **themeConfig** ThemeConfig Theme tokens. See Appendix A. **menuConfig** MenuConfig Navigation tree (SSOT for header menu). See Appendix A. **themeCss** `{ tenant: string }` At least **tenant**: string (inline CSS or URL) for Stage iframe injection. **addSection** AddSectionConfig Add-section config (§9).\n\nCore may define optional fields. The Tenant must not omit required fields.\n\n### 10.2 JsonPagesEngine\n\nRoot component: `<JsonPagesEngine config={config} />`. Responsibilities: route → page, SectionRenderer per section; in Studio mode Sovereign Shell (Inspector, Control Bar, postMessage); section wrappers and overlay per IDAC and JAP. Tenant does not implement the Shell.\n\n### 10.3 Studio Selection Event Contract (v1.3, breaking)\n\nIn strict v1.3 Studio, section selection payload for nested targets is path-based:\n\n```typescript\ntype SectionSelectMessage = {\n  type: 'SECTION_SELECT';\n  section: { id: string; type: string; scope: 'global' | 'local' };\n  itemPath?: SelectionPath; // root -> leaf\n};\n```\n\nRemoved from strict protocol:\n\n- `itemField`\n- `itemId`\n\n**Perché servono (JEB):** Un unico punto di bootstrap (config + Engine) evita che il Tenant replichi logica di routing, Shell e overlay. I campi obbligatori in JsonPagesConfig (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss, addSection) sono il minimo per far funzionare rendering, Studio e Form Factory; omissioni causano errori a runtime. In v1.3, il payload `itemPath` sincronizza in modo non ambiguo Stage e Inspector su nested arrays.\n\n---\n\n# 🏛️ OlonJS_ADMIN_PROTOCOL (JAP) v1.2\n\n**Status:** Mandatory Standard\\\n**Version:** 1.2.0 (Sovereign Shell Edition — Path/Nested Strictness)\\\n**Objective:** Deterministic orchestration of the \"Studio\" environment (ICE Level 1).\n\n---\n\n## 1. The Sovereign Shell Topology\n\nThe Admin interface is a **Sovereign Shell** from `@olonjs/core`.\n\n1. **The Stage (Canvas):** Isolated Iframe; postMessage for data updates and selection mirroring. Section markup follows **IDAC** (§6); overlay styling follows **TOCC** (§7).\n2. **The Inspector (Sidebar):** Consumes Tenant Zod schemas to generate editors; binding via `data-jp-field` and `data-jp-item-*`.\n3. **The Control Bar:** Save, Export, Add Section.\n\n## 2. State Orchestration & Persistence\n\n- **Working Draft:** Reactive local state for unsaved changes.\n- **Sync Law:** Inspector changes → Working Draft → Stage via `STUDIO_EVENTS.UPDATE_DRAFTS`.\n- **Bake Protocol:** \"Bake HTML\" requests snapshot from Iframe, injects `ProjectState` as JSON, triggers download.\n\n## 3. Context Switching (Global vs. Local)\n\n- **Header/Footer** selection → Global Mode, `site.json`.\n- Any other section → Page Mode, current `[slug].json`.\n\n## 4. Section Lifecycle Management\n\n1. **Add Section:** Modal from Tenant `SECTION_SCHEMAS`; UUID + default data via **AddSectionConfig** (§9).\n2. **Reorder:** Inspector or Stage Overlay; array mutation in Working Draft.\n3. **Delete:** Confirmation; remove from array, clear selection.\n\n## 5. Stage Isolation & Overlay\n\n- **CSS Shielding:** Stage in Iframe; Tenant CSS does not leak into Admin.\n- **Sovereign Overlay:** Selection ring and type labels injected per **IDAC** (§6); Tenant styles them per **TOCC** (§7).\n\n## 6. \"Green Build\" Validation\n\nStudio enforces `tsc && vite build`. No export with TypeScript errors.\n\n## 7. Path-Deterministic Selection & Sidebar Expansion (v1.3, breaking)\n\n- Section/item focus synchronization uses `itemPath` (root → leaf), not flat `itemField/itemId`.\n- Sidebar expansion state for nested arrays must be derived from all path segments.\n- Flat-only matching may open/close wrong branches and is non-compliant in strict mode.\n\n**Perché servono (JAP):** Stage in iframe + Inspector + Control Bar separano il contesto di editing dal sito; postMessage e Working Draft permettono modifiche senza toccare subito i file. Bake ed Export richiedono uno stato coerente. Global vs Page mode evita confusione su dove si sta editando (site.json vs \\[slug\\].json). Add/Reorder/Delete sono gestiti in un solo modo (Working Draft + ASC). Green Build garantisce che ciò che si esporta compili. In v1.3, il path completo elimina ambiguità nella sincronizzazione Stage↔Sidebar su strutture annidate.\n\n---\n\n## Compliance: Legacy vs Full UX (v1.3)\n\nDimension Legacy / Less UX Full UX (Core-aligned) **ICE binding** No `data-jp-*`; Inspector cannot bind. IDAC (§6) on every editable section/field/item. **Section wrapper** Plain `<section>`; no overlay contract. Core wrapper + overlay; Tenant CSS per TOCC (§7). **Design tokens** Raw BEM / fixed classes. Local tokens (§4.4); `var(--local-*)` only. **Base schemas** Ad hoc. BSDS (§8): BaseSectionData, BaseArrayItem, BaseSectionSettings. **Add Section** Ad hoc defaults. ASC (§9): addableSectionTypes, labels, getDefaultSectionData. **Bootstrap** Implicit. JEB (§10): JsonPagesConfig + JsonPagesEngine. **Selection payload** Flat `itemField/itemId`. Path-only `itemPath: SelectionPath` (JEB §10.3). **Nested array expansion** Single-segment or field-only heuristics. Root-to-leaf path expansion (ECIP §5.5, JAP §7). **Array item identity (strict)** Index fallback tolerated. Stable `id` required for editable object arrays.\n\n**Rule:** Every page section (non-header/footer) that appears in the Stage and in `SECTION_SCHEMAS` must comply with §6, §7, §4.4, §8, §9, §10 for full Studio UX.\n\n---\n\n## Summary of v1.3 Additions\n\n§ Title Purpose 5.5 Path-Only Nested Selection & Expansion ECIP: root→leaf `SelectionPath`; remove flat matching in strict mode. 6.5 Strict Path Extraction for Nested Arrays IDAC: path-based nested targeting; no strict flat fallback. 10.3 Studio Selection Event Contract JEB: `SECTION_SELECT` uses `itemPath`; remove `itemField/itemId`. JAP §7 Path-Deterministic Selection & Sidebar Expansion Studio state synchronization for nested arrays. Compliance Legacy vs Full UX (v1.3) Explicit breaking delta for flat protocol removal and strict IDs. **Appendix A.6** **v1.3 Path/Nested Strictness Addendum** Type/export and migration checklist for path-only protocol.\n\n---\n\n# Appendix A — Tenant Type & Code-Generation Annex\n\n**Objective:** Make the specification **sufficient** to generate or audit a full tenant (new site, new components, new data) without a reference codebase. Defines TypeScript types, JSON shapes, schema contract, file paths, and integration pattern.\n\n**Status:** Mandatory for code-generation and governance. Compliance ensures generated tenants are typed and wired like the reference implementation.\n\n---\n\n## A.1 Core-Provided Types (from `@olonjs/core`)\n\nThe following are assumed to be exported by Core. The Tenant augments **SectionDataRegistry** and **SectionSettingsRegistry**; all other types are consumed as-is.\n\nType Description **SectionType** `keyof SectionDataRegistry` (after Tenant augmentation). Union of all section type keys. **Section** Union of `BaseSection<K>` for all K in SectionDataRegistry. See MTRP §1.2. **BaseSectionSettings** Optional base type for section settings (may align with BSDS §8.3). **MenuItem** Navigation item. **Minimum shape:** `{ label: string; href: string }`. Core may extend (e.g. `children?: MenuItem[]`). **AddSectionConfig** See §9. **JsonPagesConfig** See §10.1.\n\n**Perché servono (A.1):** Il Tenant deve conoscere i tipi esportati dal Core (SectionType, MenuItem, AddSectionConfig, JsonPagesConfig) per tipizzare registry, config e augmentation senza dipendere da implementazioni interne.\n\n---\n\n## A.2 Tenant-Provided Types (single source: `src/types.ts` or equivalent)\n\nThe Tenant **must** define the following in one module (e.g. `src/types.ts`). This module **must** perform the **module augmentation** of `@olonjs/core` for **SectionDataRegistry** and **SectionSettingsRegistry**, and **must** export **SectionComponentPropsMap** and re-export from `@olonjs/core` so that **SectionType** is available after augmentation.\n\n### A.2.1 SectionComponentPropsMap\n\nMaps each section type to the props of its React component. **Header** is the only type that receives **menu**.\n\n**Option A — Explicit (recommended for clarity and tooling):** For each section type K, add one entry. Header receives **menu**.\n\n```typescript\nimport type { MenuItem } from '@olonjs/core';\n// Import Data/Settings from each capsule.\n\nexport type SectionComponentPropsMap = {\n  'header': { data: HeaderData; settings?: HeaderSettings; menu: MenuItem[] };\n  'footer': { data: FooterData; settings?: FooterSettings };\n  'hero': { data: HeroData; settings?: HeroSettings };\n  // ... one entry per SectionType, e.g. 'feature-grid', 'cta-banner', etc.\n};\n```\n\n**Option B — Mapped type (DRY, requires SectionDataRegistry/SectionSettingsRegistry in scope):**\n\n```typescript\nimport type { MenuItem } from '@olonjs/core';\n\nexport type SectionComponentPropsMap = {\n  [K in SectionType]: K extends 'header'\n    ? { data: SectionDataRegistry[K]; settings?: SectionSettingsRegistry[K]; menu: MenuItem[] }\n    : { data: SectionDataRegistry[K]; settings?: K extends keyof SectionSettingsRegistry ? SectionSettingsRegistry[K] : BaseSectionSettings };\n};\n```\n\nSectionType is imported from Core (after Tenant augmentation). In practice Option A is the reference pattern; Option B is valid if the Tenant prefers a single derived definition.\n\n**Perché servono (A.2):** SectionComponentPropsMap e i tipi di config (PageConfig, SiteConfig, MenuConfig, ThemeConfig) definiscono il contratto tra dati (JSON, API) e componente; l’augmentation è l’unico modo per estendere i registry del Core senza fork. Senza questi tipi, generazione tenant e refactor sarebbero senza guida e il type-check fallirebbe.\n\n### A.2.2 ComponentRegistry type\n\nThe registry object **must** be typed as:\n\n```typescript\nimport type { SectionType } from '@olonjs/core';\nimport type { SectionComponentPropsMap } from '@/types';\n\nexport const ComponentRegistry: {\n  [K in SectionType]: React.FC<SectionComponentPropsMap[K]>;\n} = { /* ... */ };\n```\n\nFile: `src/lib/ComponentRegistry.tsx` (or equivalent). Imports one View per section type and assigns it to the corresponding key.\n\n### A.2.3 PageConfig\n\nMinimum shape for a single page (used in **pages** and in each `[slug].json`):\n\n```typescript\nexport interface PageConfig {\n  id?: string;\n  slug: string;\n  meta?: {\n    title?: string;\n    description?: string;\n  };\n  sections: Section[];\n}\n```\n\n**Section** is the union type from MTRP (§1.2). Each element of **sections** has **id**, **type**, **data**, **settings** and conforms to the capsule schemas.\n\n### A.2.4 SiteConfig\n\nMinimum shape for **site.json** (and for **siteConfig** in JsonPagesConfig):\n\n```typescript\nexport interface SiteConfigIdentity {\n  title?: string;\n  logoUrl?: string;\n}\n\nexport interface SiteConfig {\n  identity?: SiteConfigIdentity;\n  pages?: Array<{ slug: string; label: string }>;\n  header: {\n    id: string;\n    type: 'header';\n    data: HeaderData;\n    settings?: HeaderSettings;\n  };\n  footer: {\n    id: string;\n    type: 'footer';\n    data: FooterData;\n    settings?: FooterSettings;\n  };\n}\n```\n\n**HeaderData**, **FooterData**, **HeaderSettings**, **FooterSettings** are the types exported from the header and footer capsules.\n\n### A.2.5 MenuConfig\n\nMinimum shape for **menu.json** (and for **menuConfig** in JsonPagesConfig). Structure is tenant-defined; Core expects the header to receive **MenuItem\\[\\]**. Common pattern: an object with a key (e.g. **main**) whose value is **MenuItem\\[\\]**.\n\n```typescript\nexport interface MenuConfig {\n  main?: MenuItem[];\n  [key: string]: MenuItem[] | undefined;\n}\n```\n\nOr simply `MenuItem[]` if the app uses a single flat list. The Tenant must ensure that the value passed to the header component as **menu** conforms to **MenuItem\\[\\]** (e.g. `menuConfig.main` or `menuConfig` if it is the array).\n\n### A.2.6 ThemeConfig\n\nMinimum shape for **theme.json** (and for **themeConfig** in JsonPagesConfig). Tenant-defined; typically tokens for colors, typography, radius.\n\n```typescript\nexport interface ThemeConfig {\n  name?: string;\n  tokens?: {\n    colors?: Record<string, string>;\n    typography?: Record<string, string | Record<string, string>>;\n    borderRadius?: Record<string, string>;\n  };\n  [key: string]: unknown;\n}\n```\n\n---\n\n## A.3 Schema Contract (SECTION_SCHEMAS)\n\n**Location:** `src/lib/schemas.ts` (or equivalent).\n\n**Contract:**\n\n- **SECTION_SCHEMAS** is a **single object** whose keys are **SectionType** and whose values are **Zod schemas for the section data** (not settings, unless the Form Factory contract expects a combined or per-type settings schema; then each value may be the data schema only, and settings may be defined per capsule and aggregated elsewhere if needed).\n- The Tenant **must** re-export **BaseSectionData**, **BaseArrayItem**, and optionally **BaseSectionSettingsSchema** from `src/lib/base-schemas.ts` (or equivalent). Each capsule’s data schema **must** extend BaseSectionData; each array item schema **must** extend or include BaseArrayItem.\n- **SECTION_SCHEMAS** is typed as `Record<SectionType, ZodType>` or `{ [K in SectionType]: ZodType }` so that keys match the registry and SectionDataRegistry.\n\n**Export:** The app imports **SECTION_SCHEMAS** and passes it as **config.schemas** to JsonPagesEngine. The Form Factory traverses these schemas to build editors.\n\n**Perché servono (A.3):** Un unico oggetto SECTION_SCHEMAS con chiavi = SectionType e valori = schema data permette al Form Factory di costruire form per tipo senza convenzioni ad hoc; i base schema garantiscono anchorId e id su item. Senza questo contratto, l’Inspector non saprebbe quali campi mostrare né come validare.\n\n---\n\n## A.4 File Paths & Data Layout\n\nPurpose Path (conventional) Description Site config `src/data/config/site.json` SiteConfig (identity, header, footer, pages list). Menu config `src/data/config/menu.json` MenuConfig (e.g. main nav). Theme config `src/data/config/theme.json` ThemeConfig (tokens). Page data `src/data/pages/<slug>.json` One file per page; content is PageConfig (slug, meta, sections). Base schemas `src/lib/base-schemas.ts` BaseSectionData, BaseArrayItem, BaseSectionSettingsSchema. Schema aggregate `src/lib/schemas.ts` SECTION_SCHEMAS; re-exports base schemas. Registry `src/lib/ComponentRegistry.tsx` ComponentRegistry object. Add-section config `src/lib/addSectionConfig.ts` addSectionConfig (AddSectionConfig). Tenant types & augmentation `src/types.ts` SectionComponentPropsMap, PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@olonjs/core'** for SectionDataRegistry and SectionSettingsRegistry; re-export from Core. Bootstrap `src/App.tsx` Imports config (site, theme, menu, pages), registry, schemas, addSection, themeCss; builds JsonPagesConfig; renders .\n\nThe app entry (e.g. **main.tsx**) renders **App**. No other bootstrap contract is specified; the Tenant may use Vite aliases (e.g. **@/**) for the paths above.\n\n**Perché servono (A.4):** Path fissi (data/config, data/pages, lib/schemas, types.ts, App.tsx) permettono a CLI, tooling e agenti di trovare sempre gli stessi file; l’onboarding e la generazione da spec sono deterministici. Senza convenzione, ogni tenant sarebbe una struttura diversa.\n\n---\n\n## A.5 Integration Checklist (Code-Generation)\n\nWhen generating or auditing a tenant, ensure the following in order:\n\n 1. **Capsules** — For each section type, create `src/components/<type>/` with View.tsx, schema.ts, types.ts, index.ts. Data schema extends BaseSectionData; array items extend BaseArrayItem; View complies with CIP and IDAC (§6.2–6.3 for non-reserved types).\n 2. **Base schemas** — **src/lib/base-schemas.ts** exports BaseSectionData, BaseArrayItem, BaseSectionSettingsSchema (and optional CtaSchema or similar shared fragments).\n 3. **types.ts** — Define SectionComponentPropsMap (header with **menu**), PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@olonjs/core'** and augment SectionDataRegistry and SectionSettingsRegistry; re-export from `@olonjs/core`.\n 4. **ComponentRegistry** — Import every View; build object **{ \\[K in SectionType\\]: ViewComponent }**; type as **{ \\[K in SectionType\\]: React.FC&lt;SectionComponentPropsMap\\[K\\]&gt; }**.\n 5. **schemas.ts** — Import base schemas and each capsule’s data schema; export SECTION_SCHEMAS as **{ \\[K in SectionType\\]: SchemaK }**; export SectionType as **keyof typeof SECTION_SCHEMAS** if not using Core’s SectionType.\n 6. **addSectionConfig** — addableSectionTypes, sectionTypeLabels, getDefaultSectionData; export as AddSectionConfig.\n 7. **App.tsx** — Import site, theme, menu, pages from data paths; build config (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss: { tenant }, addSection); render JsonPagesEngine.\n 8. **Data files** — Create or update site.json, menu.json, theme.json, and one or more **.json** under the paths in A.4. Ensure JSON shapes match SiteConfig, MenuConfig, ThemeConfig, PageConfig.\n 9. **Tenant CSS** — Include TOCC (§7) selectors in global CSS so the Stage overlay is visible.\n10. **Reserved types** — Header and footer capsules receive props per SectionComponentPropsMap; menu is populated from menuConfig (e.g. menuConfig.main) when building the config or inside Core when rendering the header.\n\n**Perché servono (A.5):** La checklist in ordine evita di dimenticare passi (es. augmentation prima del registry, TOCC dopo le View) e rende la spec sufficiente per generare o verificare un tenant senza codebase di riferimento.\n\n---\n\n## A.6 v1.3 Path/Nested Strictness Addendum (breaking)\n\nThis addendum extends Appendix A without removing prior v1.2 obligations:\n\n1. **Type exports** — Core and/or shared types module should expose `SelectionPathSegment` and `SelectionPath` for Studio messaging and Inspector expansion logic.\n2. **Protocol migration** — Replace flat payload fields `itemField` / `itemId` with `itemPath?: SelectionPath` in strict v1.3 channels.\n3. **Nested array compliance** — For editable object arrays, item identity must be stable (`id`) and propagated to DOM attributes (`data-jp-item-id`), schema items (BaseArrayItem), and selection path segments (`itemId` when segment targets array item).\n4. **Backward compatibility policy** — Legacy flat fields may exist only in transitional adapters outside strict mode; normative v1.3 contract is path-only.\n\n---\n\n**Validation:** Align with current `@olonjs/core` exports (SectionType, MenuItem, AddSectionConfig, JsonPagesConfig, and in v1.3 path types for Studio selection).\\\n**Distribution:** Core via `.yalc`; tenant projections via `@olonjs/cli`. This annex makes the spec **necessary and sufficient** for tenant code-generation and governance at enterprise grade."
       },
       "settings": {}
     }
   ]
 }
-
 END_OF_FILE_CONTENT
 echo "Creating src/data/pages/home.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
@@ -7806,204 +6250,102 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
   "id": "home-page",
   "slug": "home",
   "meta": {
-    "title": "JsonPages — The Sovereign Shell. Zero Runtime Overhead.",
-    "description": "The @jsonpages/core package is a headless, schema-driven runtime. It handles routing, hydration, and the admin interface, leaving your Tenant code pure and framework-agnostic."
+    "title": "OlonJS — The Contract Layer for the Agentic Web",
+    "description": "A deterministic machine contract for websites: typed, schema-driven content endpoints that make any site reliably readable and operable by AI agents."
   },
   "sections": [
     {
       "id": "hero-main",
       "type": "hero",
       "data": {
-        "badge": "Architecture v1.2",
-        "title": "The Sovereign Shell.",
-        "titleHighlight": "Zero Runtime Overhead.",
-        "description": "The @jsonpages/core package is a headless, schema-driven runtime. It handles routing, hydration, and the admin interface, leaving your Tenant code pure and framework-agnostic.",
+        "badge": "Open source · MIT License",
+        "title": "The Contract Layer\nfor the",
+        "titleHighlight": "Agentic Web",
+        "description": "AI agents are becoming operational actors in commerce, marketing, and support. OlonJS introduces a deterministic machine contract for websites — so agents can reliably read and operate any site, without custom glue.",
         "ctas": [
-          {
-            "id": "cta-1",
-            "label": "Read the Docs",
-            "href": "#devex",
-            "variant": "primary"
-          },
-          {
-            "id": "cta-2",
-            "label": "View on NPM",
-            "href": "#",
-            "variant": "secondary"
-          }
+          { "id": "cta-1", "label": "Read the Spec",    "href": "/docs",                                          "variant": "primary"    },
+          { "id": "cta-2", "label": "View on GitHub",   "href": "https://github.com/olonjs/npm-jpcore",           "variant": "secondary"  }
         ],
-        "metrics": [
-          {
-            "id": "m-1",
-            "val": "3KB",
-            "label": "Core Overhead"
-          },
-          {
-            "id": "m-2",
-            "val": "100%",
-            "label": "Type Safety"
-          },
-          {
-            "id": "m-3",
-            "val": "MIT",
-            "label": "License"
-          }
+        "metrics": []
+      },
+      "settings": {}
+    },
+    {
+      "id": "problem-section",
+      "type": "problem-statement",
+      "data": {
+        "anchorId": "problem",
+        "label": "The challenge",
+        "problemTag": "The problem",
+        "problemTitle": "Websites aren't built for agents",
+        "problemItems": [
+          { "id": "pi-1", "text": "Agentic workflows are growing, but integration is mostly custom glue — rebuilt tenant by tenant" },
+          { "id": "pi-2", "text": "Every site has a different content structure, routing assumptions, and edge cases" },
+          { "id": "pi-3", "text": "HTML-heavy, CMS-fragmented, inconsistent across properties — slow, brittle, expensive" }
+        ],
+        "solutionTag": "Our solution",
+        "solutionTitle": "A standard machine contract across tenants",
+        "solutionItems": [
+          { "id": "si-1", "text": "Predictable page endpoints for agents —", "code": "/{slug}.json" },
+          { "id": "si-2", "text": "Typed, schema-driven content contracts — validated, versioned, auditable" },
+          { "id": "si-3", "text": "Repeatable governance and deployment patterns across every tenant" }
         ]
       },
       "settings": {}
     },
     {
-      "id": "soc-section",
-      "type": "arch-layers",
+      "id": "architecture-section",
+      "type": "feature-grid",
       "data": {
         "anchorId": "architecture",
         "label": "Architecture",
-        "title": "Separation of Concerns",
-        "description": "We enforce a strict boundary between the Engine (us) and the Tenant (you). This prevents vendor lock-in.",
-        "layers": [
-          {
-            "id": "layer-3",
-            "number": "3",
-            "layerLevel": "l2",
-            "title": "The Form Factory",
-            "description": "The Admin UI is not hardcoded. It is generated at runtime by analyzing your Zod schemas. Change the schema, change the UI."
-          },
-          {
-            "id": "layer-2",
-            "number": "2",
-            "layerLevel": "l1",
-            "title": "The Tenant Protocol (TBP)",
-            "description": "Your components live here. They receive pure JSON data. They do not know they are being edited. They just render."
-          },
-          {
-            "id": "layer-1",
-            "number": "1",
-            "layerLevel": "l0",
-            "title": "The Core Engine (@jsonpages/core)",
-            "description": "Handles the React rendering loop, routing, and the Studio iframe injection. It is completely agnostic of your design system."
-          }
-        ],
-        "codeLines": []
-      },
-      "settings": {}
-    },
-    {
-      "id": "cms-ice-section",
-      "type": "cms-ice",
-      "data": {
-        "anchorId": "cms",
-        "label": "In-Context Editing",
-        "title": "The Inspector that only shows what you need.",
-        "description": "Traditional CMS sidebars dump every field at once. ICE binds to the section you click in the live canvas and shows only the fields for that block. Zero cognitive overhead. The Form Factory generates every input widget automatically from your Zod schema — change the schema, change the UI.",
-        "callouts": [
-          {
-            "id": "cl-1",
-            "icon": "🎯",
-            "title": "Context-bound Inspector",
-            "description": "Click any section in the canvas. The Inspector shows exactly — and only — the fields for that block. No sidebar overload."
-          },
-          {
-            "id": "cl-2",
-            "icon": "⚡",
-            "title": "Schema → UI, automatically",
-            "description": "The Admin UI is not hardcoded. It is generated at runtime by analyzing your Zod schemas. Change the schema, change the UI."
-          },
-          {
-            "id": "cl-3",
-            "icon": "📤",
-            "title": "Bake to Zero-Runtime HTML",
-            "description": "Hit Bake. The engine exports pure HTML/CSS with no JavaScript runtime — CDN-ready, infinitely cacheable, fully portable."
-          }
+        "sectionTitle": "Built for enterprise scale",
+        "sectionLead": "Every layer is designed for determinism — from file system layout to component contracts to Studio UX.",
+        "cards": [
+          { "id": "fc-1", "emoji": "📐", "title": "Modular Type Registry",      "description": "Core defines empty registries; tenants inject types via module augmentation. Full TypeScript safety, zero Core changes." },
+          { "id": "fc-2", "emoji": "🧱", "title": "Tenant Block Protocol",      "description": "Self-contained capsules (View + schema + types) enable automated ingestion and consistent editor generation." },
+          { "id": "fc-3", "emoji": "⚙️", "title": "Deterministic CLI",          "description": "@olonjs/cli projects new tenants from a canonical script — reproducible across every environment." },
+          { "id": "fc-4", "emoji": "🎯", "title": "ICE Data Contract",          "description": "Mandatory DOM attributes bind the Studio canvas to Inspector fields without coupling to tenant DOM structure." },
+          { "id": "fc-5", "emoji": "📦", "title": "Base Schema Fragments",      "description": "Shared BaseSectionData and BaseArrayItem enforce anchor IDs and stable React keys across all capsules." },
+          { "id": "fc-6", "emoji": "🔗", "title": "Path-Based Selection",       "description": "v1.4 strict path semantics eliminate nested array ambiguity. Studio selection is root-to-leaf, always deterministic." }
         ]
       },
-      "settings": {}
+      "settings": { "columns": 3 }
     },
     {
-      "id": "git-section",
+      "id": "why-now",
       "type": "git-section",
       "data": {
-        "anchorId": "git",
-        "label": "Versioning",
-        "title": "Your content is code.",
-        "titleHighlight": "Branch it. Diff it. Roll it back.",
-        "description": "Because every page is a plain JSON file, your content workflow is identical to your code workflow. No database exports, no CMS snapshots, no proprietary backups. Just git.",
-        "points": [
-          {
-            "id": "p-1",
-            "text": "Content changes appear in pull requests like any code change"
-          },
-          {
-            "id": "p-2",
-            "text": "Branch a page, preview it, merge when approved"
-          },
-          {
-            "id": "p-3",
-            "text": "Full diff history on every field of every section"
-          },
-          {
-            "id": "p-4",
-            "text": "Roll back any page to any commit in seconds"
-          },
-          {
-            "id": "p-5",
-            "text": "CI/CD pipelines trigger on content changes, not just code"
-          }
+        "anchorId": "why",
+        "label": "Timing",
+        "title": "Why this matters",
+        "titleAccent": "now",
+        "cards": [
+          { "id": "wc-1", "title": "Agentic commerce is live",      "description": "Operational standards are missing. Without a contract layer, teams face high integration cost and low reliability." },
+          { "id": "wc-2", "title": "Enterprises need governance",   "description": "A contract layer you can audit, version, and scale — not a one-off adapter for every new agent workflow." },
+          { "id": "wc-3", "title": "AI tooling is ready",           "description": "Deterministic structure means AI can scaffold, validate, and evolve tenants with less prompt ambiguity." },
+          { "id": "wc-4", "title": "Speed compounds",               "description": "Teams that standardize now ship new experiences in hours while others rebuild integration logic repeatedly." }
         ]
       },
       "settings": {}
     },
     {
-      "id": "devex-section",
+      "id": "dx-section",
       "type": "devex",
       "data": {
-        "anchorId": "devex",
-        "label": "Developer Experience",
-        "title": "Your App.tsx is incredibly thin.",
-        "description": "You don't write routing logic. You don't write admin panels. You just import the Engine and pass your configuration.",
+        "anchorId": "developer-velocity",
+        "label": "Developer Velocity",
+        "title": "AI-native advantage,\nfrom day one",
+        "description": "OlonJS dramatically increases AI-assisted development speed. Because structure is deterministic, agents scaffold and evolve tenants faster — with lower regression risk.",
         "features": [
-          {
-            "id": "f-1",
-            "text": "Automatic Routing based on JSON files"
-          },
-          {
-            "id": "f-2",
-            "text": "Hot Module Replacement (HMR)"
-          },
-          {
-            "id": "f-3",
-            "text": "Full TypeScript support"
-          }
-        ]
-      },
-      "settings": {}
-    },
-    {
-      "id": "cli-section",
-      "type": "cli-section",
-      "data": {
-        "anchorId": "cli",
-        "label": "CLI Tool",
-        "title": "A new tenant in under 5 minutes.",
-        "description": "Install the CLI once. From there, scaffolding a fully-typed, production-ready tenant — with all capsules, registry, schemas, and config wired up — is a single command.",
-        "steps": [
-          {
-            "id": "s-1",
-            "num": "1",
-            "title": "Install the CLI globally",
-            "description": "One-time install. The CLI lives alongside your other dev tools."
-          },
-          {
-            "id": "s-2",
-            "num": "2",
-            "title": "Scaffold a new tenant",
-            "description": "Generates the full TBP structure: capsules, registry, schemas, config, and data files — all typed and ready."
-          },
-          {
-            "id": "s-3",
-            "num": "3",
-            "title": "Start building",
-            "description": "Run npm run dev and your tenant is live with Studio, HMR, and full CMS editing."
-          }
+          { "id": "df-1", "text": "AI scaffolds and evolves tenants faster because structure is deterministic" },
+          { "id": "df-2", "text": "Shared conventions reduce prompt ambiguity and implementation drift" },
+          { "id": "df-3", "text": "Ship new tenant experiences in hours, not weeks" }
+        ],
+        "stats": [
+          { "id": "ds-1", "value": "10×",  "label": "Faster scaffolding" },
+          { "id": "ds-2", "value": "∅",    "label": "Glue per tenant"    },
+          { "id": "ds-3", "value": "100%", "label": "Type-safe contracts" }
         ]
       },
       "settings": {}
@@ -8012,29 +6354,20 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
       "id": "cta-final",
       "type": "cta-banner",
       "data": {
-        "anchorId": "start",
-        "title": "Trust the Architecture.",
-        "description": "Stop building page builders. Start building Systems.",
-        "cliCommand": "npx @jsonpages/cli@latest new tenant",
+        "anchorId": "get-started",
+        "title": "Ready to give your site\na machine contract?",
+        "description": "Read the full specification or explore the source on GitHub. Zero dependencies to start — one JSON endpoint per page.",
+        "cliCommand": "npx @olonjs/cli@latest new tenant",
         "ctas": [
-          {
-            "id": "cta-docs",
-            "label": "Read the Docs",
-            "href": "#devex",
-            "variant": "primary"
-          },
-          {
-            "id": "cta-npm",
-            "label": "View on NPM",
-            "href": "#",
-            "variant": "secondary"
-          }
+          { "id": "cta-docs", "label": "Read the Specification", "href": "/docs",                                     "variant": "primary"   },
+          { "id": "cta-gh",   "label": "View on GitHub",         "href": "https://github.com/olonjs/npm-jpcore",      "variant": "secondary" }
         ]
       },
       "settings": {}
     }
   ]
 }
+
 END_OF_FILE_CONTENT
 echo "Creating src/data/pages/post.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/pages/post.json"
@@ -8370,7 +6703,7 @@ export default LeadSenderConfirmationEmail;
 END_OF_FILE_CONTENT
 echo "Creating src/fonts.css..."
 cat << 'END_OF_FILE_CONTENT' > "src/fonts.css"
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 END_OF_FILE_CONTENT
 mkdir -p "src/hooks"
@@ -8469,6 +6802,13 @@ cat << 'END_OF_FILE_CONTENT' > "src/index.css"
      Falls back to --theme-primary if accent is undefined.
   */
   --accent: var(--theme-accent, var(--theme-primary));
+
+  /* Olon brand primitives — consumed by OlonMark SVG gradients */
+  --olon-ring-top:    #84ABFF;
+  --olon-ring-bottom: #0F52E0;
+  --olon-ground:      #080808;
+  --olon-figure:      #e8f0f8;
+  --olon-nucleus:     var(--olon-figure);
 
   /*
      Shared demo/mockup helpers
@@ -8756,20 +7096,10 @@ import { Header }           from '@/components/header';
 import { Footer }           from '@/components/footer';
 import { Hero }             from '@/components/hero';
 import { FeatureGrid }      from '@/components/feature-grid';
-import { CodeBlock }        from '@/components/code-block';
 import { ProblemStatement } from '@/components/problem-statement';
-import { PillarsGrid }      from '@/components/pillars-grid';
-import { ArchLayers }       from '@/components/arch-layers';
-import { ProductTriad }     from '@/components/product-triad';
-import { PaSection }        from '@/components/pa-section';
-import { Philosophy }       from '@/components/philosophy';
 import { CtaBanner }        from '@/components/cta-banner';
-import { ImageBreak }       from '@/components/image-break';
-import { CmsIce }           from '@/components/cms-ice';
 import { GitSection }       from '@/components/git-section';
 import { Devex }            from '@/components/devex';
-import { CliSection }       from '@/components/cli-section';
-import { DocsLayout }       from '@/components/docs-layout';
 import { Tiptap }           from '@/components/tiptap';
 
 import type { SectionType }              from '@olonjs/core';
@@ -8782,20 +7112,10 @@ export const ComponentRegistry: {
   'footer':            Footer,
   'hero':              Hero,
   'feature-grid':      FeatureGrid,
-  'code-block':        CodeBlock,
   'problem-statement': ProblemStatement,
-  'pillars-grid':      PillarsGrid,
-  'arch-layers':       ArchLayers,
-  'product-triad':     ProductTriad,
-  'pa-section':        PaSection,
-  'philosophy':        Philosophy,
   'cta-banner':        CtaBanner,
-  'image-break':       ImageBreak,
-  'cms-ice':           CmsIce,
   'git-section':       GitSection,
   'devex':             Devex,
-  'cli-section':       CliSection,
-  'docs-layout':       DocsLayout,
   'tiptap':            Tiptap,
 };
 
@@ -8863,29 +7183,17 @@ cat << 'END_OF_FILE_CONTENT' > "src/lib/addSectionConfig.ts"
 import type { AddSectionConfig } from '@olonjs/core';
 
 const addableSectionTypes = [
-  'hero', 'feature-grid', 'code-block', 'problem-statement',
-  'pillars-grid', 'arch-layers', 'product-triad', 'pa-section',
-  'philosophy', 'cta-banner', 'image-break',
-  'cms-ice', 'git-section', 'devex', 'cli-section', 'docs-layout', 'tiptap',
+  'hero', 'feature-grid', 'problem-statement',
+  'cta-banner', 'git-section', 'devex', 'tiptap',
 ] as const;
 
 const sectionTypeLabels: Record<string, string> = {
   'hero':              'Hero',
   'feature-grid':      'Feature Grid',
-  'code-block':        'Code Block',
   'problem-statement': 'Problem Statement',
-  'pillars-grid':      'Pillars Grid',
-  'arch-layers':       'Architecture Layers',
-  'product-triad':     'Product Triad',
-  'pa-section':        'PA Section',
-  'philosophy':        'Philosophy',
   'cta-banner':        'CTA Banner',
-  'image-break':       'Image Break',
-  'cms-ice':           'CMS / In-Context Editing',
   'git-section':       'Git Versioning',
   'devex':             'Developer Experience',
-  'cli-section':       'CLI Tool',
-  'docs-layout':       'Documentation Layout',
   'tiptap':            'Tiptap Editorial',
 };
 
@@ -8893,20 +7201,10 @@ function getDefaultSectionData(type: string): Record<string, unknown> {
   switch (type) {
     case 'hero':              return { title: 'New Hero', description: '' };
     case 'feature-grid':      return { sectionTitle: 'Features', cards: [] };
-    case 'code-block':        return { lines: [] };
-    case 'problem-statement': return { title: 'Problem Statement', siloGroups: [], paragraphs: [] };
-    case 'pillars-grid':      return { title: 'Pillars', pillars: [] };
-    case 'arch-layers':       return { title: 'Architecture', layers: [] };
-    case 'product-triad':     return { title: 'Products', products: [] };
-    case 'pa-section':        return { title: 'Section', subtitle: 'Subtitle', paragraphs: [{ text: '' }] };
-    case 'philosophy':        return { title: 'Philosophy', quote: 'Your quote here.' };
+    case 'problem-statement': return { problemTag: 'Problem', problemTitle: '', problemItems: [], solutionTag: 'Solution', solutionTitle: '', solutionItems: [] };
     case 'cta-banner':        return { title: 'Call to Action', description: '', cliCommand: '' };
-    case 'image-break':       return { image: { url: '', alt: '' }, caption: '' };
-    case 'cms-ice':           return { title: 'In-Context Editing', description: '', callouts: [] };
-    case 'git-section':       return { title: 'Your content is code.', description: '', points: [] };
+    case 'git-section':       return { title: 'Your content is code.', cards: [] };
     case 'devex':             return { title: 'Developer Experience', description: '', features: [] };
-    case 'cli-section':       return { title: 'CLI Tool', description: '', steps: [] };
-    case 'docs-layout':       return { pageTitle: 'Documentation', pageSubtitle: '', version: 'v1.0', groups: [] };
     case 'tiptap':            return { content: '# Post title\n\nStart writing in Markdown...' };
     default:                  return {};
   }
@@ -9215,20 +7513,10 @@ import { HeaderSchema }           from '@/components/header';
 import { FooterSchema }           from '@/components/footer';
 import { HeroSchema }             from '@/components/hero';
 import { FeatureGridSchema }      from '@/components/feature-grid';
-import { CodeBlockSchema }        from '@/components/code-block';
 import { ProblemStatementSchema } from '@/components/problem-statement';
-import { PillarsGridSchema }      from '@/components/pillars-grid';
-import { ArchLayersSchema }       from '@/components/arch-layers';
-import { ProductTriadSchema }     from '@/components/product-triad';
-import { PaSectionSchema }        from '@/components/pa-section';
-import { PhilosophySchema }       from '@/components/philosophy';
 import { CtaBannerSchema }        from '@/components/cta-banner';
-import { ImageBreakSchema }       from '@/components/image-break';
-import { CmsIceSchema }           from '@/components/cms-ice';
 import { GitSectionSchema }       from '@/components/git-section';
 import { DevexSchema }            from '@/components/devex';
-import { CliSectionSchema }       from '@/components/cli-section';
-import { DocsLayoutSchema }       from '@/components/docs-layout';
 import { TiptapSchema }           from '@/components/tiptap';
 
 export const SECTION_SCHEMAS = {
@@ -9236,20 +7524,10 @@ export const SECTION_SCHEMAS = {
   'footer':            FooterSchema,
   'hero':              HeroSchema,
   'feature-grid':      FeatureGridSchema,
-  'code-block':        CodeBlockSchema,
   'problem-statement': ProblemStatementSchema,
-  'pillars-grid':      PillarsGridSchema,
-  'arch-layers':       ArchLayersSchema,
-  'product-triad':     ProductTriadSchema,
-  'pa-section':        PaSectionSchema,
-  'philosophy':        PhilosophySchema,
   'cta-banner':        CtaBannerSchema,
-  'image-break':       ImageBreakSchema,
-  'cms-ice':           CmsIceSchema,
   'git-section':       GitSectionSchema,
   'devex':             DevexSchema,
-  'cli-section':       CliSectionSchema,
-  'docs-layout':       DocsLayoutSchema,
   'tiptap':            TiptapSchema,
 } as const;
 
@@ -9383,20 +7661,10 @@ import type { HeaderData,           HeaderSettings }           from '@/component
 import type { FooterData,           FooterSettings }           from '@/components/footer';
 import type { HeroData,             HeroSettings }             from '@/components/hero';
 import type { FeatureGridData,      FeatureGridSettings }      from '@/components/feature-grid';
-import type { CodeBlockData,        CodeBlockSettings }        from '@/components/code-block';
 import type { ProblemStatementData, ProblemStatementSettings } from '@/components/problem-statement';
-import type { PillarsGridData,      PillarsGridSettings }      from '@/components/pillars-grid';
-import type { ArchLayersData,       ArchLayersSettings }       from '@/components/arch-layers';
-import type { ProductTriadData,     ProductTriadSettings }     from '@/components/product-triad';
-import type { PaSectionData,        PaSectionSettings }        from '@/components/pa-section';
-import type { PhilosophyData,       PhilosophySettings }       from '@/components/philosophy';
 import type { CtaBannerData,        CtaBannerSettings }        from '@/components/cta-banner';
-import type { ImageBreakData,       ImageBreakSettings }       from '@/components/image-break';
-import type { CmsIceData,           CmsIceSettings }           from '@/components/cms-ice';
 import type { GitSectionData,       GitSectionSettings }       from '@/components/git-section';
 import type { DevexData,            DevexSettings }            from '@/components/devex';
-import type { CliSectionData,       CliSectionSettings }       from '@/components/cli-section';
-import type { DocsLayoutData,       DocsLayoutSettings }       from '@/components/docs-layout';
 import type { TiptapData,           TiptapSettings }           from '@/components/tiptap';
 
 export type SectionComponentPropsMap = {
@@ -9404,20 +7672,10 @@ export type SectionComponentPropsMap = {
   'footer':            { data: FooterData;            settings?: FooterSettings            };
   'hero':              { data: HeroData;              settings?: HeroSettings              };
   'feature-grid':      { data: FeatureGridData;       settings?: FeatureGridSettings       };
-  'code-block':        { data: CodeBlockData;         settings?: CodeBlockSettings         };
   'problem-statement': { data: ProblemStatementData;  settings?: ProblemStatementSettings  };
-  'pillars-grid':      { data: PillarsGridData;       settings?: PillarsGridSettings       };
-  'arch-layers':       { data: ArchLayersData;        settings?: ArchLayersSettings        };
-  'product-triad':     { data: ProductTriadData;      settings?: ProductTriadSettings      };
-  'pa-section':        { data: PaSectionData;         settings?: PaSectionSettings         };
-  'philosophy':        { data: PhilosophyData;        settings?: PhilosophySettings        };
   'cta-banner':        { data: CtaBannerData;         settings?: CtaBannerSettings         };
-  'image-break':       { data: ImageBreakData;        settings?: ImageBreakSettings        };
-  'cms-ice':           { data: CmsIceData;            settings?: CmsIceSettings            };
   'git-section':       { data: GitSectionData;        settings?: GitSectionSettings        };
   'devex':             { data: DevexData;             settings?: DevexSettings             };
-  'cli-section':       { data: CliSectionData;        settings?: CliSectionSettings        };
-  'docs-layout':       { data: DocsLayoutData;        settings?: DocsLayoutSettings        };
   'tiptap':            { data: TiptapData;            settings?: TiptapSettings            };
 };
 
@@ -9427,20 +7685,10 @@ declare module '@olonjs/core' {
     'footer':            FooterData;
     'hero':              HeroData;
     'feature-grid':      FeatureGridData;
-    'code-block':        CodeBlockData;
     'problem-statement': ProblemStatementData;
-    'pillars-grid':      PillarsGridData;
-    'arch-layers':       ArchLayersData;
-    'product-triad':     ProductTriadData;
-    'pa-section':        PaSectionData;
-    'philosophy':        PhilosophyData;
     'cta-banner':        CtaBannerData;
-    'image-break':       ImageBreakData;
-    'cms-ice':           CmsIceData;
     'git-section':       GitSectionData;
     'devex':             DevexData;
-    'cli-section':       CliSectionData;
-    'docs-layout':       DocsLayoutData;
     'tiptap':            TiptapData;
   }
   export interface SectionSettingsRegistry {
@@ -9448,20 +7696,10 @@ declare module '@olonjs/core' {
     'footer':            FooterSettings;
     'hero':              HeroSettings;
     'feature-grid':      FeatureGridSettings;
-    'code-block':        CodeBlockSettings;
     'problem-statement': ProblemStatementSettings;
-    'pillars-grid':      PillarsGridSettings;
-    'arch-layers':       ArchLayersSettings;
-    'product-triad':     ProductTriadSettings;
-    'pa-section':        PaSectionSettings;
-    'philosophy':        PhilosophySettings;
     'cta-banner':        CtaBannerSettings;
-    'image-break':       ImageBreakSettings;
-    'cms-ice':           CmsIceSettings;
     'git-section':       GitSectionSettings;
     'devex':             DevexSettings;
-    'cli-section':       CliSectionSettings;
-    'docs-layout':       DocsLayoutSettings;
     'tiptap':            TiptapSettings;
   }
 }
