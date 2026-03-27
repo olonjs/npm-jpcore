@@ -8,8 +8,10 @@
     ],
     "scripts": {
         "dev": "npm run dev -w tenant-alpha",
+		"dev:landing": "npm run dev -w olonjs-landing",
         "dev2": "npm run dev -w tenant-agritourism",
         "build": "npm run build -w tenant-alpha",
+		"build:landing": "npm run build -w olonjs-landing",
         "build:all": "npm run build --workspaces --if-present",
         "release": "node scripts/release.js",
         "check:templates": "node scripts/check-cli-templates.mjs",
