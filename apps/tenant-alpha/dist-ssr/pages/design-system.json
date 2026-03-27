@@ -1,0 +1,20 @@
+{
+  "id": "design-system-page",
+  "slug": "design-system",
+  "global-header": false,
+  "meta": {
+    "title": "Olon Design System — Design Language",
+    "description": "Token reference, color system, typography, components and brand identity for the OlonJS design language."
+  },
+  "sections": [
+   
+    {
+      "id": "ds-main",
+      "type": "design-system",
+      "data": {
+        "title": "Olon"
+      },
+      "settings": {}
+    }
+  ]
+}

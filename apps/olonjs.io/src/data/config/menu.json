@@ -1,0 +1,20 @@
+{
+  "main": [
+    {
+      "label": "The Problem",
+      "href": "#problem"
+    },
+    {
+      "label": "Architecture",
+      "href": "#architecture"
+    },
+    {
+      "label": "Why",
+      "href": "#why"
+    },
+    {
+      "label": "DX",
+      "href": "#devex"
+    }
+  ]
+}

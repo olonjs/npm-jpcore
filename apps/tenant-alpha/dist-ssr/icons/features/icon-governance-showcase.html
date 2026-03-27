@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Olon DS — icon-governance</title>
+  <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/style.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-mono/style.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #0B0907;
+      --card:         #130F0D;
+      --elevated:     #1E1814;
+      --border:       #2E271F;
+      --border-strong:#4A3D30;
+      --fg:           #F2EDE6;
+      --fg-muted:     #9A8D80;
+      --fg-dim:       #5C5248;
+      --primary:      #5B3F9A;
+      --primary-light:#B8A4E0;
+      --primary-dark: #3D2770;
+      --accent:       #E2D5B0;
+      --font-sans:    'Geist', system-ui, sans-serif;
+      --font-mono:    'Geist Mono', monospace;
+      --radius:       12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      padding: 64px 48px 96px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 64px; }
+    .wordmark { font-family: 'Merriweather', Georgia, serif; font-size: 17px; letter-spacing: -0.04em; }
+    .breadcrumb {
+      font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted);
+      padding: 3px 8px; border: 1px solid var(--border); border-radius: 4px;
+      background: var(--card); margin-left: 4px;
+    }
+    .new-badge {
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent);
+      padding: 2px 7px; border: 1px solid rgba(226,213,176,0.25);
+      border-radius: 4px; background: rgba(226,213,176,0.06);
+    }
+
+    /* Labels */
+    .label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-dim); margin-bottom: 24px; }
+    .title { font-size: 22px; font-weight: 500; letter-spacing: -0.03em; margin-bottom: 6px; }
+    .sub { font-size: 13px; color: var(--fg-muted); margin-bottom: 40px; max-width: 480px; line-height: 1.6; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 52px 0; }
+
+    /* ── Hero block ── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 56px;
+    }
+    .hero-left {
+      background: var(--elevated);
+      padding: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-right {
+      background: var(--card);
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+    }
+    .hero-name { font-size: 28px; font-weight: 500; letter-spacing: -0.04em; }
+    .hero-desc { font-size: 13px; color: var(--fg-muted); line-height: 1.7; max-width: 320px; }
+    .pill-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill {
+      font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--fg-muted);
+      padding: 4px 10px; border: 1px solid var(--border);
+      border-radius: 20px; background: var(--elevated);
+    }
+    .pill.accent { color: var(--accent); border-color: rgba(226,213,176,0.2); background: rgba(226,213,176,0.04); }
+
+    /* ── Anatomy section ── */
+    .anatomy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .anatomy-card {
+      background: var(--card);
+      padding: 32px 28px 28px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .anatomy-card svg { width: 72px; height: 72px; }
+    .anatomy-label { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); text-align: center; }
+    .anatomy-desc { font-size: 11px; color: var(--fg-dim); text-align: center; line-height: 1.5; }
+
+    /* ── Context: full set ── */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .icon-card {
+      background: var(--card);
+      padding: 32px 20px 24px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      transition: background 0.18s ease; cursor: default;
+    }
+    .icon-card:hover { background: var(--elevated); }
+    .icon-card.new-card { background: var(--elevated); }
+    .icon-card.new-card:hover { background: #251E18; }
+    .icon-card svg { width: 56px; height: 56px; }
+    .icon-name { font-family: var(--font-mono); font-size: 9.5px; color: var(--fg-muted); text-align: center; }
+    .new-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent); margin: 0 auto;
+    }
+
+    /* ── Sizes ── */
+    .sizes-row {
+      display: flex; align-items: flex-end; gap: 28px;
+      padding: 36px 40px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .size-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .size-label { font-family: var(--font-mono); font-size: 9px; color: var(--fg-dim); }
+
+    /* ── Light/dark ── */
+    .theme-pair {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--border); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .theme-swatch { padding: 48px; display: flex; align-items: center; gap: 32px; }
+    .theme-swatch.dark  { background: #130F0D; }
+    .theme-swatch.light { background: #F2EDE6; }
+    .theme-tag { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .theme-swatch.dark  .theme-tag { color: #5C5248; }
+    .theme-swatch.light .theme-tag { color: #A89E96; }
+
+    /* Token bar */
+    .token-row { display: flex; gap: 6px; margin-bottom: 40px; flex-wrap: wrap; }
+    .token { display: flex; align-items: center; gap: 7px; padding: 6px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 5px; }
+    .token-sw { width: 10px; height: 10px; border-radius: 2px; }
+    .token-n  { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); }
+    .token-h  { font-family: var(--font-mono); font-size: 10px; color: var(--fg-dim); }
+
+    /* Footer */
+    .footer { margin-top: 72px; padding-top: 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .footer-note { font-family: var(--font-mono); font-size: 11px; color: var(--fg-dim); }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .anatomy-grid { grid-template-columns: 1fr; }
+      .icon-grid { grid-template-columns: repeat(3, 1fr); }
+      .theme-pair { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
+    <defs>
+      <linearGradient id="lr" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#B8A4E0"/>
+        <stop offset="100%" stop-color="#5B3F9A"/>
+      </linearGradient>
+    </defs>
+    <circle cx="50" cy="50" r="38" stroke="url(#lr)" stroke-width="20"/>
+    <circle cx="50" cy="50" r="15" fill="#E2D5B0"/>
+  </svg>
+  <span class="wordmark">Olon</span>
+  <span class="breadcrumb">icons / governance</span>
+  <span class="new-badge">New</span>
+</div>
+
+<!-- Section intro -->
+<p class="label">Icon System · v2.1</p>
+<h1 class="title">icon-governance</h1>
+<p class="sub">Audit trails, compliance controls, and private cloud deployment. SOC2-ready by design. Three compositional layers: the immutable ledger, the certification seal, the infrastructure stack.</p>
+
+<!-- Color tokens -->
+<div class="token-row">
+  <div class="token"><div class="token-sw" style="background:#B8A4E0"></div><span class="token-n">primary-200</span><span class="token-h">#B8A4E0</span></div>
+  <div class="token"><div class="token-sw" style="background:#7254B0"></div><span class="token-n">primary-500</span><span class="token-h">#7254B0</span></div>
+  <div class="token"><div class="token-sw" style="background:#5B3F9A"></div><span class="token-n">primary-600</span><span class="token-h">#5B3F9A</span></div>
+  <div class="token"><div class="token-sw" style="background:#3D2770"></div><span class="token-n">primary-800</span><span class="token-h">#3D2770</span></div>
+  <div class="token"><div class="token-sw" style="background:#E2D5B0"></div><span class="token-n">accent</span><span class="token-h">#E2D5B0</span></div>
+</div>
+
+<hr>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-left">
+    <!-- Governance icon at display size -->
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:140px;height:140px">
+      <defs>
+        <linearGradient id="h-main" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="h-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient>
+        <linearGradient id="h-acc"  x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <rect fill="none" stroke="url(#h-body)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" x="14" y="38" width="116" height="148" rx="9"/>
+      <path fill="none" stroke="url(#h-main)" stroke-linecap="round" stroke-width="5.5" d="M14,62 h116"/>
+      <circle fill="url(#h-body)"             cx="32" cy="83"  r="4.5"/>
+      <path   fill="none" stroke="url(#h-body)" stroke-linecap="round" stroke-width="4.5" d="M44,83  h62"/>
+      <circle fill="url(#h-body)"             cx="32" cy="104" r="4.5"/>
+      <path   fill="none" stroke="url(#h-body)" stroke-linecap="round" stroke-width="4.5" opacity="0.8" d="M44,104 h62"/>
+      <circle fill="url(#h-body)" opacity="0.6" cx="32" cy="125" r="4.5"/>
+      <path   fill="none" stroke="url(#h-body)" stroke-linecap="round" stroke-width="4.5" opacity="0.6" d="M44,125 h48"/>
+      <circle fill="url(#h-body)" opacity="0.38" cx="32" cy="146" r="4.5"/>
+      <path   fill="none" stroke="url(#h-body)" stroke-linecap="round" stroke-width="4.5" opacity="0.38" d="M44,146 h38"/>
+      <rect fill="url(#h-main)" opacity="0.70" x="148" y="154" width="40" height="7" rx="3.5"/>
+      <rect fill="url(#h-main)" opacity="0.48" x="148" y="166" width="30" height="7" rx="3.5"/>
+      <rect fill="url(#h-main)" opacity="0.30" x="148" y="178" width="20" height="7" rx="3.5"/>
+      <circle fill="none" stroke="url(#h-main)" stroke-width="7" cx="152" cy="71" r="36"/>
+      <circle fill="none" stroke="url(#h-main)" stroke-width="2" stroke-dasharray="5 3.5" opacity="0.38" cx="152" cy="71" r="25"/>
+      <path fill="none" stroke="url(#h-acc)" stroke-linecap="round" stroke-linejoin="round" stroke-width="8.5" d="M133,71 l12,14 l24,-30"/>
+    </svg>
+  </div>
+  <div class="hero-right">
+    <div>
+      <p class="icon-name" style="font-size:11px; margin-bottom:8px;">icon-governance</p>
+      <h2 class="hero-name">Governance</h2>
+    </div>
+    <p class="hero-desc">Three layers, one read. The ledger communicates immutable audit trails; the compliance seal communicates SOC2 certification; the server bars communicate private cloud infrastructure — all without a label.</p>
+    <div class="pill-row">
+      <span class="pill">Audit trail</span>
+      <span class="pill">SOC2</span>
+      <span class="pill">Compliance</span>
+      <span class="pill">Private cloud</span>
+      <span class="pill accent">NX monorepo</span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- Anatomy -->
+<p class="label">Anatomy</p>
+<div class="anatomy-grid">
+
+  <!-- Layer 1: Ledger -->
+  <div class="anatomy-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="an-b1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient>
+        <linearGradient id="an-m1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+      </defs>
+      <rect fill="none" stroke="url(#an-b1)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" x="14" y="38" width="116" height="148" rx="9"/>
+      <path fill="none" stroke="url(#an-m1)" stroke-linecap="round" stroke-width="5.5" d="M14,62 h116"/>
+      <circle fill="url(#an-b1)"             cx="32" cy="83"  r="4.5"/>
+      <path   fill="none" stroke="url(#an-b1)" stroke-linecap="round" stroke-width="4.5" d="M44,83  h62"/>
+      <circle fill="url(#an-b1)"             cx="32" cy="104" r="4.5"/>
+      <path   fill="none" stroke="url(#an-b1)" stroke-linecap="round" stroke-width="4.5" opacity="0.8" d="M44,104 h62"/>
+      <circle fill="url(#an-b1)" opacity="0.6" cx="32" cy="125" r="4.5"/>
+      <path   fill="none" stroke="url(#an-b1)" stroke-linecap="round" stroke-width="4.5" opacity="0.6" d="M44,125 h48"/>
+      <circle fill="url(#an-b1)" opacity="0.38" cx="32" cy="146" r="4.5"/>
+      <path   fill="none" stroke="url(#an-b1)" stroke-linecap="round" stroke-width="4.5" opacity="0.38" d="M44,146 h38"/>
+    </svg>
+    <span class="anatomy-label">Audit ledger</span>
+    <span class="anatomy-desc">Immutable log structure. Header divider separates metadata from entries. Opacity fade communicates chronological depth.</span>
+  </div>
+
+  <!-- Layer 2: Seal -->
+  <div class="anatomy-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="an-m2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="an-a2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <circle fill="none" stroke="url(#an-m2)" stroke-width="7" cx="100" cy="100" r="62"/>
+      <circle fill="none" stroke="url(#an-m2)" stroke-width="2" stroke-dasharray="5 3.5" opacity="0.38" cx="100" cy="100" r="44"/>
+      <path fill="none" stroke="url(#an-a2)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M76,100 l16,19 l33,-42"/>
+    </svg>
+    <span class="anatomy-label">Compliance seal</span>
+    <span class="anatomy-desc">Outer ring: SOC2 certification boundary. Inner dashed ring: official document seal texture. Checkmark in accent: verified status.</span>
+  </div>
+
+  <!-- Layer 3: Server bars -->
+  <div class="anatomy-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="an-m3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+      </defs>
+      <rect fill="url(#an-m3)" opacity="0.70" x="50"  y="86"  width="100" height="14" rx="7"/>
+      <rect fill="url(#an-m3)" opacity="0.48" x="50"  y="108" width="76"  height="14" rx="7"/>
+      <rect fill="url(#an-m3)" opacity="0.30" x="50"  y="130" width="52"  height="14" rx="7"/>
+    </svg>
+    <span class="anatomy-label">Private cloud stack</span>
+    <span class="anatomy-desc">Descending bar widths represent infrastructure tiers. Paired with the NX monorepo layered deployment model.</span>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- Full set in context -->
+<p class="label">Full set — context</p>
+<p class="sub" style="margin-bottom:24px;">Governance alongside the existing five icons. Consistent optical weight, shared gradient language.</p>
+
+<div class="icon-grid">
+
+  <div class="icon-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s-g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="s-g1b" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <path fill="none" stroke="url(#s-g1)" stroke-width="8" d="m59.38 44.6h81.24c8.16 0 14.78 6.62 14.78 14.78v81.24c0 8.16-6.62 14.78-14.78 14.78h-81.24c-8.16 0-14.78-6.62-14.78-14.78v-81.24c0-8.16 6.62-14.78 14.78-14.78z"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m7.67 72.3h36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m7.67 100h36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m7.67 127.7h36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m155.4 72.3h36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m155.4 100h36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m155.4 127.7h36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m72.3 7.67v36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m100 7.67v36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m127.7 7.67v36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m72.3 155.4v36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m100 155.4v36.93"/>
+      <path fill="none" stroke="url(#s-g1)" stroke-linecap="round" stroke-width="6" d="m127.7 155.4v36.93"/>
+      <circle fill="url(#s-g1)"  cx="72.3" cy="72.3" r="7.39"/>
+      <circle fill="url(#s-g1)"  cx="127.7" cy="72.3" r="7.39"/>
+      <circle fill="url(#s-g1)"  cx="72.3" cy="127.7" r="7.39"/>
+      <circle fill="url(#s-g1)"  cx="127.7" cy="127.7" r="7.39"/>
+      <circle fill="url(#s-g1b)" cx="100" cy="100" r="9.23"/>
+    </svg>
+    <span class="icon-name">ai-specs</span>
+  </div>
+
+  <div class="icon-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s-g2a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="s-g2b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient>
+        <linearGradient id="s-g2c" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <path fill="none" stroke="url(#s-g2a)" stroke-linecap="round" stroke-width="6" d="m49.95 16.58v166.84"/>
+      <path fill="none" stroke="url(#s-g2b)" stroke-linecap="round" stroke-width="6" d="m49.95 66.63q50.05 0 100.1 25.03v91.76"/>
+      <circle fill="url(#s-g2a)" cx="49.95" cy="16.58" r="13.35"/>
+      <circle fill="url(#s-g2a)" cx="49.95" cy="66.63" r="13.35"/>
+      <circle fill="url(#s-g2a)" cx="49.95" cy="116.68" r="13.35"/>
+      <circle fill="url(#s-g2a)" cx="49.95" cy="183.42" r="13.35"/>
+      <circle fill="url(#s-g2c)" cx="150.05" cy="91.66" r="13.35"/>
+      <circle fill="url(#s-g2b)" cx="150.05" cy="136.7" r="13.35"/>
+      <circle fill="url(#s-g2b)" cx="150.05" cy="183.42" r="13.35"/>
+    </svg>
+    <span class="icon-name">clean-commits</span>
+  </div>
+
+  <div class="icon-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s-g3a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="s-g3b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient>
+        <linearGradient id="s-g3c" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <path fill="none" stroke="url(#s-g3a)" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="m115.66 6.04v46.98h46.98"/>
+      <path fill="none" stroke="url(#s-g3b)" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="m37.36 6.04v187.92h125.28v-140.94l-46.98-46.98z"/>
+      <path fill="none" stroke="url(#s-g3c)" stroke-linecap="round" stroke-linejoin="round" stroke-width="6" d="m76.51 76.51c-7.83 0-15.66 4.7-15.66 12.53v21.92c0 4.7-4.7 7.83-7.83 7.83 3.13 0 7.83 3.13 7.83 7.83v21.93c0 7.83 7.83 12.52 15.66 12.52"/>
+      <rect fill="url(#s-g3b)" opacity=".55" x="92.17" y="87.47" width="39.15" height="6.27" rx="3.13"/>
+      <rect fill="url(#s-g3b)"              x="92.17" y="110.96" width="54.82" height="6.27" rx="3.13"/>
+      <rect fill="url(#s-g3b)" opacity=".75" x="92.17" y="134.45" width="46.99" height="6.27" rx="3.13"/>
+    </svg>
+    <span class="icon-name">json-files</span>
+  </div>
+
+  <div class="icon-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s-g4a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient>
+        <linearGradient id="s-g4b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="s-g4c" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <path fill="none" stroke="url(#s-g4a)" stroke-linecap="round" stroke-width="8" d="m56.21 100v-56.17c0-22.47 14.98-32.45 28.09-32.45 13.1 0 28.08 9.98 28.08 32.45v28.08"/>
+      <path fill="none" stroke="url(#s-g4b)" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="m52.46 100h63.67c8.27 0 14.98 6.71 14.98 14.98v63.66c0 8.28-6.71 14.98-14.98 14.98h-63.67c-8.27 0-14.98-6.7-14.98-14.98v-63.66c0-8.27 6.71-14.98 14.98-14.98z"/>
+      <circle fill="url(#s-g4c)" cx="84.3" cy="137.45" r="11.24"/>
+      <rect fill="url(#s-g4b)" x="78.68" y="142.01" width="11.24" height="16.85" rx="5.62"/>
+      <circle fill="none" stroke="url(#s-g4c)" stroke-width="8" cx="140.47" cy="81.28" r="14.98"/>
+      <rect fill="url(#s-g4b)" x="157.21" y="77.53" width="39.53" height="7.49" rx="3.74"/>
+    </svg>
+    <span class="icon-name">own-data</span>
+  </div>
+
+  <div class="icon-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s-g5a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="s-g5b" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <path fill="none" stroke="url(#s-g5a)" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="m100 4.61l63.74 23.9c7.97 3.19 12.75 11.16 12.75 19.12v68.53c0 15.94-6.37 31.87-19.12 43.03l-44.62 31.87c-6.38 4.78-19.12 4.78-25.5 0l-44.62-31.87c-12.75-11.16-19.12-27.09-19.12-43.03v-68.53c0-7.96 4.78-15.93 12.75-19.12z"/>
+      <path fill="none" stroke="url(#s-g5b)" stroke-linecap="round" stroke-linejoin="round" stroke-width="10" d="m64.94 100.22l22.31 23.91 47.81-63.75"/>
+    </svg>
+    <span class="icon-name">zod-schemas</span>
+  </div>
+
+  <!-- NEW: Governance -->
+  <div class="icon-card new-card">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="s-g6m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient>
+        <linearGradient id="s-g6b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient>
+        <linearGradient id="s-g6a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient>
+      </defs>
+      <rect fill="none" stroke="url(#s-g6b)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" x="14" y="38" width="116" height="148" rx="9"/>
+      <path fill="none" stroke="url(#s-g6m)" stroke-linecap="round" stroke-width="5.5" d="M14,62 h116"/>
+      <circle fill="url(#s-g6b)"              cx="32" cy="83"  r="4.5"/>
+      <path   fill="none" stroke="url(#s-g6b)" stroke-linecap="round" stroke-width="4.5" d="M44,83  h62"/>
+      <circle fill="url(#s-g6b)"              cx="32" cy="104" r="4.5"/>
+      <path   fill="none" stroke="url(#s-g6b)" stroke-linecap="round" stroke-width="4.5" opacity="0.8" d="M44,104 h62"/>
+      <circle fill="url(#s-g6b)" opacity="0.6" cx="32" cy="125" r="4.5"/>
+      <path   fill="none" stroke="url(#s-g6b)" stroke-linecap="round" stroke-width="4.5" opacity="0.6" d="M44,125 h48"/>
+      <circle fill="url(#s-g6b)" opacity="0.38" cx="32" cy="146" r="4.5"/>
+      <path   fill="none" stroke="url(#s-g6b)" stroke-linecap="round" stroke-width="4.5" opacity="0.38" d="M44,146 h38"/>
+      <rect fill="url(#s-g6m)" opacity="0.70" x="148" y="154" width="40" height="7" rx="3.5"/>
+      <rect fill="url(#s-g6m)" opacity="0.48" x="148" y="166" width="30" height="7" rx="3.5"/>
+      <rect fill="url(#s-g6m)" opacity="0.30" x="148" y="178" width="20" height="7" rx="3.5"/>
+      <circle fill="none" stroke="url(#s-g6m)" stroke-width="7" cx="152" cy="71" r="36"/>
+      <circle fill="none" stroke="url(#s-g6m)" stroke-width="2" stroke-dasharray="5 3.5" opacity="0.38" cx="152" cy="71" r="25"/>
+      <path fill="none" stroke="url(#s-g6a)" stroke-linecap="round" stroke-linejoin="round" stroke-width="8.5" d="M133,71 l12,14 l24,-30"/>
+    </svg>
+    <span class="icon-name">governance</span>
+    <div class="new-dot"></div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- Sizes -->
+<p class="label">Scale</p>
+<div class="sizes-row">
+  <div class="size-item">
+    <svg width="16" height="16" viewBox="0 0 200 200" fill="none"><defs><linearGradient id="sz-m1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient><linearGradient id="sz-b1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="sz-a1" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient></defs><rect fill="none" stroke="url(#sz-b1)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#sz-m1)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#sz-b1)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#sz-b1)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#sz-b1)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#sz-b1)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><rect fill="url(#sz-m1)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#sz-m1)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><circle fill="none" stroke="url(#sz-m1)" stroke-width="7" cx="152" cy="71" r="36"/><path fill="none" stroke="url(#sz-a1)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+    <span class="size-label">16</span>
+  </div>
+  <div class="size-item">
+    <svg width="24" height="24" viewBox="0 0 200 200" fill="none"><use href="#sz-content"/><defs><linearGradient id="sz-m2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient><linearGradient id="sz-b2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="sz-a2" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient></defs><rect fill="none" stroke="url(#sz-b2)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#sz-m2)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#sz-b2)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#sz-b2)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#sz-b2)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#sz-b2)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><rect fill="url(#sz-m2)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#sz-m2)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><circle fill="none" stroke="url(#sz-m2)" stroke-width="7" cx="152" cy="71" r="36"/><path fill="none" stroke="url(#sz-a2)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+    <span class="size-label">24</span>
+  </div>
+  <div class="size-item">
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none"><defs><linearGradient id="sz-m3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient><linearGradient id="sz-b3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="sz-a3" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient></defs><rect fill="none" stroke="url(#sz-b3)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#sz-m3)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#sz-b3)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#sz-b3)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#sz-b3)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#sz-b3)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><circle fill="url(#sz-b3)" cx="32" cy="125" r="4.5" opacity=".6"/><path fill="none" stroke="url(#sz-b3)" stroke-width="4.5" opacity=".6" d="M44,125h48"/><rect fill="url(#sz-m3)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#sz-m3)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><rect fill="url(#sz-m3)" opacity=".3" x="148" y="178" width="20" height="7" rx="3.5"/><circle fill="none" stroke="url(#sz-m3)" stroke-width="7" cx="152" cy="71" r="36"/><circle fill="none" stroke="url(#sz-m3)" stroke-width="2" stroke-dasharray="5 3.5" opacity=".38" cx="152" cy="71" r="25"/><path fill="none" stroke="url(#sz-a3)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+    <span class="size-label">32</span>
+  </div>
+  <div class="size-item">
+    <svg width="48" height="48" viewBox="0 0 200 200" fill="none"><defs><linearGradient id="sz-m4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient><linearGradient id="sz-b4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="sz-a4" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient></defs><rect fill="none" stroke="url(#sz-b4)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#sz-m4)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#sz-b4)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#sz-b4)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#sz-b4)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#sz-b4)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><circle fill="url(#sz-b4)" cx="32" cy="125" r="4.5" opacity=".6"/><path fill="none" stroke="url(#sz-b4)" stroke-width="4.5" opacity=".6" d="M44,125h48"/><circle fill="url(#sz-b4)" cx="32" cy="146" r="4.5" opacity=".38"/><path fill="none" stroke="url(#sz-b4)" stroke-width="4.5" opacity=".38" d="M44,146h38"/><rect fill="url(#sz-m4)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#sz-m4)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><rect fill="url(#sz-m4)" opacity=".3" x="148" y="178" width="20" height="7" rx="3.5"/><circle fill="none" stroke="url(#sz-m4)" stroke-width="7" cx="152" cy="71" r="36"/><circle fill="none" stroke="url(#sz-m4)" stroke-width="2" stroke-dasharray="5 3.5" opacity=".38" cx="152" cy="71" r="25"/><path fill="none" stroke="url(#sz-a4)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+    <span class="size-label">48</span>
+  </div>
+  <div class="size-item">
+    <svg width="64" height="64" viewBox="0 0 200 200" fill="none"><defs><linearGradient id="sz-m5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient><linearGradient id="sz-b5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="sz-a5" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient></defs><rect fill="none" stroke="url(#sz-b5)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#sz-m5)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#sz-b5)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#sz-b5)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#sz-b5)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#sz-b5)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><circle fill="url(#sz-b5)" cx="32" cy="125" r="4.5" opacity=".6"/><path fill="none" stroke="url(#sz-b5)" stroke-width="4.5" opacity=".6" d="M44,125h48"/><circle fill="url(#sz-b5)" cx="32" cy="146" r="4.5" opacity=".38"/><path fill="none" stroke="url(#sz-b5)" stroke-width="4.5" opacity=".38" d="M44,146h38"/><rect fill="url(#sz-m5)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#sz-m5)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><rect fill="url(#sz-m5)" opacity=".3" x="148" y="178" width="20" height="7" rx="3.5"/><circle fill="none" stroke="url(#sz-m5)" stroke-width="7" cx="152" cy="71" r="36"/><circle fill="none" stroke="url(#sz-m5)" stroke-width="2" stroke-dasharray="5 3.5" opacity=".38" cx="152" cy="71" r="25"/><path fill="none" stroke="url(#sz-a5)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+    <span class="size-label">64</span>
+  </div>
+  <div class="size-item">
+    <svg width="96" height="96" viewBox="0 0 200 200" fill="none"><defs><linearGradient id="sz-m6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient><linearGradient id="sz-b6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="sz-a6" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient></defs><rect fill="none" stroke="url(#sz-b6)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#sz-m6)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#sz-b6)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#sz-b6)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#sz-b6)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#sz-b6)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><circle fill="url(#sz-b6)" cx="32" cy="125" r="4.5" opacity=".6"/><path fill="none" stroke="url(#sz-b6)" stroke-width="4.5" opacity=".6" d="M44,125h48"/><circle fill="url(#sz-b6)" cx="32" cy="146" r="4.5" opacity=".38"/><path fill="none" stroke="url(#sz-b6)" stroke-width="4.5" opacity=".38" d="M44,146h38"/><rect fill="url(#sz-m6)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#sz-m6)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><rect fill="url(#sz-m6)" opacity=".3" x="148" y="178" width="20" height="7" rx="3.5"/><circle fill="none" stroke="url(#sz-m6)" stroke-width="7" cx="152" cy="71" r="36"/><circle fill="none" stroke="url(#sz-m6)" stroke-width="2" stroke-dasharray="5 3.5" opacity=".38" cx="152" cy="71" r="25"/><path fill="none" stroke="url(#sz-a6)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+    <span class="size-label">96</span>
+  </div>
+</div>
+
+<hr>
+
+<!-- Light / Dark -->
+<p class="label">Theme</p>
+<div class="theme-pair">
+  <div class="theme-swatch dark">
+    <span class="theme-tag">Dark</span>
+    <svg width="64" height="64" viewBox="0 0 200 200" fill="none"><defs><linearGradient id="t-dm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#3D2770"/></linearGradient><linearGradient id="t-db" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A4E0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="t-da" x2="0" y2="1"><stop offset="0" stop-color="#E2D5B0"/><stop offset="1" stop-color="#B8A4E0"/></linearGradient></defs><rect fill="none" stroke="url(#t-db)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#t-dm)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#t-db)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#t-db)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#t-db)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#t-db)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><circle fill="url(#t-db)" cx="32" cy="125" r="4.5" opacity=".6"/><path fill="none" stroke="url(#t-db)" stroke-width="4.5" opacity=".6" d="M44,125h48"/><circle fill="url(#t-db)" cx="32" cy="146" r="4.5" opacity=".38"/><path fill="none" stroke="url(#t-db)" stroke-width="4.5" opacity=".38" d="M44,146h38"/><rect fill="url(#t-dm)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#t-dm)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><rect fill="url(#t-dm)" opacity=".3" x="148" y="178" width="20" height="7" rx="3.5"/><circle fill="none" stroke="url(#t-dm)" stroke-width="7" cx="152" cy="71" r="36"/><circle fill="none" stroke="url(#t-dm)" stroke-width="2" stroke-dasharray="5 3.5" opacity=".38" cx="152" cy="71" r="25"/><path fill="none" stroke="url(#t-da)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+  </div>
+  <div class="theme-swatch light">
+    <span class="theme-tag">Light</span>
+    <svg width="64" height="64" viewBox="0 0 200 200" fill="none"><defs><linearGradient id="t-lm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7254B0"/><stop offset="1" stop-color="#271852"/></linearGradient><linearGradient id="t-lb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7254B0"/><stop offset="1" stop-color="#5B3F9A"/></linearGradient><linearGradient id="t-la" x2="0" y2="1"><stop offset="0" stop-color="#5B3F9A"/><stop offset="1" stop-color="#7254B0"/></linearGradient></defs><rect fill="none" stroke="url(#t-lb)" stroke-width="7.5" x="14" y="38" width="116" height="148" rx="9"/><path fill="none" stroke="url(#t-lm)" stroke-width="5.5" d="M14,62h116"/><circle fill="url(#t-lb)" cx="32" cy="83" r="4.5"/><path fill="none" stroke="url(#t-lb)" stroke-width="4.5" d="M44,83h62"/><circle fill="url(#t-lb)" cx="32" cy="104" r="4.5"/><path fill="none" stroke="url(#t-lb)" stroke-width="4.5" opacity=".8" d="M44,104h62"/><circle fill="url(#t-lb)" cx="32" cy="125" r="4.5" opacity=".6"/><path fill="none" stroke="url(#t-lb)" stroke-width="4.5" opacity=".6" d="M44,125h48"/><circle fill="url(#t-lb)" cx="32" cy="146" r="4.5" opacity=".38"/><path fill="none" stroke="url(#t-lb)" stroke-width="4.5" opacity=".38" d="M44,146h38"/><rect fill="url(#t-lm)" opacity=".7" x="148" y="154" width="40" height="7" rx="3.5"/><rect fill="url(#t-lm)" opacity=".48" x="148" y="166" width="30" height="7" rx="3.5"/><rect fill="url(#t-lm)" opacity=".3" x="148" y="178" width="20" height="7" rx="3.5"/><circle fill="none" stroke="url(#t-lm)" stroke-width="7" cx="152" cy="71" r="36"/><circle fill="none" stroke="url(#t-lm)" stroke-width="2" stroke-dasharray="5 3.5" opacity=".38" cx="152" cy="71" r="25"/><path fill="none" stroke="url(#t-la)" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M133,71l12,14l24,-30"/></svg>
+  </div>
+</div>
+
+<div class="footer">
+  <span class="footer-note">icon-governance · Olon DS v2.1 · 3 gradient IDs · 3 compositional layers</span>
+  <span class="footer-note">ledger + seal + cloud · token-derived</span>
+</div>
+
+</body>
+</html>

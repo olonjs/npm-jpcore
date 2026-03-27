@@ -1,0 +1,229 @@
+{
+  "id": "home-page",
+  "slug": "home",
+  "meta": {
+    "title": "OlonJS — The Contract Layer for the Agentic Web",
+    "description": "A deterministic machine contract for websites: typed, schema-driven content endpoints that make any site reliably readable and operable by AI agents."
+  },
+  "sections": [
+    {
+      "id": "hero-main",
+      "type": "hero",
+      "data": {
+        "badge": "Open source · MIT License",
+        "title": "The Contract Layer\nfor the",
+        "titleHighlight": "Agentic Web",
+        "description": "AI agents are becoming operational actors in commerce, marketing, and support. OlonJS introduces a deterministic machine contract for websites — so agents can reliably read and operate any site, without custom glue.",
+        "ctas": [
+          {
+            "id": "cta-1",
+            "label": "Read the Spec",
+            "href": "https://github.com/olonjs/olonjs/blob/main/specs/olonjsSpecs_V_1_5.md",
+            "variant": "primary"
+          },
+          {
+            "id": "cta-2",
+            "label": "View on GitHub",
+            "href": "https://github.com/olonjs/olonjs?tab=readme-ov-file#readme",
+            "variant": "secondary"
+          }
+        ],
+        "metrics": []
+      },
+      "settings": {}
+    },
+    {
+      "id": "problem-section",
+      "type": "problem-statement",
+      "data": {
+        "anchorId": "problem",
+        "label": "The challenge",
+        "problemTag": "The problem",
+        "problemTitle": "Websites aren't built for agents",
+        "problemItems": [
+          {
+            "id": "pi-1",
+            "text": "Agentic workflows are growing, but integration is mostly custom glue — rebuilt tenant by tenant"
+          },
+          {
+            "id": "pi-2",
+            "text": "Every site has a different content structure, routing assumptions, and edge cases"
+          },
+          {
+            "id": "pi-3",
+            "text": "HTML-heavy, CMS-fragmented, inconsistent across properties — slow, brittle, expensive"
+          }
+        ],
+        "solutionTag": "Our solution",
+        "solutionTitle": "A standard machine contract across tenants",
+        "solutionItems": [
+          {
+            "id": "si-1",
+            "text": "Predictable page endpoints for agents —",
+            "code": "/{slug}.json"
+          },
+          {
+            "id": "si-2",
+            "text": "Typed, schema-driven content contracts — validated, versioned, auditable"
+          },
+          {
+            "id": "si-3",
+            "text": "Repeatable governance and deployment patterns across every tenant"
+          }
+        ]
+      },
+      "settings": {}
+    },
+    {
+      "id": "architecture-section",
+      "type": "feature-grid",
+      "data": {
+        "anchorId": "architecture",
+        "label": "Architecture",
+        "sectionTitle": "Built for enterprise scale",
+        "sectionLead": "Every layer is designed for determinism — from file system layout to component contracts to Studio UX.",
+        "cards": [
+          {
+            "id": "fc-1",
+            "emoji": "📐",
+            "title": "Modular Type Registry",
+            "description": "Core defines empty registries; tenants inject types via module augmentation. Full TypeScript safety, zero Core changes."
+          },
+          {
+            "id": "fc-2",
+            "emoji": "🧱",
+            "title": "Tenant Block Protocol",
+            "description": "Self-contained capsules (View + schema + types) enable automated ingestion and consistent editor generation."
+          },
+          {
+            "id": "fc-3",
+            "emoji": "⚙️",
+            "title": "Deterministic CLI",
+            "description": "@olonjs/cli projects new tenants from a canonical script — reproducible across every environment."
+          },
+          {
+            "id": "fc-4",
+            "emoji": "🎯",
+            "title": "ICE Data Contract",
+            "description": "Mandatory DOM attributes bind the Studio canvas to Inspector fields without coupling to tenant DOM structure."
+          },
+          {
+            "id": "fc-5",
+            "emoji": "📦",
+            "title": "Base Schema Fragments",
+            "description": "Shared BaseSectionData and BaseArrayItem enforce anchor IDs and stable React keys across all capsules."
+          },
+          {
+            "id": "fc-6",
+            "emoji": "🔗",
+            "title": "Path-Based Selection",
+            "description": "v1.4 strict path semantics eliminate nested array ambiguity. Studio selection is root-to-leaf, always deterministic."
+          }
+        ]
+      },
+      "settings": {
+        "columns": 3
+      }
+    },
+    {
+      "id": "why-now",
+      "type": "git-section",
+      "data": {
+        "anchorId": "why",
+        "label": "Timing",
+        "title": "Why this matters",
+        "titleAccent": "now",
+        "cards": [
+          {
+            "id": "wc-1",
+            "title": "Agentic commerce is live",
+            "description": "Operational standards are missing. Without a contract layer, teams face high integration cost and low reliability."
+          },
+          {
+            "id": "wc-2",
+            "title": "Enterprises need governance",
+            "description": "A contract layer you can audit, version, and scale — not a one-off adapter for every new agent workflow."
+          },
+          {
+            "id": "wc-3",
+            "title": "AI tooling is ready",
+            "description": "Deterministic structure means AI can scaffold, validate, and evolve tenants with less prompt ambiguity."
+          },
+          {
+            "id": "wc-4",
+            "title": "Speed compounds",
+            "description": "Teams that standardize now ship new experiences in hours while others rebuild integration logic repeatedly."
+          }
+        ]
+      },
+      "settings": {}
+    },
+    {
+      "id": "dx-section",
+      "type": "devex",
+      "data": {
+        "anchorId": "devex",
+        "label": "Developer Velocity",
+        "title": "AI-native advantage,\nfrom day one",
+        "description": "OlonJS dramatically increases AI-assisted development speed. Because structure is deterministic, agents scaffold and evolve tenants faster — with lower regression risk.",
+        "features": [
+          {
+            "id": "df-1",
+            "text": "AI scaffolds and evolves tenants faster because structure is deterministic"
+          },
+          {
+            "id": "df-2",
+            "text": "Shared conventions reduce prompt ambiguity and implementation drift"
+          },
+          {
+            "id": "df-3",
+            "text": "Ship new tenant experiences in hours, not weeks"
+          }
+        ],
+        "stats": [
+          {
+            "id": "ds-1",
+            "value": "10×",
+            "label": "Faster scaffolding"
+          },
+          {
+            "id": "ds-2",
+            "value": "∅",
+            "label": "Glue per tenant"
+          },
+          {
+            "id": "ds-3",
+            "value": "100%",
+            "label": "Type-safe contracts"
+          }
+        ]
+      },
+      "settings": {}
+    },
+    {
+      "id": "cta-final",
+      "type": "cta-banner",
+      "data": {
+        "anchorId": "get-started",
+        "title": "Ready to give your site\na machine contract?",
+        "description": "Read the full specification or explore the source on GitHub. Zero dependencies to start — one JSON endpoint per page.",
+        "cliCommand": "npx @olonjs/cli@latest new tenant",
+        "ctas": [
+          {
+            "id": "cta-docs",
+            "label": "Read the Specification",
+            "href": "https://github.com/olonjs/olonjs/blob/main/specs/olonjsSpecs_V_1_5.md",
+            "variant": "primary"
+          },
+          {
+            "id": "cta-gh",
+            "label": "View on GitHub",
+            "href": "https://github.com/olonjs/olonjs#readme-ov-file",
+            "variant": "secondary"
+          }
+        ]
+      },
+      "settings": {}
+    }
+  ]
+}

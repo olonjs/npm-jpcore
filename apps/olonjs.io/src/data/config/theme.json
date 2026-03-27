@@ -1,0 +1,28 @@
+{
+  "name": "Olon",
+  "tokens": {
+    "colors": {
+      "primary": "#1763FF",
+      "secondary": "#0F52E0",
+      "accent": "#84ABFF",
+      "background": "#0d1117",
+      "surface": "#0d1421",
+      "surfaceAlt": "#141b24",
+      "text": "#c8d6e8",
+      "textMuted": "#8fa3c4",
+      "border": "#253044"
+    },
+    "typography": {
+      "fontFamily": {
+        "primary": "'Instrument Sans', Helvetica, Arial, sans-serif",
+        "mono": "'JetBrains Mono', 'Fira Code', monospace",
+        "display": "'Instrument Sans', Helvetica, Arial, sans-serif"
+      }
+    },
+    "borderRadius": {
+      "sm": "0.25rem",
+      "md": "0.5rem",
+      "lg": "0.75rem"
+    }
+  }
+}

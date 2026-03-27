@@ -1,0 +1,63 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
+  <defs>
+    <!-- Diagonal: primary-200 → primary-800 (structure + seal ring) -->
+    <linearGradient id="g-main" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B8A4E0"/>
+      <stop offset="1" stop-color="#3D2770"/>
+    </linearGradient>
+    <!-- Vertical: primary-200 → primary-600 (ledger body + log entries) -->
+    <linearGradient id="g-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B8A4E0"/>
+      <stop offset="1" stop-color="#5B3F9A"/>
+    </linearGradient>
+    <!-- Accent: gold → primary-200 (compliance checkmark — the semantic highlight) -->
+    <linearGradient id="g-accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2D5B0"/>
+      <stop offset="1" stop-color="#B8A4E0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Audit ledger frame ─────────────────────────── -->
+  <rect fill="none" stroke="url(#g-body)" stroke-width="7.5"
+        stroke-linecap="round" stroke-linejoin="round"
+        x="14" y="38" width="116" height="148" rx="9"/>
+
+  <!-- Ledger header divider -->
+  <path fill="none" stroke="url(#g-main)" stroke-linecap="round" stroke-width="5.5"
+        d="M14,62 h116"/>
+
+  <!-- ── Audit trail rows: timestamp dot + entry line ── -->
+  <circle fill="url(#g-body)"                    cx="32" cy="83"  r="4.5"/>
+  <path   fill="none" stroke="url(#g-body)"  stroke-linecap="round" stroke-width="4.5"
+          d="M44,83  h62"/>
+
+  <circle fill="url(#g-body)"                    cx="32" cy="104" r="4.5"/>
+  <path   fill="none" stroke="url(#g-body)"  stroke-linecap="round" stroke-width="4.5"
+          opacity="0.8" d="M44,104 h62"/>
+
+  <circle fill="url(#g-body)" opacity="0.6"      cx="32" cy="125" r="4.5"/>
+  <path   fill="none" stroke="url(#g-body)"  stroke-linecap="round" stroke-width="4.5"
+          opacity="0.6" d="M44,125 h48"/>
+
+  <circle fill="url(#g-body)" opacity="0.38"     cx="32" cy="146" r="4.5"/>
+  <path   fill="none" stroke="url(#g-body)"  stroke-linecap="round" stroke-width="4.5"
+          opacity="0.38" d="M44,146 h38"/>
+
+  <!-- ── Private cloud / NX monorepo server bars ───── -->
+  <rect fill="url(#g-main)" opacity="0.70" x="148" y="154" width="40" height="7" rx="3.5"/>
+  <rect fill="url(#g-main)" opacity="0.48" x="148" y="166" width="30" height="7" rx="3.5"/>
+  <rect fill="url(#g-main)" opacity="0.30" x="148" y="178" width="20" height="7" rx="3.5"/>
+
+  <!-- ── SOC2 compliance seal ───────────────────────── -->
+  <!-- Outer ring -->
+  <circle fill="none" stroke="url(#g-main)" stroke-width="7"
+          cx="152" cy="71" r="36"/>
+  <!-- Inner dashed ring — official seal texture -->
+  <circle fill="none" stroke="url(#g-main)" stroke-width="2"
+          stroke-dasharray="5 3.5" opacity="0.38"
+          cx="152" cy="71" r="25"/>
+  <!-- Checkmark — accent colour, semantic anchor -->
+  <path fill="none" stroke="url(#g-accent)"
+        stroke-linecap="round" stroke-linejoin="round" stroke-width="8.5"
+        d="M133,71 l12,14 l24,-30"/>
+</svg>

@@ -1,0 +1,351 @@
+@import "tailwindcss";
+
+@source "./**/*.tsx";
+
+@theme {
+  /* 
+     🎯 MASTER MAPPING (V2.7 Landing) 
+  */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  
+  --radius-lg: var(--theme-radius-lg);
+  --radius-md: var(--theme-radius-md);
+  --radius-sm: var(--theme-radius-sm);
+
+  --font-primary: var(--theme-font-primary);
+  --font-mono: var(--theme-font-mono);
+
+  /*
+     DISPLAY FONT bridge
+     The core now emits --theme-font-display from theme.json, so this keeps
+     the tenant on the stable semantic alias rather than depending on the
+     flattened internal variable path.
+  */
+  --font-display: var(--theme-font-display);
+}
+
+/* 
+   🌍 TENANT BRAND TOKENS (JSP 1.5)
+*/
+:root {
+  --background: var(--theme-background);
+  --foreground: var(--theme-text);
+  --card: var(--theme-surface);
+  --card-foreground: var(--theme-text);
+  --primary: var(--theme-primary);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: var(--theme-secondary);
+  --secondary-foreground: var(--theme-text);
+  --muted: var(--theme-surface-alt);
+  --muted-foreground: var(--theme-text-muted);
+  --border: var(--theme-border);
+  --radius: var(--theme-radius-lg);
+
+  /* 
+     🔧 ACCENT CHAIN — Forward-compatible workaround
+     theme-manager.ts already injects --theme-accent on :root,
+     but the original index.css never bridged it into the semantic layer.
+     This closes the gap: --theme-accent → --accent → --color-accent.
+     Falls back to --theme-primary if accent is undefined.
+  */
+  --accent: var(--theme-accent, var(--theme-primary));
+
+  /* Olon brand primitives — consumed by OlonMark SVG gradients */
+  --olon-ring-top:    #84ABFF;
+  --olon-ring-bottom: #0F52E0;
+  --olon-ground:      #080808;
+  --olon-figure:      #e8f0f8;
+  --olon-nucleus:     var(--olon-figure);
+
+  /*
+     Shared demo/mockup helpers
+     These are still theme-derived, but give the tenant a stable semantic
+     palette for browser/terminal/inspector style surfaces.
+  */
+  --demo-surface: color-mix(in oklch, var(--card) 86%, var(--background));
+  --demo-surface-soft: color-mix(in oklch, var(--card) 72%, var(--background));
+  --demo-surface-strong: color-mix(in oklch, var(--background) 82%, black);
+  --demo-surface-deep: color-mix(in oklch, var(--background) 70%, black);
+  --demo-border-soft: color-mix(in oklch, var(--foreground) 8%, transparent);
+  --demo-border-strong: color-mix(in oklch, var(--primary) 24%, transparent);
+  --demo-accent-soft: color-mix(in oklch, var(--primary) 10%, transparent);
+  --demo-accent-strong: color-mix(in oklch, var(--primary) 18%, transparent);
+  --demo-text-soft: color-mix(in oklch, var(--foreground) 88%, var(--muted-foreground));
+  --demo-text-faint: color-mix(in oklch, var(--muted-foreground) 72%, transparent);
+}
+
+@layer base {
+  * { border-color: var(--border); }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+    @apply antialiased;
+  }
+}
+
+/* ==========================================================================
+   FONT DISPLAY UTILITY
+   Maps .font-display class to the display font family (Playfair Display)
+   ========================================================================== */
+.font-display {
+  font-family: var(--font-display, var(--font-primary));
+}
+
+/* ==========================================================================
+   LANDING ANIMATIONS
+   ========================================================================== */
+@keyframes jp-fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes jp-pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.jp-animate-in {
+  opacity: 0;
+  animation: jp-fadeUp 0.7s ease forwards;
+}
+.jp-d1 { animation-delay: 0.1s; }
+.jp-d2 { animation-delay: 0.2s; }
+.jp-d3 { animation-delay: 0.3s; }
+.jp-d4 { animation-delay: 0.4s; }
+.jp-d5 { animation-delay: 0.5s; }
+
+.jp-pulse-dot {
+  animation: jp-pulseDot 2s ease infinite;
+}
+
+/* ==========================================================================
+   SMOOTH SCROLL
+   ========================================================================== */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ==========================================================================
+   ICE ADMIN — Section highlight in preview iframe
+   The preview iframe only receives tenant CSS; core's overlay classes
+   (z-[50], absolute, etc.) are not in this build. Define them here so
+   the section highlight is always visible in /admin.
+   ========================================================================== */
+[data-jp-section-overlay] {
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  transition: border-color 0.2s, background-color 0.2s;
+  border: 2px solid transparent;
+}
+
+[data-section-id]:hover [data-jp-section-overlay] {
+  border-color: rgba(96, 165, 250, 0.5);
+  border-style: dashed;
+}
+
+[data-section-id][data-jp-selected] [data-jp-section-overlay] {
+  border-color: rgb(37, 99, 235);
+  border-style: solid;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+[data-jp-section-overlay] > div {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: rgb(37, 99, 235);
+  color: white;
+  transition: opacity 0.2s;
+}
+
+[data-section-id]:hover [data-jp-section-overlay] > div,
+[data-section-id][data-jp-selected] [data-jp-section-overlay] > div {
+  opacity: 1;
+}
+
+[data-section-id] [data-jp-section-overlay] > div {
+  opacity: 0;
+}
+
+/* Editorial focus lock: avoid section reselection while selecting text in inline editor. */
+[data-section-id].jp-editorial-focus [data-jp-section-overlay] {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+[data-section-id].jp-editorial-focus [data-jp-section-overlay] > div {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   TIPTAP — Public content typography (visitor view)
+   ReactMarkdown renders plain HTML; preflight resets it. Re-apply here.
+   ========================================================================== */
+.jp-tiptap-content > * + * { margin-top: 0.75em; }
+
+.jp-tiptap-content h1 { font-size: 2em;    font-weight: 700; line-height: 1.2; margin-top: 1.25em; margin-bottom: 0.25em; }
+.jp-tiptap-content h2 { font-size: 1.5em;  font-weight: 700; line-height: 1.3; margin-top: 1.25em; margin-bottom: 0.25em; }
+.jp-tiptap-content h3 { font-size: 1.25em; font-weight: 600; line-height: 1.4; margin-top: 1.25em; margin-bottom: 0.25em; }
+.jp-tiptap-content h4 { font-size: 1em;    font-weight: 600; line-height: 1.5; margin-top: 1em;    margin-bottom: 0.25em; }
+
+.jp-tiptap-content p  { line-height: 1.7; }
+
+.jp-tiptap-content strong { font-weight: 700; }
+.jp-tiptap-content em     { font-style: italic; }
+.jp-tiptap-content s      { text-decoration: line-through; }
+
+.jp-tiptap-content a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.jp-tiptap-content a:hover { opacity: 0.8; }
+
+.jp-tiptap-content code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875em;
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+  border-radius: var(--theme-radius-sm);
+  padding: 0.1em 0.35em;
+}
+.jp-tiptap-content pre {
+  background: color-mix(in oklch, var(--background) 60%, black);
+  border-radius: var(--theme-radius-lg);
+  padding: 1em 1.25em;
+  overflow-x: auto;
+}
+.jp-tiptap-content pre code { background: none; padding: 0; }
+
+.jp-tiptap-content ul { list-style-type: disc;    padding-left: 1.625em; }
+.jp-tiptap-content ol { list-style-type: decimal; padding-left: 1.625em; }
+.jp-tiptap-content li { line-height: 1.7; margin-top: 0.25em; }
+.jp-tiptap-content li + li { margin-top: 0.25em; }
+
+.jp-tiptap-content blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.jp-tiptap-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+.jp-tiptap-content img { max-width: 100%; height: auto; border-radius: var(--theme-radius-lg); }
+
+/* ==========================================================================
+   TIPTAP / PROSEMIRROR — Editor typography
+   Tailwind preflight resets all heading/list styles. Re-apply here using
+   tenant theme tokens so the editor is WYSIWYG.
+   ========================================================================== */
+.jp-simple-editor .ProseMirror {
+  outline: none;
+  word-break: break-word;
+}
+.jp-simple-editor .ProseMirror > * + * { margin-top: 0.75em; }
+
+.jp-simple-editor .ProseMirror h1 { font-size: 2em;    font-weight: 700; line-height: 1.2; margin-top: 1.25em; margin-bottom: 0.25em; }
+.jp-simple-editor .ProseMirror h2 { font-size: 1.5em;  font-weight: 700; line-height: 1.3; margin-top: 1.25em; margin-bottom: 0.25em; }
+.jp-simple-editor .ProseMirror h3 { font-size: 1.25em; font-weight: 600; line-height: 1.4; margin-top: 1.25em; margin-bottom: 0.25em; }
+.jp-simple-editor .ProseMirror h4 { font-size: 1em;    font-weight: 600; line-height: 1.5; margin-top: 1em;    margin-bottom: 0.25em; }
+
+.jp-simple-editor .ProseMirror p  { line-height: 1.7; }
+
+.jp-simple-editor .ProseMirror strong { font-weight: 700; }
+.jp-simple-editor .ProseMirror em     { font-style: italic; }
+.jp-simple-editor .ProseMirror s      { text-decoration: line-through; }
+
+.jp-simple-editor .ProseMirror a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.jp-simple-editor .ProseMirror a:hover { opacity: 0.8; }
+
+.jp-simple-editor .ProseMirror code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875em;
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+  border-radius: var(--theme-radius-sm);
+  padding: 0.1em 0.35em;
+}
+.jp-simple-editor .ProseMirror pre {
+  background: color-mix(in oklch, var(--background) 60%, black);
+  border-radius: var(--theme-radius-lg);
+  padding: 1em 1.25em;
+  overflow-x: auto;
+}
+.jp-simple-editor .ProseMirror pre code {
+  background: none;
+  padding: 0;
+}
+
+.jp-simple-editor .ProseMirror ul { list-style-type: disc;    padding-left: 1.625em; }
+.jp-simple-editor .ProseMirror ol { list-style-type: decimal; padding-left: 1.625em; }
+.jp-simple-editor .ProseMirror li { line-height: 1.7; margin-top: 0.25em; }
+.jp-simple-editor .ProseMirror li + li { margin-top: 0.25em; }
+
+.jp-simple-editor .ProseMirror blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.jp-simple-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+.jp-simple-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--theme-radius-lg);
+}
+
+.jp-simple-editor .ProseMirror img[data-uploading="true"] {
+  opacity: 0.6;
+  filter: grayscale(0.25);
+  outline: 2px dashed color-mix(in oklch, var(--primary) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.jp-simple-editor .ProseMirror img[data-upload-error="true"] {
+  outline: 2px solid color-mix(in oklch, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+/* Placeholder when editor is empty */
+.jp-simple-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+

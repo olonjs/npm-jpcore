@@ -1,0 +1,54 @@
+name: Deploy OlonJS Landing to GH Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/olonjs.io/**'
+      - 'packages/core/**'
+      - '.github/workflows/deploy-landing.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Core
+        run: |
+          cd packages/core
+          npm run build
+
+      - name: Run OlonJS Bake (SSG)
+        run: |
+          # Eseguiamo il bake come richiesto
+          node apps/olonjs.io/scripts/bake.mjs
+        env:
+          NODE_ENV: production
+
+      - name: Add CNAME for JS.ORG
+        run: |
+          # Fondamentale per l'approvazione di js.org
+          echo "olon.js.org" > apps/olonjs.io/dist/CNAME
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: apps/olonjs.io/dist
+          branch: gh-pages
+          clean: true

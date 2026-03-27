@@ -1,0 +1,198 @@
+{
+  "id": "home-page",
+  "slug": "home",
+  "meta": {
+    "title": "OlonJS — The Contract Layer for the Agentic Web",
+    "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
+  },
+  "sections": [
+    {
+      "id": "global-header",
+      "type": "header",
+      "data": {
+        "logoText": "Olon",
+        "badge": "",
+        "links": {
+          "$ref": "../config/menu.json#/main"
+        },
+        "ctaLabel": "Get started →",
+        "ctaHref": "#contact",
+        "signinHref": "#login"
+      },
+      "settings": {
+        "sticky": true
+      }
+    },
+    {
+      "id": "hero-main",
+      "type": "hero",
+      "data": {
+        "eyebrow": "Contract layer · v1.4 · Open Core",
+        "title": "Start building   ",
+        "titleHighlight": "for the agentic web.",
+        "description": "AI agents are becoming operational actors in commerce, marketing, and support. But websites are still built for humans first: HTML-heavy, CMS-fragmented, and inconsistent across properties. That makes agent integration slow, brittle, and expensive. Olon introduces a deterministic machine contract for websites OlonJS. This makes content reliably readable and operable by agents while preserving normal human UI.",
+        "ctas": [
+          {
+            "id": "cta-started",
+            "label": "Get started",
+            "href": "#contact",
+            "variant": "accent"
+          },
+          {
+            "id": "cta-github",
+            "label": "GitHub",
+            "href": "#",
+            "variant": "secondary"
+          }
+        ],
+        "docsLabel": "Read the docs",
+        "docsHref": "#",
+        "heroImage": {
+          "url": "https://bat5elmxofxdroan.public.blob.vercel-storage.com/tenant-assets/511f18d7-d8ac-4292-ad8a-b0efa99401a3/1774286598548-adac7c36-9001-451d-9b16-c3787ac27f57-signup-hero-olon-graded_1_.png",
+          "alt": ""
+        }
+      },
+      "settings": {
+        "showCode": false
+      }
+    },
+    {
+      "id": "features-section",
+      "type": "feature-grid",
+      "data": {
+        "label": "Why OlonJS",
+        "sectionTitle": "A whole in itself,",
+        "sectionTitleItalic": "part of something greater.",
+        "sectionLead": "Built on the concept of the holon — every component autonomous yet part of the larger contract. Governance and developer experience, unified.",
+        "cards": [
+          {
+            "id": "card-endpoints",
+            "icon": {
+              "url": "/icons/features/icon-json-files.svg",
+              "alt": "JSON files icon"
+            },
+            "title": "Canonical JSON endpoints",
+            "description": "Every page available at /{slug}.json — deterministic, typed, agent-readable. No custom integration per tenant."
+          },
+          {
+            "id": "card-schema",
+            "icon": {
+              "url": "/icons/features/icon-zod-schemas.svg",
+              "alt": "Zod schemas icon"
+            },
+            "title": "Schema-driven contracts",
+            "description": "Typed components validated against your schema. Shared conventions eliminate prompt ambiguity across teams."
+          },
+          {
+            "id": "card-ai",
+            "icon": {
+              "url": "/icons/features/icon-ai-specs.svg",
+              "alt": "AI specs icon"
+            },
+            "title": "AI-native velocity",
+            "description": "Structure is deterministic, so AI can scaffold and evolve tenants faster. Ship new experiences in hours, not weeks."
+          },
+          {
+            "id": "card-multitenant",
+            "icon": {
+              "url": "/icons/features/icon-own-data.svg",
+              "alt": "Own data icon"
+            },
+            "title": "Multi-tenant at scale",
+            "description": "One convention across many tenants enables reusable automations. No per-tenant custom integration work."
+          },
+          {
+            "id": "card-governance",
+            "icon": {
+              "url": "/icons/features/icon-governance.svg",
+              "alt": "Governance icon"
+            },
+            "title": "Enterprise governance",
+            "description": "Audit trails, compliance controls, and private cloud deployment via NX monorepo. SOC2-ready by design."
+          },
+          {
+            "id": "card-deploy",
+            "icon": {
+              "url": "/icons/features/icon-clean-commits.svg",
+              "alt": "Clean commits icon"
+            },
+            "title": "Deployment flexibility",
+            "description": "OSS core you can trust. Vercel-native cloud for speed. Private cloud for governance-heavy orgs."
+          }
+        ],
+        "proofStatement": "Working end-to-end with production routing parity.",
+        "proofSub": "Early customer usage across real tenant deployments · Clear hardening path to enterprise-grade governance.",
+        "tiers": [
+          {
+            "id": "tier-oss",
+            "label": "OSS"
+          },
+          {
+            "id": "tier-cloud",
+            "label": "Cloud"
+          },
+          {
+            "id": "tier-enterprise",
+            "label": "Enterprise"
+          }
+        ]
+      },
+      "settings": {
+        "columns": 3
+      }
+    },
+    {
+      "id": "contact-section",
+      "type": "contact",
+      "data": {
+        "label": "Contact",
+        "title": "Ready to define",
+        "titleHighlight": "your contract?",
+        "description": "Whether you're running a single tenant or deploying enterprise-grade governance across dozens of properties — let's talk.",
+        "tiers": [
+          {
+            "id": "tier-oss",
+            "label": "OSS",
+            "desc": "Open source core — free forever",
+            "sub": "Adoption, trust, ecosystem growth"
+          },
+          {
+            "id": "tier-cloud",
+            "label": "Cloud",
+            "desc": "Vercel-native self-serve workflow",
+            "sub": "Fast for modern dev teams"
+          },
+          {
+            "id": "tier-enterprise",
+            "label": "Enterprise",
+            "desc": "Private cloud + NX monorepo",
+            "sub": "Security, compliance, controlled deployment"
+          }
+        ],
+        "formTitle": "Get in touch",
+        "successTitle": "Message received",
+        "successBody": "We'll respond within one business day.",
+        "disclaimer": "No spam. Unsubscribe at any time."
+      },
+      "settings": {
+        "showTiers": true
+      }
+    },
+    {
+      "id": "login-section",
+      "type": "login",
+      "data": {
+        "title": "Start your journey",
+        "subtitle": "Enter your credentials to continue",
+        "forgotHref": "#",
+        "signupHref": "#contact",
+        "termsHref": "#",
+        "privacyHref": "#"
+      },
+      "settings": {
+        "showOauth": true
+      }
+    }
+  ],
+  "global-header": false
+}

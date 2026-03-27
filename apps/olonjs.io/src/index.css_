@@ -1,0 +1,905 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   OLON DESIGN SYSTEM — index.css
+   v1.4 · Holon · Labradorite
+
+   Architecture:
+   1. :root      — bridge: reads vars injected by @olonjs/core from theme.json
+                   SOT lives in src/data/config/theme.json
+   2. @theme      — Tailwind v4 bridge: --color-{slug}: var(--{slug})
+   3. @layer base — global resets + base element styles
+   4. @layer utilities — custom utility classes
+═══════════════════════════════════════════════════════════════ */
+
+
+/* ─────────────────────────────────────────────────────────────
+   1. TOKEN BRIDGE
+   Reads CSS vars injected by @olonjs/core engine from theme.json.
+   engine injects: --theme-colors-{name}, --theme-typography-*,
+                   --theme-border-radius-*, --theme-spacing-*
+   Aliases: --theme-font-*, --theme-radius-*, --theme-primary etc.
+───────────────────────────────────────────────────────────── */
+:root {
+
+  /* ── Backgrounds ─────────────────────────────────────────── */
+  --background:           var(--theme-colors-background);
+  --card:                 var(--theme-colors-card);
+  --elevated:             var(--theme-colors-elevated);
+  --overlay:              var(--theme-colors-overlay);
+  --popover:              var(--theme-colors-popover);
+  --popover-foreground:   var(--theme-colors-popover-foreground);
+
+  /* ── Foregrounds ─────────────────────────────────────────── */
+  --foreground:           var(--theme-colors-foreground);
+  --card-foreground:      var(--theme-colors-card-foreground);
+  --muted-foreground:     var(--theme-colors-muted-foreground);
+  --placeholder:          var(--theme-colors-placeholder);
+
+  /* ── Brand — Labradorite ramp ────────────────────────────── */
+  --primary:              var(--theme-colors-primary);
+  --primary-foreground:   var(--theme-colors-primary-foreground);
+  --primary-light:        var(--theme-colors-primary-light);
+  --primary-dark:         var(--theme-colors-primary-dark);
+  --primary-50:           var(--theme-colors-primary-50);
+  --primary-100:          var(--theme-colors-primary-100);
+  --primary-200:          var(--theme-colors-primary-200);
+  --primary-300:          var(--theme-colors-primary-300);
+  --primary-400:          var(--theme-colors-primary-400);
+  --primary-500:          var(--theme-colors-primary-500);
+  --primary-600:          var(--theme-colors-primary-600);
+  --primary-700:          var(--theme-colors-primary-700);
+  --primary-800:          var(--theme-colors-primary-800);
+  --primary-900:          var(--theme-colors-primary-900);
+
+  /* ── Accent ──────────────────────────────────────────────── */
+  --accent:               var(--theme-colors-accent);
+  --accent-foreground:    var(--theme-colors-accent-foreground);
+
+  /* ── Secondary ───────────────────────────────────────────── */
+  --secondary:            var(--theme-colors-secondary);
+  --secondary-foreground: var(--theme-colors-secondary-foreground);
+
+  /* ── Muted ───────────────────────────────────────────────── */
+  --muted:                var(--theme-colors-muted);
+
+  /* ── Border ──────────────────────────────────────────────── */
+  --border:               var(--theme-colors-border);
+  --border-strong:        var(--theme-colors-border-strong);
+
+  /* ── Form ────────────────────────────────────────────────── */
+  --input:                var(--theme-colors-input);
+  --ring:                 var(--theme-colors-ring);
+
+  /* ── Feedback — Destructive ──────────────────────────────── */
+  --destructive:              var(--theme-colors-destructive);
+  --destructive-foreground:   var(--theme-colors-destructive-foreground);
+  --destructive-border:       var(--theme-colors-destructive-border);
+  --destructive-ring:         var(--theme-colors-destructive-ring);
+
+  /* ── Feedback — Success ──────────────────────────────────── */
+  --success:              var(--theme-colors-success);
+  --success-foreground:   var(--theme-colors-success-foreground);
+  --success-border:       var(--theme-colors-success-border);
+  --success-indicator:    var(--theme-colors-success-indicator);
+
+  /* ── Feedback — Warning ──────────────────────────────────── */
+  --warning:              var(--theme-colors-warning);
+  --warning-foreground:   var(--theme-colors-warning-foreground);
+  --warning-border:       var(--theme-colors-warning-border);
+
+  /* ── Feedback — Info ─────────────────────────────────────── */
+  --info:                 var(--theme-colors-info);
+  --info-foreground:      var(--theme-colors-info-foreground);
+  --info-border:          var(--theme-colors-info-border);
+
+  /* ── Radius (xl/full not aliased by engine, bridge here) ─── */
+  --theme-radius-xl:      var(--theme-border-radius-xl);
+  --theme-radius-full:    var(--theme-border-radius-full);
+
+  /* ── Typography — scale ──────────────────────────────────── */
+  --theme-text-xs:        var(--theme-typography-scale-xs);
+  --theme-text-sm:        var(--theme-typography-scale-sm);
+  --theme-text-base:      var(--theme-typography-scale-base);
+  --theme-text-md:        var(--theme-typography-scale-md);
+  --theme-text-lg:        var(--theme-typography-scale-lg);
+  --theme-text-xl:        var(--theme-typography-scale-xl);
+  --theme-text-2xl:       var(--theme-typography-scale-2xl);
+  --theme-text-3xl:       var(--theme-typography-scale-3xl);
+  --theme-text-4xl:       var(--theme-typography-scale-4xl);
+  --theme-text-5xl:       var(--theme-typography-scale-5xl);
+  --theme-text-6xl:       var(--theme-typography-scale-6xl);
+  --theme-text-7xl:       var(--theme-typography-scale-7xl);
+
+  /* ── Typography — tracking ───────────────────────────────── */
+  --theme-tracking-tight:   var(--theme-typography-tracking-tight);
+  --theme-tracking-display: var(--theme-typography-tracking-display);
+  --theme-tracking-normal:  var(--theme-typography-tracking-normal);
+  --theme-tracking-wide:    var(--theme-typography-tracking-wide);
+  --theme-tracking-label:   var(--theme-typography-tracking-label);
+
+  /* ── Typography — wordmark ───────────────────────────────── */
+  --wordmark-font:     var(--theme-typography-wordmark-font-family);
+  --wordmark-tracking: var(--theme-typography-wordmark-tracking);
+  --wordmark-weight:   var(--theme-typography-wordmark-weight);
+  --wordmark-width:    var(--theme-typography-wordmark-width);
+
+  /* ── Typography — leading ────────────────────────────────── */
+  --theme-leading-none:    var(--theme-typography-leading-none);
+  --theme-leading-tight:   var(--theme-typography-leading-tight);
+  --theme-leading-snug:    var(--theme-typography-leading-snug);
+  --theme-leading-normal:  var(--theme-typography-leading-normal);
+  --theme-leading-relaxed: var(--theme-typography-leading-relaxed);
+
+  /* ── Spacing ─────────────────────────────────────────────── */
+  --theme-container-max:  var(--theme-spacing-container-max);
+  --theme-section-y:      var(--theme-spacing-section-y);
+  --theme-header-h:       var(--theme-spacing-header-h);
+  --theme-sidebar-w:      var(--theme-spacing-sidebar-w);
+
+  /* ── Z-index ─────────────────────────────────────────────── */
+  --z-base:     var(--theme-z-index-base);
+  --z-elevated: var(--theme-z-index-elevated);
+  --z-dropdown: var(--theme-z-index-dropdown);
+  --z-sticky:   var(--theme-z-index-sticky);
+  --z-overlay:  var(--theme-z-index-overlay);
+  --z-modal:    var(--theme-z-index-modal);
+  --z-toast:    var(--theme-z-index-toast);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   2. @theme — Tailwind v4 TOKEN BRIDGE
+   Pattern: --color-{slug}: var(--{slug})
+   Every token exposed here becomes a Tailwind utility class.
+───────────────────────────────────────────────────────────── */
+@theme {
+
+  /* Colors — Backgrounds */
+  --color-background:              var(--background);
+  --color-card:                    var(--card);
+  --color-elevated:                var(--elevated);
+  --color-overlay:                 var(--overlay);
+  --color-popover:                 var(--popover);
+  --color-popover-foreground:      var(--popover-foreground);
+
+  /* Colors — Foregrounds */
+  --color-foreground:              var(--foreground);
+  --color-card-foreground:         var(--card-foreground);
+  --color-muted-foreground:        var(--muted-foreground);
+  --color-placeholder:             var(--placeholder);
+
+  /* Colors — Brand ramp */
+  --color-primary:                 var(--primary);
+  --color-primary-foreground:      var(--primary-foreground);
+  --color-primary-light:           var(--primary-light);
+  --color-primary-dark:            var(--primary-dark);
+  --color-primary-50:              var(--primary-50);
+  --color-primary-100:             var(--primary-100);
+  --color-primary-200:             var(--primary-200);
+  --color-primary-300:             var(--primary-300);
+  --color-primary-400:             var(--primary-400);
+  --color-primary-500:             var(--primary-500);
+  --color-primary-600:             var(--primary-600);
+  --color-primary-700:             var(--primary-700);
+  --color-primary-800:             var(--primary-800);
+  --color-primary-900:             var(--primary-900);
+
+  /* Colors — Accent */
+  --color-accent:                  var(--accent);
+  --color-accent-foreground:       var(--accent-foreground);
+
+  /* Colors — Secondary */
+  --color-secondary:               var(--secondary);
+  --color-secondary-foreground:    var(--secondary-foreground);
+
+  /* Colors — Muted */
+  --color-muted:                   var(--muted);
+
+  /* Colors — Border */
+  --color-border:                  var(--border);
+  --color-border-strong:           var(--border-strong);
+
+  /* Colors — Form */
+  --color-input:                   var(--input);
+  --color-ring:                    var(--ring);
+
+  /* Colors — Feedback */
+  --color-destructive:             var(--destructive);
+  --color-destructive-foreground:  var(--destructive-foreground);
+  --color-destructive-border:      var(--destructive-border);
+  --color-destructive-ring:        var(--destructive-ring);
+  --color-success:                 var(--success);
+  --color-success-foreground:      var(--success-foreground);
+  --color-success-border:          var(--success-border);
+  --color-success-indicator:       var(--success-indicator);
+  --color-warning:                 var(--warning);
+  --color-warning-foreground:      var(--warning-foreground);
+  --color-warning-border:          var(--warning-border);
+  --color-info:                    var(--info);
+  --color-info-foreground:         var(--info-foreground);
+  --color-info-border:             var(--info-border);
+
+  /* Radius */
+  --radius-xl:                     var(--theme-radius-xl);
+  --radius-lg:                     var(--theme-radius-lg);
+  --radius-md:                     var(--theme-radius-md);
+  --radius-sm:                     var(--theme-radius-sm);
+  --radius-full:                   var(--theme-radius-full);
+
+  /* Fonts */
+  --font-primary:                  var(--theme-font-primary);
+  --font-mono:                     var(--theme-font-mono);
+  --font-display:                  var(--theme-font-display);
+
+  /* Text scale */
+  --text-xs:                       var(--theme-text-xs);
+  --text-sm:                       var(--theme-text-sm);
+  --text-base:                     var(--theme-text-base);
+  --text-md:                       var(--theme-text-md);
+  --text-lg:                       var(--theme-text-lg);
+  --text-xl:                       var(--theme-text-xl);
+  --text-2xl:                      var(--theme-text-2xl);
+  --text-3xl:                      var(--theme-text-3xl);
+  --text-4xl:                      var(--theme-text-4xl);
+  --text-5xl:                      var(--theme-text-5xl);
+  --text-6xl:                      var(--theme-text-6xl);
+  --text-7xl:                      var(--theme-text-7xl);
+
+  /* Line heights */
+  --leading-none:                  var(--theme-leading-none);
+  --leading-tight:                 var(--theme-leading-tight);
+  --leading-snug:                  var(--theme-leading-snug);
+  --leading-normal:                var(--theme-leading-normal);
+  --leading-relaxed:               var(--theme-leading-relaxed);
+
+  /* Tracking */
+  --tracking-tight:                var(--theme-tracking-tight);
+  --tracking-display:              var(--theme-tracking-display);
+  --tracking-normal:               var(--theme-tracking-normal);
+  --tracking-wide:                 var(--theme-tracking-wide);
+  --tracking-label:                var(--theme-tracking-label);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   3. BASE LAYER
+───────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--theme-font-primary);
+    font-size: var(--theme-text-base);
+    line-height: var(--theme-leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--theme-font-primary);
+    font-weight: 500;
+    line-height: var(--theme-leading-tight);
+    color: var(--foreground);
+  }
+
+  h1 {
+    font-size: var(--theme-text-5xl);
+  }
+  h2 {
+    font-size: var(--theme-text-4xl);
+  }
+  h3 {
+    font-size: var(--theme-text-3xl);
+  }
+  h4 {
+    font-size: var(--theme-text-2xl);
+  }
+  h5 {
+    font-size: var(--theme-text-xl);
+  }
+  h6 {
+    font-size: var(--theme-text-lg);
+  }
+
+  @media (min-width: 768px) {
+    h1 { font-size: var(--theme-text-6xl); }
+    h2 { font-size: var(--theme-text-5xl); }
+    h3 { font-size: var(--theme-text-4xl); }
+    h4 { font-size: var(--theme-text-3xl); }
+    h5 { font-size: var(--theme-text-2xl); }
+    h6 { font-size: var(--theme-text-xl);  }
+  }
+
+  @media (min-width: 1024px) {
+    h1 { font-size: var(--theme-text-7xl); }
+    h2 { font-size: var(--theme-text-6xl); }
+    h3 { font-size: var(--theme-text-5xl); }
+    h4 { font-size: var(--theme-text-4xl); }
+    h5 { font-size: var(--theme-text-3xl); }
+    h6 { font-size: var(--theme-text-2xl); }
+  }
+
+  p {
+    line-height: var(--theme-leading-normal);
+  }
+
+  code, pre, kbd, samp {
+    font-family: var(--theme-font-mono);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  input, textarea, select {
+    font-family: var(--theme-font-primary);
+    font-size: var(--theme-text-sm);
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar           { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track     { background: var(--background); }
+  ::-webkit-scrollbar-thumb     { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   4. UTILITIES LAYER
+───────────────────────────────────────────────────────────── */
+@layer utilities {
+
+  /* ── Typography helpers ─────────────────────────────────── */
+  .font-display   { font-family: var(--theme-font-display); }
+  .font-mono-olon { font-family: var(--theme-font-mono); }
+
+  .tracking-label { letter-spacing: var(--theme-tracking-label); }
+  .tracking-display { letter-spacing: var(--theme-tracking-display); }
+
+  /* ── Layout ─────────────────────────────────────────────── */
+  .container-olon {
+    width: 100%;
+    max-width: var(--theme-container-max);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .section-anchor {
+    scroll-margin-top: calc(var(--theme-header-h) + 24px);
+  }
+
+  /* TOCC — required overlay visuals for Studio stage */
+  [data-section-id] {
+    position: relative;
+  }
+
+  [data-jp-section-overlay] {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border: 1px dashed transparent;
+    background: transparent;
+    z-index: 9999;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+
+  [data-section-id]:hover [data-jp-section-overlay] {
+    border-color: color-mix(in srgb, var(--primary-light) 75%, transparent);
+    background-color: color-mix(in srgb, var(--primary-900) 12%, transparent);
+  }
+
+  [data-section-id][data-jp-selected] [data-jp-section-overlay] {
+    border-color: var(--primary-light);
+    background-color: color-mix(in srgb, var(--primary-900) 20%, transparent);
+  }
+
+  [data-jp-section-overlay] > div {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-family: var(--theme-font-mono);
+    font-size: var(--theme-text-xs);
+    letter-spacing: var(--theme-tracking-label);
+    text-transform: uppercase;
+    color: var(--primary-light);
+    background: color-mix(in srgb, var(--background) 82%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary-light) 50%, transparent);
+    border-radius: var(--theme-radius-sm);
+    padding: 2px 8px;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  [data-section-id]:hover [data-jp-section-overlay] > div,
+  [data-section-id][data-jp-selected] [data-jp-section-overlay] > div {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── DS-specific ────────────────────────────────────────── */
+  .ds-divider {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 0;
+  }
+
+  .token-label {
+    font-family: var(--theme-font-mono);
+    font-size: var(--theme-text-xs);
+    color: var(--muted-foreground);
+  }
+
+  /* ── DS Sidebar nav link ────────────────────────────────── */
+  .nav-link {
+    display: block;
+    font-size: var(--theme-text-sm);
+    color: var(--muted-foreground);
+    padding: 5px 12px;
+    border-radius: var(--theme-radius-sm);
+    transition: color 0.15s, background-color 0.15s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .nav-link:hover {
+    color: var(--foreground);
+    background-color: var(--elevated);
+  }
+  .nav-link.active {
+    color: var(--primary-light);
+    background-color: var(--elevated);
+  }
+
+  /* ── Focus ring ─────────────────────────────────────────── */
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  /* ── Inline code ────────────────────────────────────────── */
+  .code-inline {
+    font-family: var(--theme-font-mono);
+    font-size: 0.85em;
+    background-color: var(--primary-900);
+    color: var(--primary-light);
+    padding: 1px 6px;
+    border-radius: var(--theme-radius-sm);
+  }
+
+  /* ── Surface elevations ─────────────────────────────────── */
+  .surface-base     { background-color: var(--background); }
+  .surface-card     { background-color: var(--card); }
+  .surface-elevated { background-color: var(--elevated); }
+  .surface-overlay  { background-color: var(--overlay); }
+
+  /* ── Feedback surfaces ──────────────────────────────────── */
+  .surface-destructive {
+    background-color: var(--destructive);
+    color: var(--destructive-foreground);
+    border-color: var(--destructive-border);
+  }
+  .surface-success {
+    background-color: var(--success);
+    color: var(--success-foreground);
+    border-color: var(--success-border);
+  }
+  .surface-warning {
+    background-color: var(--warning);
+    color: var(--warning-foreground);
+    border-color: var(--warning-border);
+  }
+  .surface-info {
+    background-color: var(--info);
+    color: var(--info-foreground);
+    border-color: var(--info-border);
+  }
+
+  /* ── Syntax highlight roles (code blocks) ───────────────── */
+  .syntax-keyword   { color: var(--primary-400); }
+  .syntax-string    { color: var(--primary-200); }
+  .syntax-property  { color: var(--accent); }
+  .syntax-variable  { color: var(--primary-light); }
+  .syntax-comment   { color: var(--muted-foreground); }
+  .syntax-value     { color: var(--primary-light); }
+
+  /* Hero image blend overlay */
+  .hero-media-overlay {
+    background:
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--background) 100%, transparent) 0%,
+        color-mix(in srgb, var(--background) 82%, transparent) 16%,
+        color-mix(in srgb, var(--background) 56%, transparent) 34%,
+        color-mix(in srgb, var(--background) 22%, transparent) 54%,
+        color-mix(in srgb, var(--background) 6%, transparent) 74%,
+        color-mix(in srgb, var(--background) 0%, transparent) 100%
+      ),
+      linear-gradient(
+        to top,
+        color-mix(in srgb, var(--background) 24%, transparent) 0%,
+        color-mix(in srgb, var(--background) 8%, transparent) 28%,
+        color-mix(in srgb, var(--background) 0%, transparent) 56%
+      );
+  }
+
+  .hero-media-portrait {
+    aspect-ratio: 3 / 4;
+    min-height: 26rem;
+  }
+
+  @media (min-width: 768px) {
+    .hero-media-portrait {
+      min-height: 34rem;
+    }
+  }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   4b. TIPTAP — visitor markdown (.jp-tiptap-content) + Studio ProseMirror
+   Typography, color, radius: :root bridge only (theme.json → engine).
+───────────────────────────────────────────────────────────── */
+
+.jp-simple-editor .ProseMirror {
+  outline: none;
+  word-break: break-word;
+}
+
+.jp-tiptap-content,
+.jp-simple-editor .ProseMirror {
+  color: var(--foreground);
+  font-family: var(--theme-font-primary);
+  font-size: var(--theme-text-md);
+  line-height: var(--theme-leading-relaxed);
+}
+
+.jp-tiptap-content > * + *,
+.jp-simple-editor .ProseMirror > * + * {
+  margin-top: 0.75em;
+}
+
+.jp-tiptap-content h1,
+.jp-simple-editor .ProseMirror h1 {
+  font-family: var(--theme-font-display, var(--theme-font-primary));
+  font-size: var(--theme-text-4xl);
+  font-weight: 700;
+  line-height: var(--theme-leading-tight);
+  letter-spacing: var(--theme-tracking-display);
+  color: var(--foreground);
+  margin-top: 1.25em;
+  margin-bottom: 0.25em;
+}
+
+@media (min-width: 768px) {
+  .jp-tiptap-content h1,
+  .jp-simple-editor .ProseMirror h1 {
+    font-size: var(--theme-text-5xl);
+  }
+}
+
+.jp-tiptap-content h2,
+.jp-simple-editor .ProseMirror h2 {
+  font-family: var(--theme-font-display, var(--theme-font-primary));
+  font-size: var(--theme-text-3xl);
+  font-weight: 700;
+  line-height: var(--theme-leading-tight);
+  letter-spacing: var(--theme-tracking-tight);
+  color: var(--foreground);
+  margin-top: 1.25em;
+  margin-bottom: 0.25em;
+}
+
+.jp-tiptap-content h3,
+.jp-simple-editor .ProseMirror h3 {
+  font-size: var(--theme-text-2xl);
+  font-weight: 600;
+  line-height: var(--theme-leading-snug);
+  color: var(--foreground);
+  margin-top: 1.25em;
+  margin-bottom: 0.25em;
+}
+
+.jp-tiptap-content h4,
+.jp-simple-editor .ProseMirror h4 {
+  font-size: var(--theme-text-xl);
+  font-weight: 600;
+  line-height: var(--theme-leading-snug);
+  color: var(--foreground);
+  margin-top: 1em;
+  margin-bottom: 0.25em;
+}
+
+.jp-tiptap-content h5,
+.jp-simple-editor .ProseMirror h5 {
+  font-size: var(--theme-text-lg);
+  font-weight: 600;
+  line-height: var(--theme-leading-snug);
+  color: var(--foreground);
+  margin-top: 1em;
+  margin-bottom: 0.25em;
+}
+
+.jp-tiptap-content h6,
+.jp-simple-editor .ProseMirror h6 {
+  font-size: var(--theme-text-md);
+  font-weight: 600;
+  line-height: var(--theme-leading-normal);
+  letter-spacing: var(--theme-tracking-wide);
+  color: var(--muted-foreground);
+  margin-top: 1em;
+  margin-bottom: 0.25em;
+}
+
+.jp-tiptap-content p,
+.jp-simple-editor .ProseMirror p {
+  line-height: var(--theme-leading-relaxed);
+}
+
+.jp-tiptap-content strong,
+.jp-simple-editor .ProseMirror strong {
+  font-weight: 700;
+}
+
+.jp-tiptap-content em,
+.jp-simple-editor .ProseMirror em {
+  font-style: italic;
+}
+
+.jp-tiptap-content s,
+.jp-simple-editor .ProseMirror s {
+  text-decoration: line-through;
+}
+
+.jp-tiptap-content a,
+.jp-simple-editor .ProseMirror a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.jp-tiptap-content a:hover,
+.jp-simple-editor .ProseMirror a:hover {
+  opacity: 0.88;
+}
+
+.jp-tiptap-content code,
+.jp-simple-editor .ProseMirror code {
+  font-family: var(--theme-font-mono);
+  font-size: var(--theme-text-sm);
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  border-radius: var(--theme-radius-sm);
+  padding: 0.1em 0.35em;
+}
+
+.jp-tiptap-content pre,
+.jp-simple-editor .ProseMirror pre {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--theme-radius-md);
+  padding: 1em 1.25em;
+  overflow-x: auto;
+  font-size: var(--theme-text-sm);
+  line-height: var(--theme-leading-relaxed);
+}
+
+.jp-tiptap-content pre code,
+.jp-simple-editor .ProseMirror pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.jp-tiptap-content ul,
+.jp-simple-editor .ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.625em;
+}
+
+.jp-tiptap-content ol,
+.jp-simple-editor .ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.625em;
+}
+
+.jp-tiptap-content li,
+.jp-simple-editor .ProseMirror li {
+  line-height: var(--theme-leading-relaxed);
+  margin-top: 0.25em;
+}
+
+.jp-tiptap-content li + li,
+.jp-simple-editor .ProseMirror li + li {
+  margin-top: 0.25em;
+}
+
+.jp-tiptap-content blockquote,
+.jp-simple-editor .ProseMirror blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+.jp-tiptap-content hr,
+.jp-simple-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+.jp-tiptap-content img,
+.jp-simple-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--theme-radius-md);
+}
+
+.jp-simple-editor .ProseMirror img[data-uploading="true"] {
+  opacity: 0.6;
+  filter: grayscale(0.25);
+  outline: 2px dashed color-mix(in srgb, var(--primary) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.jp-simple-editor .ProseMirror img[data-upload-error="true"] {
+  outline: 2px solid color-mix(in srgb, var(--destructive) 85%, transparent);
+  outline-offset: 2px;
+}
+
+.jp-simple-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Tiptap docs — scrollable TOC rail */
+.jp-docs-toc-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.jp-docs-toc-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.jp-docs-toc-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--theme-radius-sm);
+}
+
+.jp-docs-toc-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   5. CLOUD-AI-NATIVE-GRID — ported from platform-frontend
+   Classes used by cloud-ai-native-grid component.
+───────────────────────────────────────────────────────────── */
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+.jp-feature-card {
+  border-radius: 1rem;
+  border-width: 1px;
+  border-style: solid;
+  transition: all 0.2s;
+  background-color: var(--card);
+  border-color: var(--border);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   6. LIGHT MODE
+   Applied when <html data-theme="light">.
+   Overrides the bridge vars directly.
+   SOT future: move to theme.json when engine supports modes.
+───────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+
+  /* Backgrounds — warm whites */
+  --background:                 var(--theme-modes-light-colors-background);
+  --card:                       var(--theme-modes-light-colors-card);
+  --elevated:                   var(--theme-modes-light-colors-elevated);
+  --overlay:                    var(--theme-modes-light-colors-overlay);
+  --popover:                    var(--theme-modes-light-colors-popover);
+  --popover-foreground:         var(--theme-modes-light-colors-popover-foreground);
+
+  /* Foregrounds */
+  --foreground:                 var(--theme-modes-light-colors-foreground);
+  --card-foreground:            var(--theme-modes-light-colors-card-foreground);
+  --muted-foreground:           var(--theme-modes-light-colors-muted-foreground);
+  --placeholder:                var(--theme-modes-light-colors-placeholder);
+
+  /* Brand — Labradorite (same hues, adjusted for light bg) */
+  --primary:                    var(--theme-modes-light-colors-primary);
+  --primary-foreground:         var(--theme-modes-light-colors-primary-foreground);
+  --primary-light:              var(--theme-modes-light-colors-primary-light);
+  --primary-dark:               var(--theme-modes-light-colors-primary-dark);
+  --primary-50:                 var(--theme-modes-light-colors-primary-50);
+  --primary-100:                var(--theme-modes-light-colors-primary-100);
+  --primary-200:                var(--theme-modes-light-colors-primary-200);
+  --primary-300:                var(--theme-modes-light-colors-primary-300);
+  --primary-400:                var(--theme-modes-light-colors-primary-400);
+  --primary-500:                var(--theme-modes-light-colors-primary-500);
+  --primary-600:                var(--theme-modes-light-colors-primary-600);
+  --primary-700:                var(--theme-modes-light-colors-primary-700);
+  --primary-800:                var(--theme-modes-light-colors-primary-800);
+  --primary-900:                var(--theme-modes-light-colors-primary-900);
+
+  /* Accent — Parchment darker for light bg contrast */
+  --accent:                     var(--theme-modes-light-colors-accent);
+  --accent-foreground:          var(--theme-modes-light-colors-accent-foreground);
+
+  /* Secondary */
+  --secondary:                  var(--theme-modes-light-colors-secondary);
+  --secondary-foreground:       var(--theme-modes-light-colors-secondary-foreground);
+
+  /* Muted */
+  --muted:                      var(--theme-modes-light-colors-muted);
+
+  /* Border */
+  --border:                     var(--theme-modes-light-colors-border);
+  --border-strong:              var(--theme-modes-light-colors-border-strong);
+
+  /* Form */
+  --input:                      var(--theme-modes-light-colors-input);
+  --ring:                       var(--theme-modes-light-colors-ring);
+
+  /* Feedback */
+  --destructive:                var(--theme-modes-light-colors-destructive);
+  --destructive-foreground:     var(--theme-modes-light-colors-destructive-foreground);
+  --destructive-border:         var(--theme-modes-light-colors-destructive-border);
+  --destructive-ring:           var(--theme-modes-light-colors-destructive-ring);
+  --success:                    var(--theme-modes-light-colors-success);
+  --success-foreground:         var(--theme-modes-light-colors-success-foreground);
+  --success-border:             var(--theme-modes-light-colors-success-border);
+  --success-indicator:          var(--theme-modes-light-colors-success-indicator);
+  --warning:                    var(--theme-modes-light-colors-warning);
+  --warning-foreground:         var(--theme-modes-light-colors-warning-foreground);
+  --warning-border:             var(--theme-modes-light-colors-warning-border);
+  --info:                       var(--theme-modes-light-colors-info);
+  --info-foreground:            var(--theme-modes-light-colors-info-foreground);
+  --info-border:                var(--theme-modes-light-colors-info-border);
+}
