@@ -1,12 +1,12 @@
-# 📐 OlonJS Architecture Specifications v1.4
+# 📐 OlonJS Architecture Specifications v1.5
 
 **Status:** Mandatory Standard  
 **Version:** 1.5.0 (Sovereign Core Edition — Architecture + Studio/ICE UX, Path-Deterministic Nested Editing, Deterministic Local Design Tokens, Three-Layer CSS Bridge Contract)  
 **Target:** Senior Architects / AI Agents / Enterprise Governance  
 
-**Scope v1.4:** This edition preserves the complete v1.3 architecture (MTRP, JSP, TBP, CIP, ECIP, JAP + Studio/ICE UX contract: IDAC, TOCC, BSDS, ASC, JEB + Tenant Type & Code-Generation Annex + strict path-based/nested-array behavior) as a **faithful superset**, and upgrades **Local Design Tokens** from a principle to a deterministic implementation contract.  
+**Scope v1.5:** This edition preserves the complete v1.3 architecture (MTRP, JSP, TBP, CIP, ECIP, JAP + Studio/ICE UX contract: IDAC, TOCC, BSDS, ASC, JEB + Tenant Type & Code-Generation Annex + strict path-based/nested-array behavior) as a **faithful superset**, and upgrades **Local Design Tokens** from a principle to a deterministic implementation contract.  
 **Scope note (breaking):** In strict v1.3+ Studio semantics, the legacy flat protocol (`itemField` / `itemId`) is removed in favor of `itemPath` (root-to-leaf path segments).  
-**Scope note (clarification):** In v1.4, `theme.json` is the tenant theme source of truth for themed tenants; runtime theme publication is mandatory for compliant themed tenants; section-local tokens (`--local-*`) are the required scoping layer for section-owned color and radius concerns.
+**Scope note (clarification):** In v1.5, `theme.json` is the tenant theme source of truth for themed tenants; runtime theme publication is mandatory for compliant themed tenants; section-local tokens (`--local-*`) are the required scoping layer for section-owned color and radius concerns.
 
 ---
 
@@ -55,7 +55,7 @@ Every site must reside in an isolated directory. Global Governance is physically
 
 **Application path convention:** The runtime app typically imports these via an alias (e.g. **`@/data/config/`** and **`@/data/pages/`**). The physical silo may be `src/data/config/` and `src/data/pages/` so that `site.json`, `menu.json`, `theme.json` live under `src/data/config/`, and page JSONs under `src/data/pages/`. The CLI or projection script may use `/config/` and `/pages/` at repo root; the **contract** is that the app receives **siteConfig**, **menuConfig**, **themeConfig**, and **pages** as defined in JEB (§10) and Appendix A.
 
-**Rule:** For a tenant that claims v1.4 design-token compliance, `theme.json` is not optional in practice. If a tenant omits a physical `theme.json`, it must still provide an equivalent `ThemeConfig` object before bootstrap; otherwise the tenant is outside full v1.4 theme compliance.
+**Rule:** For a tenant that claims v1.5 design-token compliance, `theme.json` is not optional in practice. If a tenant omits a physical `theme.json`, it must still provide an equivalent `ThemeConfig` object before bootstrap; otherwise the tenant is outside full v1.5 theme compliance.
 
 ### 2.2 Deterministic Projection (CLI Workflow)
 The CLI (`@olonjs/cli`) creates new tenants by:
@@ -95,7 +95,7 @@ Components are self-contained directories under **`src/components/<sectionType>/
 2.  **Z-Index Neutrality:** Components must not use `z-index > 1`. Layout delegation (sticky/fixed) is managed by the `SectionRenderer`.
 3.  **Agnostic Asset Protocol:** Use `resolveAssetUrl(path, tenantId)` for all media. Resolved URLs are under **`/assets/...`** with no tenantId segment in the path (e.g. relative `img/hero.jpg` → `/assets/img/hero.jpg`).
 
-### 4.4 Local Design Tokens (v1.4)
+### 4.4 Local Design Tokens (v1.5)
 **Objective:** Standardize how a section consumes tenant theme values without leaking global styling assumptions into the section implementation.
 
 #### 4.4.1 The Required Four-Layer Chain
@@ -387,7 +387,7 @@ Canonical font chain:
 ### 4.5 Z-Index & Overlay Governance (v1.2)
 Section content root **must** stay at **`z-index` ≤ 1** (prefer `z-0`) so the Sovereign Overlay can sit above with high z-index in Tenant CSS (§7). Header/footer may use a higher z-index (e.g. 50) only as a documented exception for global chrome.
 
-**Perché servono (CIP):** View “dumb” (solo data/settings) e senza import di Zod evita accoppiamento e permette al Form Factory di essere l’unica fonte di verità sugli schemi. Z-index basso evita che il contenuto copra l’overlay di selezione in Studio. Asset via `resolveAssetUrl`: i path relativi vengono risolti in `/assets/...` (senza segmento tenantId nel path). In v1.4 la catena `theme.json -> runtime vars -> --local-* -> JSX classes` rende i tenant temabili, riproducibili e compatibili con la Studio UX; senza questa separazione, stili “nudi” o valori hardcoded creano drift visivo, rompono il contratto del brand, e rendono ambiguo ciò che appartiene al tema contro ciò che appartiene alla section.
+**Perché servono (CIP):** View “dumb” (solo data/settings) e senza import di Zod evita accoppiamento e permette al Form Factory di essere l’unica fonte di verità sugli schemi. Z-index basso evita che il contenuto copra l’overlay di selezione in Studio. Asset via `resolveAssetUrl`: i path relativi vengono risolti in `/assets/...` (senza segmento tenantId nel path). In v1.5 la catena `theme.json -> runtime vars -> --local-* -> JSX classes` rende i tenant temabili, riproducibili e compatibili con la Studio UX; senza questa separazione, stili “nudi” o valori hardcoded creano drift visivo, rompono il contratto del brand, e rendono ambiguo ciò che appartiene al tema contro ciò che appartiene alla section.
 
 ---
 
@@ -635,7 +635,7 @@ Studio enforces `tsc && vite build`. No export with TypeScript errors.
 
 ---
 
-## Compliance: Legacy vs Full UX (v1.4)
+## Compliance: Legacy vs Full UX (v1.5)
 
 | Dimension | Legacy / Less UX | Full UX (Core-aligned) |
 |-----------|-------------------|-------------------------|
@@ -662,7 +662,7 @@ Studio enforces `tsc && vite build`. No export with TypeScript errors.
 
 ---
 
-## Summary of v1.4 Additions
+## Summary of v1.5 Additions
 
 | § | Title | Purpose |
 |---|--------|--------|
@@ -1023,7 +1023,7 @@ This addendum extends Appendix A without removing prior v1.2 obligations:
 
 ---
 
-## A.7 v1.4 Local Design Tokens Implementation Addendum
+## A.7 v1.5 Local Design Tokens Implementation Addendum
 
 This addendum extends Appendix A without removing prior v1.3 obligations:
 
