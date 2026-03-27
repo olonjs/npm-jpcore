@@ -71,7 +71,26 @@ function buildThemeCssFromSot(theme: ThemeConfig): string {
   const tokens = root['tokens'];
   const flattened = flattenThemeTokens(tokens);
   if (flattened.length === 0) return '';
-  const serialized = flattened.map((item) => `${item.name}:${item.value}`).join(';');
+  const aliases: Array<{ name: string; value: string }> = [];
+  const hasToken = (name: string) => flattened.some((item) => item.name === name);
+
+  if (hasToken('--theme-colors-background')) aliases.push({ name: '--theme-background', value: 'var(--theme-colors-background)' });
+  if (hasToken('--theme-colors-text')) aliases.push({ name: '--theme-text', value: 'var(--theme-colors-text)' });
+  if (hasToken('--theme-colors-surface')) aliases.push({ name: '--theme-surface', value: 'var(--theme-colors-surface)' });
+  if (hasToken('--theme-colors-surfaceAlt')) aliases.push({ name: '--theme-surface-alt', value: 'var(--theme-colors-surfaceAlt)' });
+  if (hasToken('--theme-colors-primary')) aliases.push({ name: '--theme-primary', value: 'var(--theme-colors-primary)' });
+  if (hasToken('--theme-colors-secondary')) aliases.push({ name: '--theme-secondary', value: 'var(--theme-colors-secondary)' });
+  if (hasToken('--theme-colors-accent')) aliases.push({ name: '--theme-accent', value: 'var(--theme-colors-accent)' });
+  if (hasToken('--theme-colors-border')) aliases.push({ name: '--theme-border', value: 'var(--theme-colors-border)' });
+  if (hasToken('--theme-colors-textMuted')) aliases.push({ name: '--theme-text-muted', value: 'var(--theme-colors-textMuted)' });
+  if (hasToken('--theme-typography-fontFamily-primary')) aliases.push({ name: '--theme-font-primary', value: 'var(--theme-typography-fontFamily-primary)' });
+  if (hasToken('--theme-typography-fontFamily-mono')) aliases.push({ name: '--theme-font-mono', value: 'var(--theme-typography-fontFamily-mono)' });
+  if (hasToken('--theme-typography-fontFamily-display')) aliases.push({ name: '--theme-font-display', value: 'var(--theme-typography-fontFamily-display)' });
+  if (hasToken('--theme-borderRadius-sm')) aliases.push({ name: '--theme-radius-sm', value: 'var(--theme-borderRadius-sm)' });
+  if (hasToken('--theme-borderRadius-md')) aliases.push({ name: '--theme-radius-md', value: 'var(--theme-borderRadius-md)' });
+  if (hasToken('--theme-borderRadius-lg')) aliases.push({ name: '--theme-radius-lg', value: 'var(--theme-borderRadius-lg)' });
+
+  const serialized = [...flattened, ...aliases].map((item) => `${item.name}:${item.value}`).join(';');
   return `:root{${serialized}}`;
 }
 

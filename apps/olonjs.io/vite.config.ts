@@ -55,8 +55,9 @@ function isTenantPageJsonRequest(req, pathname) {
   return !viteOrStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
-export default defineConfig({
-  base: '/core/',
+export default defineConfig(({ command }) => ({
+  // Dev must run at `/`; project Pages build is served under `/core/`.
+  base: command === 'serve' ? '/' : '/core/',
   plugins: [
     react(),
     tailwindcss(),
@@ -136,7 +137,7 @@ export default defineConfig({
       'next/link': path.resolve(__dirname, './src/shims/next-link.tsx'),
     },
   },
-});
+}));
 
 
 

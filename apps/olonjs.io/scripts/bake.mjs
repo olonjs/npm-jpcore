@@ -59,6 +59,12 @@ async function discoverTargets() {
   });
 }
 
+function stripClientRuntime(html) {
+  return html
+    .replace(/\s*<link rel="modulepreload"[^>]*>/g, '')
+    .replace(/\s*<script type="module"[^>]*><\/script>/g, '');
+}
+
 console.log('\n[bake] Building client...');
 await build({ root, mode: 'production', logLevel: 'warn', base: SITE_BASE });
 console.log('[bake] Client build done.');
@@ -126,6 +132,8 @@ for (const { slug, out, depth } of targets) {
   } else {
     bakedHtml = bakedHtml.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
   }
+
+  bakedHtml = stripClientRuntime(bakedHtml);
 
   const outPath = path.resolve(root, out);
   await fs.mkdir(path.dirname(outPath), { recursive: true });

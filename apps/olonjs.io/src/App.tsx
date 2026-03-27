@@ -40,6 +40,11 @@ const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
 const ASSET_UPLOAD_MAX_RETRIES = 2;
 const ASSET_UPLOAD_TIMEOUT_MS = 20_000;
 const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
+const APP_BASE_URL = import.meta.env.BASE_URL || '/';
+
+function withAppBase(pathname: string): string {
+  return `${APP_BASE_URL}${pathname.replace(/^\/+/, '')}`;
+}
 
 interface CloudSaveUiState {
   isOpen: boolean;
@@ -382,7 +387,7 @@ function App() {
       return;
     }
 
-    fetch('/api/list-assets')
+    fetch(withAppBase('/api/list-assets'))
       .then((r) => (r.ok ? r.json() : []))
       .then((list: LibraryImageEntry[]) => setAssetsManifest(Array.isArray(list) ? list : []))
       .catch(() => setAssetsManifest([]));
