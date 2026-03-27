@@ -157,6 +157,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@olonjs/core': path.resolve(__dirname, '../../packages/core/src/index.ts'),
       'next/link': path.resolve(__dirname, './src/shims/next-link.tsx'),
     },
   },
