@@ -16,6 +16,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const pagesDir = path.resolve(root, 'src/data/pages');
 
+/** GitHub project Pages site root; must match `base` in vite.config.ts */
+const SITE_BASE =
+  (process.env.VITE_SITE_BASE && String(process.env.VITE_SITE_BASE).replace(/\/?$/, '/')) || '/core/';
+
 function toCanonicalSlug(relativeJsonPath) {
   const normalized = relativeJsonPath.replace(/\\/g, '/');
   const slug = normalized.replace(/\.json$/i, '').replace(/^\/+|\/+$/g, '');
@@ -56,7 +60,7 @@ async function discoverTargets() {
 }
 
 console.log('\n[bake] Building client...');
-await build({ root, mode: 'production', logLevel: 'warn' });
+await build({ root, mode: 'production', logLevel: 'warn', base: SITE_BASE });
 console.log('[bake] Client build done.');
 
 console.log('\n[bake] Building SSR bundle...');
@@ -64,6 +68,7 @@ await build({
   root,
   mode: 'production',
   logLevel: 'warn',
+  base: SITE_BASE,
   build: {
     ssr: 'src/entry-ssg.tsx',
     outDir: 'dist-ssr',
