@@ -14,9 +14,9 @@
     },
     "typography": {
       "fontFamily": {
-        "primary": "'Instrument Sans', Helvetica, Arial, sans-serif",
+        "primary": "'JetBrains Mono', Helvetica, Arial, sans-serif",
         "mono": "'JetBrains Mono', 'Fira Code', monospace",
-        "display": "'Instrument Sans', Helvetica, Arial, sans-serif"
+        "display": "'JetBrains Mono', Helvetica, Arial, sans-serif"
       }
     },
     "borderRadius": {

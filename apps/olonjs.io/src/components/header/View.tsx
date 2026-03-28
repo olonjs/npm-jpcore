@@ -30,7 +30,7 @@ export const Header: React.FC<{
             className="flex items-center gap-2 no-underline shrink-0"
             aria-label="OlonJS home"
           >
-            <OlonMark size={26} />
+            <OlonMark size={22} />
             <span
               className="text-lg font-bold tracking-tight text-foreground"
               data-jp-field="logoText"

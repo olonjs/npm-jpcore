@@ -25,10 +25,10 @@
     "id": "global-header",
     "type": "header",
     "data": {
-      "logoText": "Olon",
+      "logoText": "olon",
       "logoHighlight": "JS",
-      "logoIconText": "",
-      "badge": "v1.5.0",
+      
+      
       "links": [
         {
           "label": "The Problem",
