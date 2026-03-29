@@ -19,46 +19,9 @@
     "data": {
       "logoText": "Olon",
       "badge": "",
-      "links": [
-        {
-          "label": "Platform",
-          "href": "/platform",
-          "children": [
-            {
-              "label": "Overview",
-              "href": "/platform/overview"
-            },
-            {
-              "label": "Architecture",
-              "href": "/platform/architecture"
-            },
-            {
-              "label": "Security",
-              "href": "/platform/security"
-            },
-            {
-              "label": "Integrations",
-              "href": "/platform/integrations"
-            },
-            {
-              "label": "Roadmap",
-              "href": "/platform/roadmap"
-            }
-          ]
-        },
-        {
-          "label": "Solutions",
-          "href": "/solutions"
-        },
-        {
-          "label": "Pricing",
-          "href": "/pricing"
-        },
-        {
-          "label": "Resources",
-          "href": "/resources"
-        }
-      ],
+      "links": {
+        "$ref": "../config/menu.json#/main"
+      },
       "ctaLabel": "Get started →",
       "ctaHref": "#contact",
       "signinHref": "#login"
@@ -71,10 +34,6 @@
       "brandText": "Olon",
       "copyright": "© 2025 OlonJS · v1.4 · Holon",
       "links": [
-        {
-          "label": "Docs",
-          "href": "/docs"
-        },
         {
           "label": "GitHub",
           "href": "#"

@@ -314,12 +314,12 @@ Removed from strict protocol:
 The Admin interface is a **Sovereign Shell** from `@olonjs/core`.
 1.  **The Stage (Canvas):** Isolated Iframe; postMessage for data updates and selection mirroring. Section markup follows **IDAC** (§6); overlay styling follows **TOCC** (§7).
 2.  **The Inspector (Sidebar):** Consumes Tenant Zod schemas to generate editors; binding via `data-jp-field` and `data-jp-item-*`.
-3.  **The Control Bar:** Save, Export, Add Section.
+3.  **The Studio Actions:** Save to file, Hot Save, Add Section.
 
 ## 2. State Orchestration & Persistence
 *   **Working Draft:** Reactive local state for unsaved changes.
 *   **Sync Law:** Inspector changes → Working Draft → Stage via `STUDIO_EVENTS.UPDATE_DRAFTS`.
-*   **Bake Protocol:** "Bake HTML" requests snapshot from Iframe, injects `ProjectState` as JSON, triggers download.
+*   **Persistence Protocol:** Studio invokes tenant-provided `saveToFile` and `hotSave` callbacks for editorial persistence.
 
 ## 3. Context Switching (Global vs. Local)
 *   **Header/Footer** selection → Global Mode, `site.json`.
@@ -335,14 +335,14 @@ The Admin interface is a **Sovereign Shell** from `@olonjs/core`.
 *   **Sovereign Overlay:** Selection ring and type labels injected per **IDAC** (§6); Tenant styles them per **TOCC** (§7).
 
 ## 6. "Green Build" Validation
-Studio enforces `tsc && vite build`. No export with TypeScript errors.
+Studio enforces `tsc && vite build`. No Studio or SSG build should proceed with TypeScript errors.
 
 ## 7. Path-Deterministic Selection & Sidebar Expansion (v1.3, breaking)
 *   Section/item focus synchronization uses `itemPath` (root → leaf), not flat `itemField/itemId`.
 *   Sidebar expansion state for nested arrays must be derived from all path segments.
 *   Flat-only matching may open/close wrong branches and is non-compliant in strict mode.
 
-**Perché servono (JAP):** Stage in iframe + Inspector + Control Bar separano il contesto di editing dal sito; postMessage e Working Draft permettono modifiche senza toccare subito i file. Bake ed Export richiedono uno stato coerente. Global vs Page mode evita confusione su dove si sta editando (site.json vs [slug].json). Add/Reorder/Delete sono gestiti in un solo modo (Working Draft + ASC). Green Build garantisce che ciò che si esporta compili. In v1.3, il path completo elimina ambiguità nella sincronizzazione Stage↔Sidebar su strutture annidate.
+**Perché servono (JAP):** Stage in iframe + Inspector + Studio actions separano il contesto di editing dal sito; postMessage e Working Draft permettono modifiche senza toccare subito i file. Save to file e Hot Save richiedono uno stato coerente. Global vs Page mode evita confusione su dove si sta editando (site.json vs [slug].json). Add/Reorder/Delete sono gestiti in un solo modo (Working Draft + ASC). Green Build garantisce che Studio e SSG compilino correttamente. In v1.3, il path completo elimina ambiguità nella sincronizzazione Stage↔Sidebar su strutture annidate.
 
 ---
 

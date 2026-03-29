@@ -2,8 +2,8 @@
   "id": "overview-page",
   "slug": "platform/overview",
   "meta": {
-    "title": "OlonJS — Documentation",
-    "description": "Architecture specifications, tenant protocol, and developer reference for the OlonJS contract layer."
+    "title": "OlonJS — Platform Overview",
+    "description": "Overview of the OlonJS platform, architecture direction, and product surface."
   },
   "sections": [
     {
@@ -17,15 +17,15 @@
             "href": "/"
           },
           {
-            "id": "crumb-docs",
-            "label": "Docs",
-            "href": "/doc"
+            "id": "crumb-platform",
+            "label": "Platform",
+            "href": "/platform/overview"
           }
         ],
         "badge": "",
         "title": "Platform",
         "titleItalic": "Overview",
-        "description": "The platform overview page."
+        "description": "High-level overview of the OlonJS platform."
       }
     }
   ]

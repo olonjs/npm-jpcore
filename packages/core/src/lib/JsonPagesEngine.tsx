@@ -15,7 +15,6 @@ import { AddSectionLibrary } from '../admin/AddSectionLibrary';
 import { DefaultNotFound } from './DefaultNotFound';
 import { themeManager } from '../utils/theme-manager';
 import { STUDIO_EVENTS } from './events';
-import { exportProjectJSON, exportBakedHTML } from './persistence';
 import type { JsonPagesConfig, SelectionPath } from './types-engine';
 import type { PageConfig, SiteConfig, Section, MenuItem, ProjectState } from './kernel';
 import { resolveHeaderMenuItems, resolveRuntimeConfig } from './config-resolver';
@@ -155,41 +154,18 @@ const VisitorRoute: React.FC<VisitorRouteProps> = ({
 }) => {
   const location = useLocation();
   const slug = resolveSlugFromPathname(location.pathname);
-  const [bakedState, setBakedState] = useState<ProjectState | null>(null);
-
-  useEffect(() => {
-    const bakedScript = document.getElementById('jp-baked-state');
-    if (bakedScript?.textContent) {
-      try {
-        const state = JSON.parse(bakedScript.textContent) as ProjectState;
-        setBakedState(state);
-        themeManager.setTheme(state.theme);
-      } catch (e) {
-        console.error('Failed to parse baked state', e);
-      }
-    }
-  }, []);
-
-  const activePages = bakedState
-    ? { [bakedState.page.slug || slug]: bakedState.page }
-    : pageRegistry;
-  const activeSiteConfig = bakedState ? bakedState.site : siteConfig;
-  const activeMenuConfig = bakedState ? bakedState.menu : menuConfig;
-  const activeThemeConfig = bakedState ? bakedState.theme : themeConfig;
   const resolvedRuntime = useMemo(
     () =>
       resolveRuntimeConfig({
-        pages: activePages,
-        siteConfig: activeSiteConfig,
-        themeConfig: activeThemeConfig,
-        menuConfig: activeMenuConfig,
+        pages: pageRegistry,
+        siteConfig,
+        themeConfig,
+        menuConfig,
         refDocuments,
       }),
-    [activePages, activeSiteConfig, activeThemeConfig, activeMenuConfig, refDocuments]
+    [pageRegistry, siteConfig, themeConfig, menuConfig, refDocuments]
   );
-  const pageConfig = bakedState
-    ? resolvedRuntime.pages[bakedState.page.slug || slug]
-    : resolvePageFromRegistry(resolvedRuntime.pages, slug);
+  const pageConfig = resolvePageFromRegistry(resolvedRuntime.pages, slug);
 
   useEffect(() => {
     try {
@@ -230,7 +206,6 @@ interface StudioRouteProps {
   hotSave?: (state: ProjectState, slug: string) => Promise<void>;
   showLegacySave?: boolean;
   showHotSave?: boolean;
-  exportHTML: (state: ProjectState, slug: string, cleanHtml: string) => void;
 }
 
 const StudioRoute: React.FC<StudioRouteProps> = ({
@@ -247,7 +222,6 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   hotSave,
   showLegacySave = true,
   showHotSave = false,
-  exportHTML,
 }) => {
   const location = useLocation();
   const slug = resolveSlugFromPathname(location.pathname, 'admin');
@@ -373,7 +347,7 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
     []
   );
 
-  const handleBakeResponse = useCallback(
+  const handleStudioMessage = useCallback(
     (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       if (event.data.type === STUDIO_EVENTS.SECTION_SELECT) {
@@ -423,26 +397,14 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
           handleReorderSection(sectionId, newIndex, draftRef.current);
         }
       }
-      if (event.data.type === STUDIO_EVENTS.SEND_CLEAN_HTML) {
-        if (!draftRef.current) return;
-        const headerData = resolvedRuntime.siteConfig.header?.data;
-        const projectState: ProjectState = {
-          page: draftRef.current,
-          site: globalDraftRef.current,
-          menu: { main: resolveMenuMainFromHeaderData(headerData, menuConfig.main) },
-          theme: resolvedRuntime.themeConfig,
-        };
-        exportHTML(projectState, slug, event.data.html);
-        setHasChanges(false);
-      }
     },
-    [slug, handleReorderSection, exportHTML, resolvedRuntime.siteConfig, resolvedRuntime.themeConfig, menuConfig.main]
+    [handleReorderSection]
   );
 
   useEffect(() => {
-    window.addEventListener('message', handleBakeResponse);
-    return () => window.removeEventListener('message', handleBakeResponse);
-  }, [handleBakeResponse]);
+    window.addEventListener('message', handleStudioMessage);
+    return () => window.removeEventListener('message', handleStudioMessage);
+  }, [handleStudioMessage]);
 
   const handleRequestScrollToSection = useCallback((sectionId: string) => {
     const layer = allLayers.find((l) => l.id === sectionId);
@@ -502,11 +464,6 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
     },
     [draft, globalDraft]
   );
-
-  const triggerBake = () => {
-    const iframe = document.querySelector('iframe');
-    iframe?.contentWindow?.postMessage({ type: STUDIO_EVENTS.REQUEST_CLEAN_HTML }, '*');
-  };
 
   const requestInlineFlush = useCallback(async () => {
     const iframe = document.querySelector('iframe');
@@ -688,7 +645,6 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
                     : undefined
                 }
                 hasChanges={hasChanges}
-                onExportHTML={triggerBake}
                 onSaveToFile={saveToFile != null ? handleSaveToFile : undefined}
                 saveSuccessFeedback={saveSuccessFeedback}
                 onHotSave={hotSave != null ? handleHotSave : undefined}
@@ -753,8 +709,6 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
     (Object.keys(schemas).filter((t) => t !== 'header' && t !== 'footer') as string[]);
 
   const persistence = {
-    exportJSON: config.persistence?.exportJSON ?? exportProjectJSON,
-    exportHTML: config.persistence?.exportHTML ?? exportBakedHTML,
     saveToFile: config.persistence?.saveToFile,
     hotSave: config.persistence?.hotSave,
     showLegacySave: config.persistence?.showLegacySave ?? true,
@@ -872,7 +826,6 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   hotSave={persistence.hotSave}
                   showLegacySave={persistence.showLegacySave}
                   showHotSave={persistence.showHotSave}
-                  exportHTML={persistence.exportHTML}
                 />
               }
             />
@@ -893,7 +846,6 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   hotSave={persistence.hotSave}
                   showLegacySave={persistence.showLegacySave}
                   showHotSave={persistence.showHotSave}
-                  exportHTML={persistence.exportHTML}
                 />
               }
             />

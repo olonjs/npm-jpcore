@@ -68,11 +68,9 @@ interface AdminSidebarProps {
   onDeleteSection?: (sectionId: string) => void;
   /** When provided, shows an "Add section" button in the inspector header that opens the section library. */
   onAddSection?: () => void;
-  /** Whether there are unsaved changes (disables Bake HTML / Export JSON when false). */
+  /** Whether there are unsaved changes for the current draft. */
   hasChanges?: boolean;
-  /** Trigger Bake HTML (same as ControlBar). */
-  onExportHTML?: () => void;
-  /** Save to file (writes JSON to repo via server). Replaces Export JSON in sidebar when provided. */
+  /** Save to file (writes JSON to repo via server). */
   onSaveToFile?: () => void;
   /** Hot Save callback (typically cloud save2edge). */
   onHotSave?: () => void;
@@ -82,7 +80,7 @@ interface AdminSidebarProps {
   hotSaveSuccessFeedback?: boolean;
   /** When true, hot save action is currently running. */
   hotSaveInProgress?: boolean;
-  /** Controls visibility of legacy Save button. */
+  /** Controls visibility of the Save to file button. */
   showLegacySave?: boolean;
   /** Controls visibility of Hot Save button. */
   showHotSave?: boolean;
@@ -759,7 +757,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     <span>Save</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Save (export JSON)</TooltipContent>
+                <TooltipContent>Save to file</TooltipContent>
               </Tooltip>
             )}
             {showHotSave && onHotSave != null && (

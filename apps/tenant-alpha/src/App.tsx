@@ -704,7 +704,7 @@ function App() {
     addSection: addSectionConfig,
     persistence: {
       async saveToFile(state: ProjectState, slug: string): Promise<void> {
-        // 💻 LOCAL FILESYSTEM (Development / legacy fallback)
+        // 💻 LOCAL FILESYSTEM (development path)
         console.log(`💻 Saving ${slug} to Local Filesystem...`);
         const res = await fetch('/api/save-to-file', {
           method: 'POST',

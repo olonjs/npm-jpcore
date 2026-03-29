@@ -1645,7 +1645,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.84",
+    "@olonjs/core": "^1.0.85",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -10671,9 +10671,46 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "data": {
       "logoText": "Olon",
       "badge": "",
-      "links": {
-        "$ref": "../config/menu.json#/main"
-      },
+      "links": [
+        {
+          "label": "Platform",
+          "href": "/platform",
+          "children": [
+            {
+              "label": "Overview",
+              "href": "/platform/overview"
+            },
+            {
+              "label": "Architecture",
+              "href": "/platform/architecture"
+            },
+            {
+              "label": "Security",
+              "href": "/platform/security"
+            },
+            {
+              "label": "Integrations",
+              "href": "/platform/integrations"
+            },
+            {
+              "label": "Roadmap",
+              "href": "/platform/roadmap"
+            }
+          ]
+        },
+        {
+          "label": "Solutions",
+          "href": "/solutions"
+        },
+        {
+          "label": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "label": "Resources",
+          "href": "/resources"
+        }
+      ],
       "ctaLabel": "Get started →",
       "ctaHref": "#contact",
       "signinHref": "#login"
@@ -10942,7 +10979,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
     "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
   },
   "sections": [
-   
     {
       "id": "hero-main",
       "type": "hero",
@@ -11114,7 +11150,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
       }
     }
   ]
-  
 }
 END_OF_FILE_CONTENT
 mkdir -p "src/data/pages/platform"

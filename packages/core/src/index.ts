@@ -2,11 +2,10 @@
  * @olonjs/core — Public API (legacy alias: @jsonpages/core)
  */
 
-// Lib: kernel, types, engine, renderers, context, persistence, events, utils, shared-types
+// Lib: kernel, types, engine, renderers, context, events, utils, shared-types
 export * from './lib/kernel';
 export * from './lib/types-engine';
 export * from './lib/events';
-export * from './lib/persistence';
 export * from './lib/utils';
 export * from './lib/shared-types';
 export { PageRenderer } from './lib/PageRenderer';
@@ -28,7 +27,6 @@ export { resolveAssetUrl } from './utils/asset-resolver';
 
 // Admin
 export { AdminSidebar, type LayerItem, type OnUpdateSection } from './admin/AdminSidebar';
-export { ControlBar } from './admin/ControlBar';
 export { StudioStage } from './admin/StudioStage';
 export { PreviewEntry } from './admin/PreviewEntry';
 export { AddSectionLibrary } from './admin/AddSectionLibrary';

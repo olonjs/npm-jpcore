@@ -13,10 +13,8 @@ export interface SelectionPathSegment {
 /** v1.3 strict Studio path for field/item focus synchronization. */
 export type SelectionPath = SelectionPathSegment[];
 
-/** Persistence API; defaults provided by Core, overridable by Tenant. */
+/** Persistence API exposed by the tenant app to Studio actions. */
 export interface PersistenceConfig {
-  exportJSON: (state: ProjectState, slug: string) => Promise<void>;
-  exportHTML: (state: ProjectState, slug: string, cleanHtml: string) => void;
   /**
    * Optional. Save current state to repo files (e.g. POST to /api/save-to-file); server writes
    * src/data/config/*.json and src/data/pages/<slug>.json. No git push.
@@ -27,7 +25,7 @@ export interface PersistenceConfig {
    * Core only triggers this callback; tenant decides transport and endpoint.
    */
   hotSave?: (state: ProjectState, slug: string) => Promise<void>;
-  /** Controls legacy Save button visibility in sidebar. Default true. */
+  /** Controls Save to file button visibility in sidebar. Default true. */
   showLegacySave?: boolean;
   /** Controls Hot Save button visibility in sidebar. Default false. */
   showHotSave?: boolean;
@@ -90,7 +88,7 @@ export interface JsonPagesConfig {
   menuConfig: MenuConfig;
   /** Optional extra JSON documents available to the runtime $ref resolver. */
   refDocuments?: Record<string, unknown>;
-  /** Optional persistence; Core provides defaults if omitted. */
+  /** Optional persistence callbacks for tenant-specific save flows. */
   persistence?: Partial<PersistenceConfig>;
   /** CSS strings for ThemeLoader. */
   themeCss: ThemeCssConfig;

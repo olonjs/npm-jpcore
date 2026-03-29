@@ -9,12 +9,6 @@ export const STUDIO_EVENTS = {
   // Parent -> Child (ICE Control)
   SYNC_SELECTION: 'jsonpages:sync-selection',
   
-  // Parent -> Child (Bake Handshake)
-  REQUEST_CLEAN_HTML: 'jsonpages:request-clean-html',
-  
-  // Child -> Parent (Bake Response)
-  SEND_CLEAN_HTML: 'jsonpages:send-clean-html',
-  
   // Child -> Parent (User Interaction)
   SECTION_SELECT: 'jsonpages:section-select',
   INLINE_FIELD_UPDATE: 'jsonpages:inline-field-update',

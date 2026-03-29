@@ -6,6 +6,7 @@
     "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
   },
   "sections": [
+   
     {
       "id": "hero-main",
       "type": "hero",
@@ -28,8 +29,8 @@
             "variant": "secondary"
           }
         ],
-        "docsLabel": "Read the docs",
-        "docsHref": "#",
+        "docsLabel": "Explore platform",
+        "docsHref": "/platform/overview",
         "heroImage": {
           "url": "https://bat5elmxofxdroan.public.blob.vercel-storage.com/tenant-assets/511f18d7-d8ac-4292-ad8a-b0efa99401a3/1774286598548-adac7c36-9001-451d-9b16-c3787ac27f57-signup-hero-olon-graded_1_.png",
           "alt": ""
@@ -177,4 +178,5 @@
       }
     }
   ]
+  
 }

@@ -19,7 +19,6 @@ export const PreviewEntry: React.FC = () => {
   const [menuConfig, setMenuConfig] = useState<MenuConfig>({ main: [] });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [scrollToSectionId, setScrollToSectionId] = useState<string | null>(null);
-  const [isBaking, setIsBaking] = useState(false);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -55,19 +54,6 @@ export const PreviewEntry: React.FC = () => {
         }, 0);
       }
 
-      // 🛡️ BAKE HANDSHAKE: Switch to visitor mode and send HTML back
-      if (event.data.type === STUDIO_EVENTS.REQUEST_CLEAN_HTML) {
-        setIsBaking(true);
-        // Use setTimeout to ensure React has rendered the "Visitor" mode (no outlines)
-        setTimeout(() => {
-          const html = document.documentElement.outerHTML;
-          window.parent.postMessage({
-            type: STUDIO_EVENTS.SEND_CLEAN_HTML,
-            html
-          }, '*');
-          setIsBaking(false);
-        }, 50);
-      }
     };
 
     window.addEventListener('message', handleMessage);
@@ -196,13 +182,13 @@ export const PreviewEntry: React.FC = () => {
   };
 
   return (
-    <StudioProvider mode={isBaking ? "visitor" : "studio"}>
-      <div className={isBaking ? "" : "jp-ice-active"}>
+    <StudioProvider mode="studio">
+      <div className="jp-ice-active">
         <PageRenderer
           pageConfig={draft}
           siteConfig={globalDraft}
           menuConfig={currentMenuConfig}
-          selectedId={isBaking ? null : selectedId}
+          selectedId={selectedId}
           scrollToSectionId={scrollToSectionId}
           onActiveSectionChange={handleActiveSectionChange}
         />
