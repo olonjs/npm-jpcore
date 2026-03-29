@@ -6,7 +6,6 @@
     "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
   },
   "sections": [
-   
     {
       "id": "hero-main",
       "type": "hero",
@@ -178,5 +177,4 @@
       }
     }
   ]
-  
 }

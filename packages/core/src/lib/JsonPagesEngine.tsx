@@ -624,13 +624,17 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
 
   const sidebarData =
     selected?.scope === 'global'
-      ? { sections: [globalDraft.header, globalDraft.footer].filter((s): s is Section => s != null) }
-      : draft;
+      ? {
+          sections: [resolvedRuntime.siteConfig.header, resolvedRuntime.siteConfig.footer].filter(
+            (s): s is Section => s != null
+          ),
+        }
+      : (resolvedDraft ?? draft);
 
   const allSectionsData: Section[] = [
-    ...(globalDraft.header ? [globalDraft.header] : []),
-    ...draft.sections,
-    ...(globalDraft.footer ? [globalDraft.footer] : []),
+    ...(resolvedRuntime.siteConfig.header ? [resolvedRuntime.siteConfig.header] : []),
+    ...((resolvedDraft ?? draft)?.sections ?? []),
+    ...(resolvedRuntime.siteConfig.footer ? [resolvedRuntime.siteConfig.footer] : []),
   ];
 
   return (

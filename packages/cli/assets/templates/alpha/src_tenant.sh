@@ -1645,7 +1645,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.83",
+    "@olonjs/core": "^1.0.84",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -2079,7 +2079,6 @@ for (const { slug, out, depth } of targets) {
 console.log('\n[bake] All pages baked. OK\n');
 
 END_OF_FILE_CONTENT
-# SKIP: scripts/bake.mjs:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating scripts/sync-pages-to-public.mjs..."
 cat << 'END_OF_FILE_CONTENT' > "scripts/sync-pages-to-public.mjs"
 import fs from 'fs';
@@ -2749,7 +2748,12 @@ const CLOUD_API_KEY =
   import.meta.env.VITE_OLONJS_API_KEY ?? import.meta.env.VITE_JSONPAGES_API_KEY;
 
 const themeConfig = themeData as unknown as ThemeConfig;
-const menuConfig = menuData as unknown as MenuConfig;
+const menuConfig: MenuConfig = { main: [] };
+const refDocuments = {
+  'menu.json': menuData,
+  'config/menu.json': menuData,
+  'src/data/config/menu.json': menuData,
+} satisfies NonNullable<JsonPagesConfig['refDocuments']>;
 const TENANT_ID = 'alpha';
 
 const filePages = getFilePages();
@@ -3412,6 +3416,7 @@ function App() {
     siteConfig,
     themeConfig,
     menuConfig,
+    refDocuments,
     themeCss: { tenant: `${buildThemeFontVarsCss(themeConfig)}\n${tenantCss}` },
     addSection: addSectionConfig,
     persistence: {
@@ -3694,7 +3699,6 @@ export default App;
 
 
 END_OF_FILE_CONTENT
-# SKIP: src/App.tsx:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/App_.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/App_.tsx"
 /**
@@ -10602,7 +10606,7 @@ echo "Creating src/data/config/menu.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu.json"
 {
   "main": [
-    {
+    { 
       "label": "Platform",
       "href": "/platform",
       "children": [
@@ -10667,46 +10671,9 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "data": {
       "logoText": "Olon",
       "badge": "",
-      "links": [
-        {
-          "label": "Platform",
-          "href": "/platform",
-          "children": [
-            {
-              "label": "Overview",
-              "href": "/platform/overview"
-            },
-            {
-              "label": "Architecture",
-              "href": "/platform/architecture"
-            },
-            {
-              "label": "Security",
-              "href": "/platform/security"
-            },
-            {
-              "label": "Integrations",
-              "href": "/platform/integrations"
-            },
-            {
-              "label": "Roadmap",
-              "href": "/platform/roadmap"
-            }
-          ]
-        },
-        {
-          "label": "Solutions",
-          "href": "/solutions"
-        },
-        {
-          "label": "Pricing",
-          "href": "/pricing"
-        },
-        {
-          "label": "Resources",
-          "href": "/resources"
-        }
-      ],
+      "links": {
+        "$ref": "../config/menu.json#/main"
+      },
       "ctaLabel": "Get started →",
       "ctaHref": "#contact",
       "signinHref": "#login"
@@ -10975,23 +10942,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
     "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
   },
   "sections": [
-    {
-      "id": "global-header",
-      "type": "header",
-      "data": {
-        "logoText": "Olon",
-        "badge": "",
-        "links": {
-          "$ref": "../config/menu.json#/main"
-        },
-        "ctaLabel": "Get started →",
-        "ctaHref": "#contact",
-        "signinHref": "#login"
-      },
-      "settings": {
-        "sticky": true
-      }
-    },
+   
     {
       "id": "hero-main",
       "type": "hero",
@@ -11162,8 +11113,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
         "showOauth": true
       }
     }
-  ],
-  "global-header": false
+  ]
+  
 }
 END_OF_FILE_CONTENT
 mkdir -p "src/data/pages/platform"
@@ -11539,7 +11490,7 @@ echo "Creating src/entry-ssg.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/entry-ssg.tsx"
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
-import { ConfigProvider, PageRenderer, StudioProvider } from '@olonjs/core';
+import { ConfigProvider, PageRenderer, StudioProvider, resolveRuntimeConfig } from '@olonjs/core';
 import type { JsonPagesConfig, MenuConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ComponentRegistry } from '@/lib/ComponentRegistry';
@@ -11551,9 +11502,14 @@ import themeData from '@/data/config/theme.json';
 import tenantCss from '@/index.css?inline';
 
 const siteConfig = siteData as unknown as SiteConfig;
-const menuConfig = menuData as unknown as MenuConfig;
+const menuConfig: MenuConfig = { main: [] };
 const themeConfig = themeData as unknown as ThemeConfig;
 const pages = getFilePages();
+const refDocuments = {
+  'menu.json': menuData,
+  'config/menu.json': menuData,
+  'src/data/config/menu.json': menuData,
+} satisfies NonNullable<JsonPagesConfig['refDocuments']>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -11635,6 +11591,14 @@ function resolveTenantId(): string {
 export function render(slug: string): string {
   const resolved = resolvePage(slug);
   const location = resolved.slug === 'home' ? '/' : `/${resolved.slug}`;
+  const resolvedRuntime = resolveRuntimeConfig({
+    pages,
+    siteConfig,
+    themeConfig,
+    menuConfig,
+    refDocuments,
+  });
+  const resolvedPage = resolvedRuntime.pages[resolved.slug] ?? resolved.page;
 
   return renderToString(
     <StaticRouter location={location}>
@@ -11647,7 +11611,11 @@ export function render(slug: string): string {
       >
         <StudioProvider mode="visitor">
           <ThemeProvider>
-            <PageRenderer pageConfig={resolved.page} siteConfig={siteConfig} menuConfig={menuConfig} />
+            <PageRenderer
+              pageConfig={resolvedPage}
+              siteConfig={resolvedRuntime.siteConfig}
+              menuConfig={resolvedRuntime.menuConfig}
+            />
           </ThemeProvider>
         </StudioProvider>
       </ConfigProvider>
@@ -11673,7 +11641,6 @@ export function getPageMeta(slug: string): { title: string; description: string 
 }
 
 END_OF_FILE_CONTENT
-# SKIP: src/entry-ssg.tsx:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/fonts.css..."
 cat << 'END_OF_FILE_CONTENT' > "src/fonts.css"
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -13453,7 +13420,6 @@ export default defineConfig({
                 if (!fs.existsSync(DATA_PAGES_DIR)) fs.mkdirSync(DATA_PAGES_DIR, { recursive: true });
                 if (projectState.site != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'site.json'), JSON.stringify(projectState.site, null, 2), 'utf8');
                 if (projectState.theme != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'theme.json'), JSON.stringify(projectState.theme, null, 2), 'utf8');
-                if (projectState.menu != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'menu.json'), JSON.stringify(projectState.menu, null, 2), 'utf8');
                 if (projectState.page != null) {
                   const safeSlug = (slug.replace(/[^a-zA-Z0-9-_]/g, '_') || 'page');
                   fs.writeFileSync(path.join(DATA_PAGES_DIR, `${safeSlug}.json`), JSON.stringify(projectState.page, null, 2), 'utf8');

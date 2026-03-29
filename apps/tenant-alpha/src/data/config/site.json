@@ -19,9 +19,46 @@
     "data": {
       "logoText": "Olon",
       "badge": "",
-      "links": {
-        "$ref": "../config/menu.json#/main"
-      },
+      "links": [
+        {
+          "label": "Platform",
+          "href": "/platform",
+          "children": [
+            {
+              "label": "Overview",
+              "href": "/platform/overview"
+            },
+            {
+              "label": "Architecture",
+              "href": "/platform/architecture"
+            },
+            {
+              "label": "Security",
+              "href": "/platform/security"
+            },
+            {
+              "label": "Integrations",
+              "href": "/platform/integrations"
+            },
+            {
+              "label": "Roadmap",
+              "href": "/platform/roadmap"
+            }
+          ]
+        },
+        {
+          "label": "Solutions",
+          "href": "/solutions"
+        },
+        {
+          "label": "Pricing",
+          "href": "/pricing"
+        },
+        {
+          "label": "Resources",
+          "href": "/resources"
+        }
+      ],
       "ctaLabel": "Get started →",
       "ctaHref": "#contact",
       "signinHref": "#login"
