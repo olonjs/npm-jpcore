@@ -11,9 +11,9 @@
       "type": "hero",
       "data": {
         "badge": "Open source · MIT License",
-        "title": "The Contract Layer\nfor the",
+        "title": "The Contract Layer for the",
         "titleHighlight": "Agentic Web",
-        "description": "AI agents are becoming operational actors in commerce, marketing, and support. OlonJS introduces a deterministic machine contract for websites — so agents can reliably read and operate any site, without custom glue.",
+        "description": "Agents are becoming operational actors in commerce, marketing, and support. OlonJS introduces a deterministic machine contract for websites — so agents can reliably read and operate any site, without custom glue.",
         "ctas": [
           {
             "id": "cta-1",
