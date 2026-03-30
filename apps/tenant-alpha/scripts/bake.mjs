@@ -11,10 +11,34 @@ import { build } from 'vite';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs/promises';
+import {
+  buildPageContract,
+  buildPageManifest,
+  buildPageManifestHref,
+  buildSiteManifest,
+} from '../../../packages/core/src/lib/webmcp-contracts.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const pagesDir = path.resolve(root, 'src/data/pages');
+const publicDir = path.resolve(root, 'public');
+const distDir = path.resolve(root, 'dist');
+
+async function writeJsonTargets(relativePath, value) {
+  const targets = [
+    path.resolve(publicDir, relativePath),
+    path.resolve(distDir, relativePath),
+  ];
+
+  for (const targetPath of targets) {
+    await fs.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.writeFile(targetPath, `${JSON.stringify(value, null, 2)}\n`, 'utf-8');
+  }
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
 
 function toCanonicalSlug(relativeJsonPath) {
   const normalized = relativeJsonPath.replace(/\\/g, '/');
@@ -84,7 +108,7 @@ if (targets.length === 0) {
 console.log(`[bake] Targets: ${targets.map((t) => t.slug).join(', ')}`);
 
 const ssrEntryUrl = pathToFileURL(path.resolve(root, 'dist-ssr/entry-ssg.js')).href;
-const { render, getCss, getPageMeta } = await import(ssrEntryUrl);
+const { render, getCss, getPageMeta, getWebMcpBuildState } = await import(ssrEntryUrl);
 
 const template = await fs.readFile(path.resolve(root, 'dist/index.html'), 'utf-8');
 const hasCommentMarker = template.includes('<!--app-html-->');
@@ -95,6 +119,33 @@ if (!hasCommentMarker && !hasRootDivMarker) {
 
 const inlinedCss = getCss();
 const styleTag = `<style data-bake="inline">${inlinedCss}</style>`;
+const webMcpBuildState = getWebMcpBuildState();
+
+for (const { slug } of targets) {
+  const pageConfig = webMcpBuildState.pages[slug];
+  if (!pageConfig) continue;
+  const contract = buildPageContract({
+    slug,
+    pageConfig,
+    schemas: webMcpBuildState.schemas,
+    siteConfig: webMcpBuildState.siteConfig,
+  });
+  await writeJsonTargets(`schemas/${slug}.schema.json`, contract);
+  const pageManifest = buildPageManifest({
+    slug,
+    pageConfig,
+    schemas: webMcpBuildState.schemas,
+    siteConfig: webMcpBuildState.siteConfig,
+  });
+  await writeJsonTargets(buildPageManifestHref(slug).replace(/^\//, ''), pageManifest);
+}
+
+const mcpManifest = buildSiteManifest({
+  pages: webMcpBuildState.pages,
+  schemas: webMcpBuildState.schemas,
+  siteConfig: webMcpBuildState.siteConfig,
+});
+await writeJsonTargets('mcp-manifest.json', mcpManifest);
 
 for (const { slug, out, depth } of targets) {
   console.log(`\n[bake] Rendering /${slug === 'home' ? '' : slug}...`);
@@ -108,12 +159,26 @@ for (const { slug, out, depth } of targets) {
     `<meta property="og:title" content="${safeTitle}">`,
     `<meta property="og:description" content="${safeDescription}">`,
   ].join('\n    ');
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: title,
+    description,
+    url: slug === 'home' ? '/' : `/${slug}`,
+  });
 
   const prefix = depth > 0 ? '../'.repeat(depth) : './';
   const fixedTemplate = depth > 0 ? template.replace(/(['"])\.\//g, `$1${prefix}`) : template;
+  const mcpManifestHref = `${prefix}${buildPageManifestHref(slug).replace(/^\//, '')}`;
+  const contractHref = `${prefix}schemas/${slug}.schema.json`;
+  const contractLinks = [
+    `<link rel="mcp-manifest" href="${escapeHtmlAttribute(mcpManifestHref)}">`,
+    `<link rel="olon-contract" href="${escapeHtmlAttribute(contractHref)}">`,
+    `<script type="application/ld+json">${jsonLd}</script>`,
+  ].join('\n  ');
 
   let bakedHtml = fixedTemplate
-    .replace('</head>', `  ${styleTag}\n</head>`)
+    .replace('</head>', `  ${styleTag}\n  ${contractLinks}\n</head>`)
     .replace(/<title>.*?<\/title>/, `<title>${safeTitle}</title>\n    ${metaTags}`);
 
   if (hasCommentMarker) {

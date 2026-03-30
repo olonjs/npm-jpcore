@@ -702,6 +702,10 @@ function App() {
     refDocuments,
     themeCss: { tenant: `${buildThemeFontVarsCss(themeConfig)}\n${tenantCss}` },
     addSection: addSectionConfig,
+    webmcp: {
+      enabled: true,
+      namespace: 'tenant-alpha-studio',
+    },
     persistence: {
       async saveToFile(state: ProjectState, slug: string): Promise<void> {
         // 💻 LOCAL FILESYSTEM (development path)

@@ -6,13 +6,12 @@
     "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
   },
   "sections": [
-   
     {
       "id": "hero-main",
       "type": "hero",
       "data": {
         "eyebrow": "Contract layer · v1.4 · Open Core",
-        "title": "Start building   ",
+        "title": "Start Building",
         "titleHighlight": "for the agentic web.",
         "description": "AI agents are becoming operational actors in commerce, marketing, and support. But websites are still built for humans first: HTML-heavy, CMS-fragmented, and inconsistent across properties. That makes agent integration slow, brittle, and expensive. Olon introduces a deterministic machine contract for websites OlonJS. This makes content reliably readable and operable by agents while preserving normal human UI.",
         "ctas": [
@@ -178,5 +177,4 @@
       }
     }
   ]
-  
 }

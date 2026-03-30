@@ -73,6 +73,14 @@ export interface AssetsConfig {
   onAssetUpload?: (file: File) => Promise<string>;
 }
 
+/** Optional WebMCP bridge registration in Studio mode. */
+export interface WebMcpConfig {
+  /** Enables WebMCP tool registration when Studio is active. */
+  enabled?: boolean;
+  /** Optional namespace used by testing helpers and debug output. */
+  namespace?: string;
+}
+
 /** Single entry point configuration for the JsonPages Engine. */
 export interface JsonPagesConfig {
   /** Unique identifier for the tenant (used for asset resolution) */
@@ -100,4 +108,6 @@ export interface JsonPagesConfig {
   assets?: AssetsConfig;
   /** Optional list of section types where Studio overlay should be disabled. */
   overlayDisabledSectionTypes?: string[];
+  /** Optional WebMCP bridge config for Studio-only tool registration. */
+  webmcp?: WebMcpConfig;
 }

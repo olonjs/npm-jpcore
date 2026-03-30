@@ -18,6 +18,15 @@ import { STUDIO_EVENTS } from './events';
 import type { JsonPagesConfig, SelectionPath } from './types-engine';
 import type { PageConfig, SiteConfig, Section, MenuItem, ProjectState } from './kernel';
 import { resolveHeaderMenuItems, resolveRuntimeConfig } from './config-resolver';
+import {
+  buildWebMcpToolName,
+  createWebMcpToolInputSchema,
+  ensureWebMcpRuntime,
+  parseWebMcpToolName,
+  registerWebMcpTool,
+  resolveWebMcpMutationData,
+  type WebMcpMutationArgs,
+} from './webmcp-bridge';
 
 import defaultAdminCss from '../admin/admin-skin.css?inline';
 
@@ -131,6 +140,49 @@ function resolveMenuMainFromHeaderData(
   return resolveHeaderMenuItems(headerData, fallbackMain);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function syncHeadLink(rel: string, href: string) {
+  if (typeof document === 'undefined') return;
+  const selector = `link[rel="${rel}"]`;
+  let link = document.head.querySelector(selector) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = rel;
+    document.head.appendChild(link);
+  }
+  link.href = href;
+}
+
+function syncWebMcpJsonLd(title: string, description: string, url: string) {
+  if (typeof document === 'undefined') return;
+  const scriptId = 'olonjs-webmcp-jsonld';
+  let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+  if (!script) {
+    script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = scriptId;
+    document.head.appendChild(script);
+  }
+  script.textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: title,
+    description,
+    url,
+  });
+}
+
+function buildPageManifestHref(slug: string) {
+  return `/mcp-manifests/${slug}.json`;
+}
+
+function buildPageContractHref(slug: string) {
+  return `/schemas/${slug}.schema.json`;
+}
+
 interface VisitorRouteProps {
   pageRegistry: Record<string, PageConfig>;
   siteConfig: SiteConfig;
@@ -177,6 +229,15 @@ const VisitorRoute: React.FC<VisitorRouteProps> = ({
     }
   }, [resolvedRuntime.themeConfig]);
 
+  useEffect(() => {
+    if (!pageConfig) return;
+    const title = typeof pageConfig.meta?.title === 'string' ? pageConfig.meta.title : slug;
+    const description = typeof pageConfig.meta?.description === 'string' ? pageConfig.meta.description : '';
+    syncHeadLink('mcp-manifest', buildPageManifestHref(slug));
+    syncHeadLink('olon-contract', buildPageContractHref(slug));
+    syncWebMcpJsonLd(title, description, slug === 'home' ? '/' : `/${slug}`);
+  }, [pageConfig, slug]);
+
   if (!pageConfig) return <NotFoundComponent />;
 
   return (
@@ -194,6 +255,7 @@ const VisitorRoute: React.FC<VisitorRouteProps> = ({
 
 interface StudioRouteProps {
   pageRegistry: Record<string, PageConfig>;
+  schemas: JsonPagesConfig['schemas'];
   siteConfig: SiteConfig;
   menuConfig: { main: MenuItem[] };
   themeConfig: JsonPagesConfig['themeConfig'];
@@ -202,6 +264,7 @@ interface StudioRouteProps {
   adminCss: string;
   addSectionConfig: JsonPagesConfig['addSection'];
   addableSectionTypes: string[];
+  webMcp?: JsonPagesConfig['webmcp'];
   saveToFile?: (state: ProjectState, slug: string) => Promise<void>;
   hotSave?: (state: ProjectState, slug: string) => Promise<void>;
   showLegacySave?: boolean;
@@ -210,6 +273,7 @@ interface StudioRouteProps {
 
 const StudioRoute: React.FC<StudioRouteProps> = ({
   pageRegistry,
+  schemas,
   siteConfig,
   menuConfig,
   themeConfig,
@@ -218,6 +282,7 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   adminCss,
   addSectionConfig,
   addableSectionTypes,
+  webMcp,
   saveToFile,
   hotSave,
   showLegacySave = true,
@@ -397,14 +462,67 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
           handleReorderSection(sectionId, newIndex, draftRef.current);
         }
       }
+      if (event.data.type === STUDIO_EVENTS.WEBMCP_TOOL_CALL) {
+        const requestId = typeof event.data.requestId === 'string' ? event.data.requestId : crypto.randomUUID();
+        const toolName = typeof event.data.toolName === 'string' ? event.data.toolName : '';
+        void handleWebMcpToolCall(toolName, event.data.args)
+          .then((result) => {
+            window.postMessage(
+              { type: STUDIO_EVENTS.WEBMCP_TOOL_RESULT, requestId, toolName, result, ok: true },
+              window.location.origin
+            );
+          })
+          .catch((error: unknown) => {
+            const message = error instanceof Error ? error.message : String(error);
+            window.postMessage(
+              {
+                type: STUDIO_EVENTS.WEBMCP_TOOL_RESULT,
+                requestId,
+                toolName,
+                ok: false,
+                error: message,
+              },
+              window.location.origin
+            );
+          });
+      }
     },
-    [handleReorderSection]
+    [handleReorderSection, handleWebMcpToolCall]
   );
 
   useEffect(() => {
     window.addEventListener('message', handleStudioMessage);
     return () => window.removeEventListener('message', handleStudioMessage);
   }, [handleStudioMessage]);
+
+  useEffect(() => {
+    if (!webMcp?.enabled) return;
+    ensureWebMcpRuntime();
+
+    const currentDraft = draftRef.current;
+    if (!currentDraft) return;
+
+    const sectionTypes = Array.from(
+      new Set([
+        ...(globalDraftRef.current.header ? [globalDraftRef.current.header.type] : []),
+        ...(globalDraftRef.current.footer ? [globalDraftRef.current.footer.type] : []),
+        ...currentDraft.sections.map((section) => section.type),
+      ])
+    );
+
+    const unregisterFns = sectionTypes.map((sectionType) =>
+      registerWebMcpTool({
+        name: buildWebMcpToolName(sectionType),
+        description: `Update a ${sectionType} section in OlonJS Studio and persist immediately to file.`,
+        inputSchema: createWebMcpToolInputSchema(sectionType),
+        execute: (args) => handleWebMcpToolCall(buildWebMcpToolName(sectionType), args),
+      })
+    );
+
+    return () => {
+      for (const unregister of unregisterFns) unregister();
+    };
+  }, [webMcp?.enabled, slug, draft, globalDraft, handleWebMcpToolCall]);
 
   const handleRequestScrollToSection = useCallback((sectionId: string) => {
     const layer = allLayers.find((l) => l.id === sectionId);
@@ -488,6 +606,151 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
       }, 400);
     });
   }, []);
+
+  const persistProjectState = useCallback(
+    async (nextDraft: PageConfig, nextGlobalDraft: SiteConfig) => {
+      if (!saveToFile) {
+        throw new Error('saveToFile is not configured for this tenant.');
+      }
+
+      const resolvedSaveRuntime = resolveRuntimeConfig({
+        pages: { [slug]: nextDraft },
+        siteConfig: nextGlobalDraft,
+        themeConfig,
+        menuConfig,
+        refDocuments,
+      });
+      const headerData = resolvedSaveRuntime.siteConfig.header?.data;
+      const projectState: ProjectState = {
+        page: nextDraft,
+        site: nextGlobalDraft,
+        menu: { main: resolveMenuMainFromHeaderData(headerData, menuConfig.main) },
+        theme: resolvedSaveRuntime.themeConfig,
+      };
+
+      await saveToFile(projectState, slug);
+      setHasChanges(false);
+      setSaveSuccessFeedback(true);
+      if (typeof window !== 'undefined') {
+        window.setTimeout(() => setSaveSuccessFeedback(false), 2500);
+      }
+    },
+    [saveToFile, slug, themeConfig, menuConfig, refDocuments]
+  );
+
+  const executeWebMcpMutation = useCallback(
+    async (sectionType: string, rawArgs: unknown) => {
+      if (!saveToFile) {
+        throw new Error('WebMCP requires saveToFile persistence in Studio mode.');
+      }
+
+      if (!isRecord(rawArgs) || typeof rawArgs.sectionId !== 'string') {
+        throw new Error('WebMCP mutation requires a sectionId.');
+      }
+
+      const args = rawArgs as unknown as WebMcpMutationArgs;
+      const normalizedSlug = typeof args.slug === 'string' ? normalizeSlugSegments(args.slug) : slug;
+      if (normalizedSlug !== slug) {
+        throw new Error(`WebMCP slug mismatch. Active Studio slug is "${slug}", received "${normalizedSlug}".`);
+      }
+
+      await requestInlineFlush();
+
+      const currentDraft = draftRef.current;
+      const currentGlobalDraft = globalDraftRef.current;
+      if (!currentDraft) {
+        throw new Error('Studio draft is not ready yet.');
+      }
+
+      const schema = schemas[sectionType];
+      if (!schema || typeof schema.parse !== 'function') {
+        throw new Error(`Missing schema for section type "${sectionType}".`);
+      }
+
+      const scope = args.scope === 'global' ? 'global' : 'local';
+      let nextDraft = currentDraft;
+      let nextGlobalDraft = currentGlobalDraft;
+
+      if (scope === 'global') {
+        const targetSection =
+          currentGlobalDraft.header?.id === args.sectionId
+            ? currentGlobalDraft.header
+            : currentGlobalDraft.footer?.id === args.sectionId
+              ? currentGlobalDraft.footer
+              : null;
+
+        if (!targetSection) {
+          throw new Error(`Global section "${args.sectionId}" was not found.`);
+        }
+        if (targetSection.type !== sectionType) {
+          throw new Error(`Section "${args.sectionId}" is type "${targetSection.type}", not "${sectionType}".`);
+        }
+
+        const currentData = isRecord(targetSection.data) ? targetSection.data : {};
+        const nextData = resolveWebMcpMutationData(currentData, args);
+        const parsedData = schema.parse(nextData) as Record<string, unknown>;
+        const nextSection = { ...targetSection, data: parsedData } as Section;
+        nextGlobalDraft = {
+          ...currentGlobalDraft,
+          ...(targetSection.type === 'header' ? { header: nextSection } : { footer: nextSection }),
+        };
+        globalDraftRef.current = nextGlobalDraft;
+        setGlobalDraft(nextGlobalDraft);
+      } else {
+        const targetSection = currentDraft.sections.find((section) => section.id === args.sectionId);
+        if (!targetSection) {
+          throw new Error(`Local section "${args.sectionId}" was not found in page "${slug}".`);
+        }
+        if (targetSection.type !== sectionType) {
+          throw new Error(`Section "${args.sectionId}" is type "${targetSection.type}", not "${sectionType}".`);
+        }
+
+        const currentData = isRecord(targetSection.data) ? targetSection.data : {};
+        const nextData = resolveWebMcpMutationData(currentData, args);
+        const parsedData = schema.parse(nextData) as Record<string, unknown>;
+
+        nextDraft = {
+          ...currentDraft,
+          sections: currentDraft.sections.map((section) =>
+            section.id === args.sectionId ? ({ ...section, data: parsedData } as Section) : section
+          ),
+        };
+        draftRef.current = nextDraft;
+        setDraft(nextDraft);
+      }
+
+      setSelected({ id: args.sectionId, type: sectionType, scope });
+      setExpandedItemPath(Array.isArray(args.itemPath) ? args.itemPath : null);
+      setHasChanges(true);
+
+      await persistProjectState(nextDraft, nextGlobalDraft);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              ok: true,
+              slug,
+              sectionId: args.sectionId,
+              sectionType,
+              scope,
+            }),
+          },
+        ],
+        isError: false,
+      };
+    },
+    [saveToFile, slug, requestInlineFlush, schemas, persistProjectState]
+  );
+
+  async function handleWebMcpToolCall(toolName: string, rawArgs: unknown) {
+    const sectionType = parseWebMcpToolName(toolName);
+    if (!sectionType) {
+      throw new Error(`Unknown WebMCP tool "${toolName}".`);
+    }
+    return executeWebMcpMutation(sectionType, rawArgs);
+  }
 
   const handleSaveToFile = async () => {
     if (!saveToFile) return;
@@ -576,6 +839,15 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
     setHasChanges(true);
     setSelected({ id: newSection.id, type: sectionType, scope: 'local' });
   };
+
+  useEffect(() => {
+    const currentPage = resolvedDraft ?? draft;
+    const title = typeof currentPage?.meta?.title === 'string' ? currentPage.meta.title : slug;
+    const description = typeof currentPage?.meta?.description === 'string' ? currentPage.meta.description : '';
+    syncHeadLink('mcp-manifest', buildPageManifestHref(slug));
+    syncHeadLink('olon-contract', buildPageContractHref(slug));
+    syncWebMcpJsonLd(title, description, `/admin${slug === 'home' ? '' : `/${slug}`}`);
+  }, [draft, resolvedDraft, slug]);
 
   if (!draft) return <div>Loading Studio...</div>;
 
@@ -814,6 +1086,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
               element={
                 <StudioRoute
                   pageRegistry={pageRegistry}
+                  schemas={schemas}
                   siteConfig={siteConfig}
                   menuConfig={menuConfig}
                   themeConfig={baseResolvedRuntime.themeConfig}
@@ -822,6 +1095,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   adminCss={adminCss}
                   addSectionConfig={addSectionConfig}
                   addableSectionTypes={addableSectionTypes}
+                  webMcp={config.webmcp}
                   saveToFile={persistence.saveToFile}
                   hotSave={persistence.hotSave}
                   showLegacySave={persistence.showLegacySave}
@@ -834,6 +1108,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
               element={
                 <StudioRoute
                   pageRegistry={pageRegistry}
+                  schemas={schemas}
                   siteConfig={siteConfig}
                   menuConfig={menuConfig}
                   themeConfig={baseResolvedRuntime.themeConfig}
@@ -842,6 +1117,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   adminCss={adminCss}
                   addSectionConfig={addSectionConfig}
                   addableSectionTypes={addableSectionTypes}
+                  webMcp={config.webmcp}
                   saveToFile={persistence.saveToFile}
                   hotSave={persistence.hotSave}
                   showLegacySave={persistence.showLegacySave}

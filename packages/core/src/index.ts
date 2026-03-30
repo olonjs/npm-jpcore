@@ -16,6 +16,16 @@ export { ConfigProvider, useConfig, type ConfigContextValue } from './lib/Config
 export { ThemeLoader } from './lib/ThemeLoader';
 export { DefaultNotFound } from './lib/DefaultNotFound';
 export {
+  applyValueAtSelectionPath,
+  buildWebMcpToolName,
+  createWebMcpToolInputSchema,
+  ensureWebMcpRuntime,
+  parseWebMcpToolName,
+  registerWebMcpTool,
+  resolveWebMcpMutationData,
+  type WebMcpMutationArgs,
+} from './lib/webmcp-bridge';
+export {
   resolveHeaderMenuItems,
   resolveRuntimeConfig,
   resolveSectionMenuItems,

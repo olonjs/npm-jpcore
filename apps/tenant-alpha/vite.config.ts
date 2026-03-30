@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,6 +54,20 @@ function isTenantPageJsonRequest(req, pathname) {
   const viteOrStaticPrefixes = ['/api/', '/assets/', '/src/', '/node_modules/', '/public/', '/@'];
   return !viteOrStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
+
+function normalizeManifestSlug(raw) {
+  return decodeURIComponent(raw || '')
+    .replace(/^\/+|\/+$/g, '')
+    .replace(/\\/g, '/')
+    .replace(/(\.schema)?\.json$/i, '');
+}
+
+async function loadWebMcpBuilders() {
+  const moduleUrl = pathToFileURL(
+    path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'lib', 'webmcp-contracts.mjs')
+  ).href;
+  return import(moduleUrl);
+}
 export default defineConfig({
   plugins: [
     react(),
@@ -64,6 +78,75 @@ export default defineConfig({
         server.middlewares.use((req, res, next) => {
           const pathname = (req.url || '').split('?')[0];
           const isPageJsonRequest = isTenantPageJsonRequest(req, pathname);
+
+          const handleManifestRequest = async () => {
+            const { buildPageContract, buildPageManifest, buildSiteManifest } = await loadWebMcpBuilders();
+            const ssrEntry = await server.ssrLoadModule('/src/entry-ssg.tsx');
+            const buildState = ssrEntry.getWebMcpBuildState();
+
+            if (req.method === 'GET' && pathname === '/mcp-manifest.json') {
+              sendJson(res, 200, buildSiteManifest({
+                pages: buildState.pages,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
+              return true;
+            }
+
+            const pageManifestMatch = pathname.match(/^\/mcp-manifests\/(.+)\.json$/i);
+            if (pageManifestMatch && req.method === 'GET') {
+              const slug = normalizeManifestSlug(pageManifestMatch[1]);
+              const pageConfig = buildState.pages[slug];
+              if (!pageConfig) {
+                sendJson(res, 404, { error: 'Page manifest not found' });
+                return true;
+              }
+
+              sendJson(res, 200, buildPageManifest({
+                slug,
+                pageConfig,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
+              return true;
+            }
+
+            const schemaMatch = pathname.match(/^\/schemas\/(.+)\.schema\.json$/i);
+            if (!schemaMatch || req.method !== 'GET') return false;
+
+            const slug = normalizeManifestSlug(schemaMatch[1]);
+            const pageConfig = buildState.pages[slug];
+            if (!pageConfig) {
+              sendJson(res, 404, { error: 'Schema contract not found' });
+              return true;
+            }
+
+            sendJson(res, 200, buildPageContract({
+              slug,
+              pageConfig,
+              schemas: buildState.schemas,
+              siteConfig: buildState.siteConfig,
+            }));
+            return true;
+          };
+
+          if (
+            req.method === 'GET' &&
+            (
+              pathname === '/mcp-manifest.json'
+              || /^\/mcp-manifests\/.+\.json$/i.test(pathname)
+              || /^\/schemas\/.+\.schema\.json$/i.test(pathname)
+            )
+          ) {
+            void handleManifestRequest()
+              .then((handled) => {
+                if (!handled) next();
+              })
+              .catch((error) => {
+                sendJson(res, 500, { error: error?.message || 'Manifest generation failed' });
+              });
+            return;
+          }
 
           if (isPageJsonRequest) {
             const normalizedPath = decodeURIComponent(pathname).replace(/\\/g, '/');
@@ -130,7 +213,19 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@olonjs/core': path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'index.ts'),
       'next/link': path.resolve(__dirname, './src/shims/next-link.tsx'),
+    },
+  },
+  server: {
+    fs: {
+      allow: [
+        path.resolve(__dirname, '..', '..'),
+      ],
+    },
+    watch: {
+      usePolling: true,
+      interval: 300,
     },
   },
 });

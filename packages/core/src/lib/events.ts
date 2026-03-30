@@ -23,5 +23,9 @@ export const STUDIO_EVENTS = {
 
   // Child -> Parent (Lifecycle)
   STAGE_READY: 'jsonpages:stage-ready',
+
+  // WebMCP bridge (same-window or extension mediated)
+  WEBMCP_TOOL_CALL: 'olonjs:webmcp:tool-call',
+  WEBMCP_TOOL_RESULT: 'olonjs:webmcp:tool-result',
 } as const;
 

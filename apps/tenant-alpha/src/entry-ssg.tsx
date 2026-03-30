@@ -149,3 +149,15 @@ export function getPageMeta(slug: string): { title: string; description: string 
   const description = typeof rawMeta.description === 'string' ? rawMeta.description : '';
   return { title, description };
 }
+
+export function getWebMcpBuildState(): {
+  pages: Record<string, PageConfig>;
+  schemas: JsonPagesConfig['schemas'];
+  siteConfig: SiteConfig;
+} {
+  return {
+    pages,
+    schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+    siteConfig,
+  };
+}

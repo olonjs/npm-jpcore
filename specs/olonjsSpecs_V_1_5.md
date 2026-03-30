@@ -53,7 +53,7 @@ Every site must reside in an isolated directory. Global Governance is physically
 *   **`/config/theme.json`** — Theme tokens for themed tenants. See Appendix A.
 *   **`/pages/[slug].json`** — Local Body Content per page. See Appendix A (PageConfig).
 
-**Application path convention:** The runtime app typically imports these via an alias (e.g. **`@/data/config/`** and **`@/data/pages/`**). The physical silo may be `src/data/config/` and `src/data/pages/` so that `site.json`, `menu.json`, `theme.json` live under `src/data/config/`, and page JSONs under `src/data/pages/`. The CLI or projection script may use `/config/` and `/pages/` at repo root; the **contract** is that the app receives **siteConfig**, **menuConfig**, **themeConfig**, and **pages** as defined in JEB (§10) and Appendix A.
+**Application path convention:** The runtime app typically imports these via an alias (e.g. **`@/data/config/`** and **`@/data/pages/`**). The physical silo may be `src/data/config/` and `src/data/pages/` so that `site.json`, `menu.json`, `theme.json` live under `src/data/config/`, and page JSONs under `src/data/pages/`. The CLI or projection script may use `/config/` and `/pages/` at repo root; the **contract** is that the app receives **siteConfig**, **menuConfig**, **themeConfig**, **pages**, and optional **refDocuments** as defined in JEB (§10) and Appendix A. In v1.5 runtime behavior, menu data may be resolved from the JSON graph via `$ref` (e.g. `menu.json#/main`, `../config/menu.json#/main`) and is not limited to a single `menuConfig.main` source.
 
 **Rule:** For a tenant that claims v1.5 design-token compliance, `theme.json` is not optional in practice. If a tenant omits a physical `theme.json`, it must still provide an equivalent `ThemeConfig` object before bootstrap; otherwise the tenant is outside full v1.5 theme compliance.
 
@@ -563,14 +563,15 @@ The Tenant passes a single **config** object to **JsonPagesEngine**. Required fi
 | **pages** | `Record<string, PageConfig>` | Slug → page config. See Appendix A. |
 | **siteConfig** | SiteConfig | Global site (identity, header/footer blocks). See Appendix A. |
 | **themeConfig** | ThemeConfig | Theme tokens. See Appendix A. |
-| **menuConfig** | MenuConfig | Navigation tree (SSOT for header menu). See Appendix A. |
+| **menuConfig** | MenuConfig | Navigation fallback payload and resolver context. Header navigation may also come from dereferenced `$ref` paths. See Appendix A. |
+| **refDocuments** | `Record<string, unknown>` (optional) | Extra JSON documents available to the recursive `$ref` resolver (for example `menu.json`, `config/menu.json`, `src/data/config/menu.json`). |
 | **themeCss** | `{ tenant: string }` | At least **tenant**: string (inline CSS or URL) for Stage iframe injection. |
 | **addSection** | AddSectionConfig | Add-section config (§9). |
 
 Core may define optional fields. The Tenant must not omit required fields.
 
 ### 10.2 JsonPagesEngine
-Root component: **`<JsonPagesEngine config={config} />`**. Responsibilities: route → page, SectionRenderer per section; in Studio mode Sovereign Shell (Inspector, Control Bar, postMessage); section wrappers and overlay per IDAC and JAP. Tenant does not implement the Shell.
+Root component: **`<JsonPagesEngine config={config} />`**. Responsibilities: route → page, SectionRenderer per section; in Studio mode Sovereign Shell (Inspector, Control Bar, postMessage); section wrappers and overlay per IDAC and JAP. In v1.5, the engine uses a recursive `$ref` resolver (`config-resolver`) across runtime surfaces (Engine, renderer path, and preview path), so references such as `menu.json#/main` and `../config/menu.json#/main` can be resolved from local runtime docs and optional tenant `refDocuments`. Tenant does not implement the Shell.
 
 ### 10.3 Studio Selection Event Contract (v1.3, breaking)
 In strict v1.3 Studio, section selection payload for nested targets is path-based:
@@ -587,7 +588,7 @@ Removed from strict protocol:
 *   `itemField`
 *   `itemId`
 
-**Perché servono (JEB):** Un unico punto di bootstrap (config + Engine) evita che il Tenant replichi logica di routing, Shell e overlay. I campi obbligatori in JsonPagesConfig (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss, addSection) sono il minimo per far funzionare rendering, Studio e Form Factory; omissioni causano errori a runtime. In v1.3, il payload `itemPath` sincronizza in modo non ambiguo Stage e Inspector su nested arrays.
+**Perché servono (JEB):** Un unico punto di bootstrap (config + Engine) evita che il Tenant replichi logica di routing, Shell e overlay. I campi obbligatori in JsonPagesConfig (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss, addSection) sono il minimo per far funzionare rendering, Studio e Form Factory; `refDocuments` estende il runtime con documenti aggiuntivi per la dereferenziazione ricorsiva. In v1.3, il payload `itemPath` sincronizza in modo non ambiguo Stage e Inspector su nested arrays.
 
 ---
 
@@ -800,7 +801,7 @@ export interface SiteConfig {
 **HeaderData**, **FooterData**, **HeaderSettings**, **FooterSettings** are the types exported from the header and footer capsules.
 
 ### A.2.5 MenuConfig
-Minimum shape for **menu.json** (and for **menuConfig** in JsonPagesConfig). Structure is tenant-defined; Core expects the header to receive **MenuItem[]**. Common pattern: an object with a key (e.g. **main**) whose value is **MenuItem[]**.
+Minimum shape for **menu.json** (and for **menuConfig** in JsonPagesConfig). Structure is tenant-defined; Core expects the header to receive **MenuItem[]** after runtime resolution. Common pattern: an object with a key (e.g. **main**) whose value is **MenuItem[]**.
 
 ```typescript
 export interface MenuConfig {
@@ -809,7 +810,7 @@ export interface MenuConfig {
 }
 ```
 
-Or simply **`MenuItem[]`** if the app uses a single flat list. The Tenant must ensure that the value passed to the header component as **menu** conforms to **MenuItem[]** (e.g. `menuConfig.main` or `menuConfig` if it is the array).
+Or simply **`MenuItem[]`** if the app uses a single flat list. In v1.5 runtime behavior, header menu is resolved through recursive `$ref` resolution first (e.g. `menu.json#/main`, `../config/menu.json#/main`) using local documents and optional `refDocuments`, then falls back to `menuConfig.main` / `menuConfig` when needed. The final value passed to header must conform to **MenuItem[]**.
 
 ### A.2.6 ThemeConfig
 Minimum shape for **theme.json** (and for **themeConfig** in JsonPagesConfig). `theme.json` is the **source of truth** for the entire visual contract of the tenant. The schema (`design-system.schema.json`) is the machine-readable formalisation of this contract — if the TypeScript interfaces and the JSON Schema diverge, the JSON Schema wins.
@@ -984,7 +985,7 @@ export interface ThemeConfig {
 | Registry | **`src/lib/ComponentRegistry.tsx`** | ComponentRegistry object. |
 | Add-section config | **`src/lib/addSectionConfig.ts`** | addSectionConfig (AddSectionConfig). |
 | Tenant types & augmentation | **`src/types.ts`** | SectionComponentPropsMap, PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@olonjs/core'** for SectionDataRegistry and SectionSettingsRegistry; re-export from `@olonjs/core`. |
-| Bootstrap | **`src/App.tsx`** | Imports config (site, theme, menu, pages), registry, schemas, addSection, themeCss; builds JsonPagesConfig; renders **<JsonPagesEngine config={config} />**. |
+| Bootstrap | **`src/App.tsx`** | Imports config (site, theme, menu, pages), optional `refDocuments`, registry, schemas, addSection, themeCss; builds JsonPagesConfig; renders **<JsonPagesEngine config={config} />**. |
 
 The app entry (e.g. **main.tsx**) renders **App**. No other bootstrap contract is specified; the Tenant may use Vite aliases (e.g. **@/**) for the paths above.
 
@@ -1002,11 +1003,11 @@ When generating or auditing a tenant, ensure the following in order:
 4. **ComponentRegistry** — Import every View; build object **{ [K in SectionType]: ViewComponent }**; type as **{ [K in SectionType]: React.FC<SectionComponentPropsMap[K]> }**.
 5. **schemas.ts** — Import base schemas and each capsule’s data schema; export SECTION_SCHEMAS as **{ [K in SectionType]: SchemaK }**; export SectionType as **keyof typeof SECTION_SCHEMAS** if not using Core’s SectionType.
 6. **addSectionConfig** — addableSectionTypes, sectionTypeLabels, getDefaultSectionData; export as AddSectionConfig.
-7. **App.tsx** — Import site, theme, menu, pages from data paths; build config (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss: { tenant }, addSection); render JsonPagesEngine.
+7. **App.tsx** — Import site, theme, menu, pages from data paths; expose optional `refDocuments` for recursive `$ref` resolution; build config (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, refDocuments, themeCss: { tenant }, addSection); render JsonPagesEngine.
 8. **Data files** — Create or update site.json, menu.json, theme.json, and one or more **<slug>.json** under the paths in A.4. Ensure JSON shapes match SiteConfig, MenuConfig, ThemeConfig, PageConfig.
 9. **Runtime theme publication** — Publish the theme contract as runtime CSS custom properties before themed sections render.
 10. **Tenant CSS** — Include TOCC (§7) selectors in global CSS so the Stage overlay is visible, and bridge semantic theme variables where needed.
-11. **Reserved types** — Header and footer capsules receive props per SectionComponentPropsMap; menu is populated from menuConfig (e.g. menuConfig.main) when building the config or inside Core when rendering the header.
+11. **Reserved types** — Header and footer capsules receive props per SectionComponentPropsMap; menu is resolved from the JSON graph via `$ref` (with `refDocuments` support) and falls back to `menuConfig` values when direct resolution is unavailable.
 
 **Perché servono (A.5):** La checklist in ordine evita di dimenticare passi (es. augmentation prima del registry, TOCC dopo le View) e rende la spec sufficiente per generare o verificare un tenant senza codebase di riferimento.
 
