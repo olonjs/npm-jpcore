@@ -1,0 +1,117 @@
+{
+  "version": "1.0.0",
+  "kind": "olonjs-page-mcp-manifest",
+  "generatedAt": "2026-03-30T13:10:19.456Z",
+  "slug": "home",
+  "title": "OlonJS — The Contract Layer for the Agentic Web",
+  "description": "A deterministic machine contract for websites: typed, schema-driven content endpoints that make any site reliably readable and operable by AI agents.",
+  "contractHref": "/schemas/home.schema.json",
+  "transport": {
+    "kind": "window-message",
+    "requestType": "olonjs:webmcp:tool-call",
+    "resultType": "olonjs:webmcp:tool-result",
+    "target": "window"
+  },
+  "sectionTypes": [
+    "header",
+    "footer",
+    "hero",
+    "problem-statement",
+    "feature-grid",
+    "git-section",
+    "devex",
+    "cta-banner"
+  ],
+  "sectionInstances": [
+    {
+      "id": "global-header",
+      "type": "header",
+      "scope": "global",
+      "label": "header"
+    },
+    {
+      "id": "global-footer",
+      "type": "footer",
+      "scope": "global",
+      "label": "footer"
+    },
+    {
+      "id": "hero-main",
+      "type": "hero",
+      "scope": "local",
+      "label": "The Contract Layer for the"
+    },
+    {
+      "id": "problem-section",
+      "type": "problem-statement",
+      "scope": "local",
+      "label": "The challenge"
+    },
+    {
+      "id": "architecture-section",
+      "type": "feature-grid",
+      "scope": "local",
+      "label": "Built for enterprise scale"
+    },
+    {
+      "id": "why-now",
+      "type": "git-section",
+      "scope": "local",
+      "label": "Why this matters"
+    },
+    {
+      "id": "dx-section",
+      "type": "devex",
+      "scope": "local",
+      "label": "AI-native advantage,\nfrom day one"
+    },
+    {
+      "id": "cta-final",
+      "type": "cta-banner",
+      "scope": "local",
+      "label": "Ready to give your site\na machine contract?"
+    }
+  ],
+  "tools": [
+    {
+      "name": "update-header",
+      "sectionType": "header",
+      "description": "Update a header section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-footer",
+      "sectionType": "footer",
+      "description": "Update a footer section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-hero",
+      "sectionType": "hero",
+      "description": "Update a hero section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-problem-statement",
+      "sectionType": "problem-statement",
+      "description": "Update a problem-statement section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-feature-grid",
+      "sectionType": "feature-grid",
+      "description": "Update a feature-grid section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-git-section",
+      "sectionType": "git-section",
+      "description": "Update a git-section section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-devex",
+      "sectionType": "devex",
+      "description": "Update a devex section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-cta-banner",
+      "sectionType": "cta-banner",
+      "description": "Update a cta-banner section in OlonJS Studio and persist immediately to file."
+    }
+  ]
+}
