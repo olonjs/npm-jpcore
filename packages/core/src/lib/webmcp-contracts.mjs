@@ -307,6 +307,16 @@ export function buildPageManifest({ slug, pageConfig, schemas, siteConfig }) {
       resultType: WEBMCP_TOOL_RESULT_TYPE,
       target: 'window',
     },
+    capabilities: {
+      resources: [
+        {
+          uri: `olon://pages/${slug}`,
+          name: `${contract.title} Data`,
+          mimeType: 'application/json',
+          description: `Structured content for the ${slug} page.`,
+        },
+      ],
+    },
     sectionTypes: contract.sectionTypes,
     sectionInstances: contract.sectionInstances,
     tools: contract.tools.map(({ name, sectionType, description }) => ({

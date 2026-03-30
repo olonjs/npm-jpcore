@@ -1632,6 +1632,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
   "scripts": {
     "dev": "vite",
     "dev:clean": "vite --force",
+    "verify:webmcp": "node scripts/webmcp-feature-check.mjs",
     "prebuild": "node scripts/sync-pages-to-public.mjs",
     "build": "tsc && vite build",
     "dist": "bash ./src2Code.sh --template alpha src .cursor vercel.json index.html tsconfig.json tsconfig.node.json vite.config.ts scripts specs package.json",
@@ -1645,7 +1646,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.85",
+    "@olonjs/core": "^1.0.86",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -1959,10 +1960,34 @@ import { build } from 'vite';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs/promises';
+import {
+  buildPageContract,
+  buildPageManifest,
+  buildPageManifestHref,
+  buildSiteManifest,
+} from '../../../packages/core/src/lib/webmcp-contracts.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 const pagesDir = path.resolve(root, 'src/data/pages');
+const publicDir = path.resolve(root, 'public');
+const distDir = path.resolve(root, 'dist');
+
+async function writeJsonTargets(relativePath, value) {
+  const targets = [
+    path.resolve(publicDir, relativePath),
+    path.resolve(distDir, relativePath),
+  ];
+
+  for (const targetPath of targets) {
+    await fs.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.writeFile(targetPath, `${JSON.stringify(value, null, 2)}\n`, 'utf-8');
+  }
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
 
 function toCanonicalSlug(relativeJsonPath) {
   const normalized = relativeJsonPath.replace(/\\/g, '/');
@@ -2032,7 +2057,7 @@ if (targets.length === 0) {
 console.log(`[bake] Targets: ${targets.map((t) => t.slug).join(', ')}`);
 
 const ssrEntryUrl = pathToFileURL(path.resolve(root, 'dist-ssr/entry-ssg.js')).href;
-const { render, getCss, getPageMeta } = await import(ssrEntryUrl);
+const { render, getCss, getPageMeta, getWebMcpBuildState } = await import(ssrEntryUrl);
 
 const template = await fs.readFile(path.resolve(root, 'dist/index.html'), 'utf-8');
 const hasCommentMarker = template.includes('<!--app-html-->');
@@ -2043,6 +2068,33 @@ if (!hasCommentMarker && !hasRootDivMarker) {
 
 const inlinedCss = getCss();
 const styleTag = `<style data-bake="inline">${inlinedCss}</style>`;
+const webMcpBuildState = getWebMcpBuildState();
+
+for (const { slug } of targets) {
+  const pageConfig = webMcpBuildState.pages[slug];
+  if (!pageConfig) continue;
+  const contract = buildPageContract({
+    slug,
+    pageConfig,
+    schemas: webMcpBuildState.schemas,
+    siteConfig: webMcpBuildState.siteConfig,
+  });
+  await writeJsonTargets(`schemas/${slug}.schema.json`, contract);
+  const pageManifest = buildPageManifest({
+    slug,
+    pageConfig,
+    schemas: webMcpBuildState.schemas,
+    siteConfig: webMcpBuildState.siteConfig,
+  });
+  await writeJsonTargets(buildPageManifestHref(slug).replace(/^\//, ''), pageManifest);
+}
+
+const mcpManifest = buildSiteManifest({
+  pages: webMcpBuildState.pages,
+  schemas: webMcpBuildState.schemas,
+  siteConfig: webMcpBuildState.siteConfig,
+});
+await writeJsonTargets('mcp-manifest.json', mcpManifest);
 
 for (const { slug, out, depth } of targets) {
   console.log(`\n[bake] Rendering /${slug === 'home' ? '' : slug}...`);
@@ -2056,12 +2108,26 @@ for (const { slug, out, depth } of targets) {
     `<meta property="og:title" content="${safeTitle}">`,
     `<meta property="og:description" content="${safeDescription}">`,
   ].join('\n    ');
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: title,
+    description,
+    url: slug === 'home' ? '/' : `/${slug}`,
+  });
 
   const prefix = depth > 0 ? '../'.repeat(depth) : './';
   const fixedTemplate = depth > 0 ? template.replace(/(['"])\.\//g, `$1${prefix}`) : template;
+  const mcpManifestHref = `${prefix}${buildPageManifestHref(slug).replace(/^\//, '')}`;
+  const contractHref = `${prefix}schemas/${slug}.schema.json`;
+  const contractLinks = [
+    `<link rel="mcp-manifest" href="${escapeHtmlAttribute(mcpManifestHref)}">`,
+    `<link rel="olon-contract" href="${escapeHtmlAttribute(contractHref)}">`,
+    `<script type="application/ld+json">${jsonLd}</script>`,
+  ].join('\n  ');
 
   let bakedHtml = fixedTemplate
-    .replace('</head>', `  ${styleTag}\n</head>`)
+    .replace('</head>', `  ${styleTag}\n  ${contractLinks}\n</head>`)
     .replace(/<title>.*?<\/title>/, `<title>${safeTitle}</title>\n    ${metaTags}`);
 
   if (hasCommentMarker) {
@@ -2101,6 +2167,308 @@ fs.mkdirSync(targetDir, { recursive: true });
 fs.cpSync(sourceDir, targetDir, { recursive: true });
 
 console.log('[sync-pages-to-public] Synced pages to public/pages');
+
+END_OF_FILE_CONTENT
+echo "Creating scripts/webmcp-feature-check.mjs..."
+cat << 'END_OF_FILE_CONTENT' > "scripts/webmcp-feature-check.mjs"
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, '..');
+const baseUrl = process.env.WEBMCP_BASE_URL ?? 'http://127.0.0.1:4173';
+
+function pageFilePathFromSlug(slug) {
+  return path.resolve(rootDir, 'src', 'data', 'pages', `${slug}.json`);
+}
+
+function adminUrlFromSlug(slug) {
+  return `${baseUrl}/admin${slug === 'home' ? '' : `/${slug}`}`;
+}
+
+function isStringSchema(schema) {
+  if (!schema || typeof schema !== 'object') return false;
+  if (schema.type === 'string') return true;
+  if (Array.isArray(schema.anyOf)) {
+    return schema.anyOf.some((entry) => entry && typeof entry === 'object' && entry.type === 'string');
+  }
+  return false;
+}
+
+function findTopLevelStringField(sectionSchema) {
+  const properties = sectionSchema?.properties;
+  if (!properties || typeof properties !== 'object') return null;
+  const preferred = ['title', 'sectionTitle', 'label', 'headline', 'name'];
+  for (const key of preferred) {
+    if (isStringSchema(properties[key])) return key;
+  }
+  for (const [key, value] of Object.entries(properties)) {
+    if (isStringSchema(value)) return key;
+  }
+  return null;
+}
+
+async function loadPlaywright() {
+  const require = createRequire(import.meta.url);
+  try {
+    return require('playwright');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Playwright is required for WebMCP verification. Install it before running this script. Original error: ${message}`
+    );
+  }
+}
+
+async function readPageJson(slug) {
+  const pageFilePath = pageFilePathFromSlug(slug);
+  const raw = await fs.readFile(pageFilePath, 'utf8');
+  return { raw, json: JSON.parse(raw), pageFilePath };
+}
+
+async function waitFor(predicate, timeoutMs, label) {
+  const startedAt = Date.now();
+  for (;;) {
+    const result = await predicate();
+    if (result) return result;
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error(`Timed out while waiting for ${label}.`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+}
+
+async function waitForFileFieldValue(slug, sectionId, fieldKey, expectedValue) {
+  await waitFor(async () => {
+    const { json } = await readPageJson(slug);
+    const section = Array.isArray(json.sections)
+      ? json.sections.find((item) => item?.id === sectionId)
+      : null;
+    return section?.data?.[fieldKey] === expectedValue;
+  }, 8_000, `file field "${fieldKey}" = "${expectedValue}"`);
+}
+
+async function ensureResponseOk(response, label) {
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`${label} failed with ${response.status}: ${text}`);
+  }
+  return response;
+}
+
+async function fetchJson(relativePath, label) {
+  const response = await ensureResponseOk(await fetch(`${baseUrl}${relativePath}`), label);
+  return response.json();
+}
+
+async function selectTarget() {
+  const siteIndex = await fetchJson('/mcp-manifest.json', 'Manifest index request');
+  const requestedSlug = typeof process.env.WEBMCP_TARGET_SLUG === 'string' && process.env.WEBMCP_TARGET_SLUG.trim()
+    ? process.env.WEBMCP_TARGET_SLUG.trim()
+    : null;
+
+  const candidatePages = requestedSlug
+    ? (siteIndex.pages ?? []).filter((page) => page?.slug === requestedSlug)
+    : (siteIndex.pages ?? []);
+
+  for (const pageEntry of candidatePages) {
+    if (!pageEntry?.slug || !pageEntry?.manifestHref || !pageEntry?.contractHref) continue;
+    const pageManifest = await fetchJson(pageEntry.manifestHref, `Page manifest request for ${pageEntry.slug}`);
+    const pageContract = await fetchJson(pageEntry.contractHref, `Page contract request for ${pageEntry.slug}`);
+    const localInstances = Array.isArray(pageContract.sectionInstances)
+      ? pageContract.sectionInstances.filter((section) => section?.scope === 'local')
+      : [];
+    const tools = Array.isArray(pageManifest.tools) ? pageManifest.tools : [];
+
+    for (const tool of tools) {
+      const sectionType = tool?.sectionType;
+      if (typeof tool?.name !== 'string' || typeof sectionType !== 'string') continue;
+      const targetInstance = localInstances.find((section) => section?.type === sectionType);
+      if (!targetInstance?.id) continue;
+      const targetFieldKey = findTopLevelStringField(pageContract.sectionSchemas?.[sectionType]);
+      if (!targetFieldKey) continue;
+      const pageState = await readPageJson(pageEntry.slug);
+      const section = Array.isArray(pageState.json.sections)
+        ? pageState.json.sections.find((item) => item?.id === targetInstance.id)
+        : null;
+      const originalValue = section?.data?.[targetFieldKey];
+      if (typeof originalValue !== 'string') continue;
+
+      return {
+        slug: pageEntry.slug,
+        manifestHref: pageEntry.manifestHref,
+        contractHref: pageEntry.contractHref,
+        toolName: tool.name,
+        sectionId: targetInstance.id,
+        fieldKey: targetFieldKey,
+        originalValue,
+        originalState: pageState,
+      };
+    }
+  }
+
+  throw new Error(
+    requestedSlug
+      ? `No valid WebMCP verification target found for page "${requestedSlug}".`
+      : 'No valid WebMCP verification target found in manifest index.'
+  );
+}
+
+async function main() {
+  const { chromium } = await loadPlaywright();
+  const target = await selectTarget();
+  const nextValue = `${target.originalValue} WebMCP ${Date.now()}`;
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const consoleEvents = [];
+  let mutationApplied = false;
+
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') {
+      consoleEvents.push(`[console:${message.type()}] ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) => {
+    consoleEvents.push(`[pageerror] ${error.message}`);
+  });
+
+  const restoreOriginal = async () => {
+    try {
+      await page.evaluate(
+        async ({ toolName, slug, sectionId, fieldKey, value }) => {
+          const runtime = navigator.modelContextTesting;
+          if (!runtime?.executeTool) return;
+          await runtime.executeTool(
+            toolName,
+            JSON.stringify({
+              slug,
+              sectionId,
+              fieldKey,
+              value,
+            })
+          );
+        },
+        {
+          toolName: target.toolName,
+          slug: target.slug,
+          sectionId: target.sectionId,
+          fieldKey: target.fieldKey,
+          value: target.originalValue,
+        }
+      );
+      await waitForFileFieldValue(target.slug, target.sectionId, target.fieldKey, target.originalValue);
+    } catch {
+      await fs.writeFile(target.originalState.pageFilePath, target.originalState.raw, 'utf8');
+    }
+  };
+
+  try {
+    const pageManifest = await fetchJson(target.manifestHref, `Manifest request for ${target.slug}`);
+    if (!Array.isArray(pageManifest.tools) || !pageManifest.tools.some((tool) => tool?.name === target.toolName)) {
+      throw new Error(`Manifest does not expose ${target.toolName}.`);
+    }
+
+    const pageContract = await fetchJson(target.contractHref, `Contract request for ${target.slug}`);
+    if (!Array.isArray(pageContract.tools) || !pageContract.tools.some((tool) => tool?.name === target.toolName)) {
+      throw new Error(`Page contract does not expose ${target.toolName}.`);
+    }
+
+    await page.goto(adminUrlFromSlug(target.slug), { waitUntil: 'networkidle' });
+
+    try {
+      await page.waitForFunction(
+        ({ manifestHref, contractHref }) => {
+          const manifestLink = document.head.querySelector('link[rel="mcp-manifest"]');
+          const contractLink = document.head.querySelector('link[rel="olon-contract"]');
+          return manifestLink?.getAttribute('href') === manifestHref
+            && contractLink?.getAttribute('href') === contractHref;
+        },
+        { manifestHref: target.manifestHref, contractHref: target.contractHref },
+        { timeout: 10_000 }
+      );
+    } catch (error) {
+      const diagnostics = await page.evaluate(() => ({
+        head: document.head.innerHTML,
+        bodyText: document.body.innerText,
+      }));
+      throw new Error(
+        [
+          error instanceof Error ? error.message : String(error),
+          `head=${diagnostics.head}`,
+          `body=${diagnostics.bodyText}`,
+          ...consoleEvents,
+        ].join('\n')
+      );
+    }
+
+    const toolNames = await page.evaluate(() => {
+      const runtime = navigator.modelContextTesting;
+      return runtime?.listTools?.().map((tool) => tool.name) ?? [];
+    });
+    if (!toolNames.includes(target.toolName)) {
+      throw new Error(`Runtime did not register ${target.toolName}. Found: ${toolNames.join(', ')}`);
+    }
+
+    const rawResult = await page.evaluate(
+      async ({ toolName, slug, sectionId, fieldKey, value }) => {
+        const runtime = navigator.modelContextTesting;
+        if (!runtime?.executeTool) {
+          throw new Error('navigator.modelContextTesting.executeTool is unavailable.');
+        }
+        return runtime.executeTool(
+          toolName,
+          JSON.stringify({
+            slug,
+            sectionId,
+            fieldKey,
+            value,
+          })
+        );
+      },
+      {
+        toolName: target.toolName,
+        slug: target.slug,
+        sectionId: target.sectionId,
+        fieldKey: target.fieldKey,
+        value: nextValue,
+      }
+    );
+
+    const parsedResult = JSON.parse(rawResult);
+    if (parsedResult?.isError) {
+      throw new Error(`WebMCP tool returned an error: ${rawResult}`);
+    }
+
+    mutationApplied = true;
+    await waitForFileFieldValue(target.slug, target.sectionId, target.fieldKey, nextValue);
+    await page.frameLocator('iframe').getByText(nextValue, { exact: true }).waitFor({ state: 'attached' });
+
+    console.log(
+      JSON.stringify({
+        ok: true,
+        slug: target.slug,
+        manifestHref: target.manifestHref,
+        contractHref: target.contractHref,
+        toolName: target.toolName,
+        sectionId: target.sectionId,
+        fieldKey: target.fieldKey,
+        toolNames,
+      })
+    );
+  } finally {
+    if (mutationApplied) {
+      await restoreOriginal();
+    }
+    await browser.close();
+  }
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  process.exit(1);
+});
 
 END_OF_FILE_CONTENT
 mkdir -p "specs"
@@ -2422,12 +2790,12 @@ Removed from strict protocol:
 The Admin interface is a **Sovereign Shell** from `@olonjs/core`.
 1.  **The Stage (Canvas):** Isolated Iframe; postMessage for data updates and selection mirroring. Section markup follows **IDAC** (§6); overlay styling follows **TOCC** (§7).
 2.  **The Inspector (Sidebar):** Consumes Tenant Zod schemas to generate editors; binding via `data-jp-field` and `data-jp-item-*`.
-3.  **The Control Bar:** Save, Export, Add Section.
+3.  **The Studio Actions:** Save to file, Hot Save, Add Section.
 
 ## 2. State Orchestration & Persistence
 *   **Working Draft:** Reactive local state for unsaved changes.
 *   **Sync Law:** Inspector changes → Working Draft → Stage via `STUDIO_EVENTS.UPDATE_DRAFTS`.
-*   **Bake Protocol:** "Bake HTML" requests snapshot from Iframe, injects `ProjectState` as JSON, triggers download.
+*   **Persistence Protocol:** Studio invokes tenant-provided `saveToFile` and `hotSave` callbacks for editorial persistence.
 
 ## 3. Context Switching (Global vs. Local)
 *   **Header/Footer** selection → Global Mode, `site.json`.
@@ -2443,14 +2811,14 @@ The Admin interface is a **Sovereign Shell** from `@olonjs/core`.
 *   **Sovereign Overlay:** Selection ring and type labels injected per **IDAC** (§6); Tenant styles them per **TOCC** (§7).
 
 ## 6. "Green Build" Validation
-Studio enforces `tsc && vite build`. No export with TypeScript errors.
+Studio enforces `tsc && vite build`. No Studio or SSG build should proceed with TypeScript errors.
 
 ## 7. Path-Deterministic Selection & Sidebar Expansion (v1.3, breaking)
 *   Section/item focus synchronization uses `itemPath` (root → leaf), not flat `itemField/itemId`.
 *   Sidebar expansion state for nested arrays must be derived from all path segments.
 *   Flat-only matching may open/close wrong branches and is non-compliant in strict mode.
 
-**Perché servono (JAP):** Stage in iframe + Inspector + Control Bar separano il contesto di editing dal sito; postMessage e Working Draft permettono modifiche senza toccare subito i file. Bake ed Export richiedono uno stato coerente. Global vs Page mode evita confusione su dove si sta editando (site.json vs [slug].json). Add/Reorder/Delete sono gestiti in un solo modo (Working Draft + ASC). Green Build garantisce che ciò che si esporta compili. In v1.3, il path completo elimina ambiguità nella sincronizzazione Stage↔Sidebar su strutture annidate.
+**Perché servono (JAP):** Stage in iframe + Inspector + Studio actions separano il contesto di editing dal sito; postMessage e Working Draft permettono modifiche senza toccare subito i file. Save to file e Hot Save richiedono uno stato coerente. Global vs Page mode evita confusione su dove si sta editando (site.json vs [slug].json). Add/Reorder/Delete sono gestiti in un solo modo (Working Draft + ASC). Green Build garantisce che Studio e SSG compilino correttamente. In v1.3, il path completo elimina ambiguità nella sincronizzazione Stage↔Sidebar su strutture annidate.
 
 ---
 
@@ -3419,9 +3787,13 @@ function App() {
     refDocuments,
     themeCss: { tenant: `${buildThemeFontVarsCss(themeConfig)}\n${tenantCss}` },
     addSection: addSectionConfig,
+    webmcp: {
+      enabled: true,
+      namespace: typeof window !== 'undefined' ? window.location.href : '',
+    },
     persistence: {
       async saveToFile(state: ProjectState, slug: string): Promise<void> {
-        // 💻 LOCAL FILESYSTEM (Development / legacy fallback)
+        // 💻 LOCAL FILESYSTEM (development path)
         console.log(`💻 Saving ${slug} to Local Filesystem...`);
         const res = await fetch('/api/save-to-file', {
           method: 'POST',
@@ -3692,944 +4064,6 @@ function App() {
       />
       </>
     </ThemeProvider>
-  );
-}
-
-export default App;
-
-
-END_OF_FILE_CONTENT
-echo "Creating src/App_.tsx..."
-cat << 'END_OF_FILE_CONTENT' > "src/App_.tsx"
-/**
- * Thin Entry Point (Tenant).
- * Data from getHydratedData (file-backed or draft); assets from public/assets/images.
- * Supports Hybrid Persistence: Local Filesystem (Dev) or Cloud Bridge (Prod).
- */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { JsonPagesEngine } from '@olonjs/core';
-import type { JsonPagesConfig, LibraryImageEntry, ProjectState } from '@olonjs/core';
-import { ComponentRegistry } from '@/lib/ComponentRegistry';
-import { SECTION_SCHEMAS } from '@/lib/schemas';
-import { addSectionConfig } from '@/lib/addSectionConfig';
-import { getHydratedData } from '@/lib/draftStorage';
-import type { SiteConfig, ThemeConfig, MenuConfig, PageConfig } from '@/types';
-import type { DeployPhase, StepId } from '@/types/deploy';
-import { DEPLOY_STEPS } from '@/lib/deploySteps';
-import { startCloudSaveStream } from '@/lib/cloudSaveStream';
-import siteData from '@/data/config/site.json';
-import themeData from '@/data/config/theme.json';
-import menuData from '@/data/config/menu.json';
-import { getFilePages } from '@/lib/getFilePages';
-import { DopaDrawer } from '@/components/save-drawer/DopaDrawer';
-import { Skeleton } from '@/components/ui/skeleton';
-
-import tenantCss from './index.css?inline';
-
-// Cloud Configuration (Injected by Vercel/Netlify Env Vars)
-const CLOUD_API_URL =
-  import.meta.env.VITE_OLONJS_CLOUD_URL ?? import.meta.env.VITE_JSONPAGES_CLOUD_URL;
-const CLOUD_API_KEY =
-  import.meta.env.VITE_OLONJS_API_KEY ?? import.meta.env.VITE_JSONPAGES_API_KEY;
-
-const themeConfig = themeData as unknown as ThemeConfig;
-const menuConfig = menuData as unknown as MenuConfig;
-const TENANT_ID = 'alpha';
-
-const filePages = getFilePages();
-const fileSiteConfig = siteData as unknown as SiteConfig;
-const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
-const ASSET_UPLOAD_MAX_RETRIES = 2;
-const ASSET_UPLOAD_TIMEOUT_MS = 20_000;
-const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']);
-
-interface CloudSaveUiState {
-  isOpen: boolean;
-  phase: DeployPhase;
-  currentStepId: StepId | null;
-  doneSteps: StepId[];
-  progress: number;
-  errorMessage?: string;
-  deployUrl?: string;
-}
-
-type ContentMode = 'cloud' | 'error';
-type ContentStatus = 'ok' | 'empty_namespace' | 'legacy_fallback';
-
-type ContentResponse = {
-  ok?: boolean;
-  siteConfig?: unknown;
-  pages?: unknown;
-  items?: unknown;
-  error?: string;
-  code?: string;
-  correlationId?: string;
-  contentStatus?: ContentStatus;
-  usedUnscopedFallback?: boolean;
-  namespace?: string;
-  namespaceMatchedKeys?: number;
-};
-
-type CachedCloudContent = {
-  keyFingerprint: string;
-  savedAt: number;
-  siteConfig: unknown | null;
-  pages: Record<string, unknown>;
-};
-
-const CLOUD_CACHE_KEY = 'jp_cloud_content_cache_v1';
-const CLOUD_CACHE_TTL_MS = 5 * 60 * 1000;
-
-function normalizeApiBase(raw: string): string {
-  return raw.trim().replace(/\/+$/, '');
-}
-
-function buildApiCandidates(raw: string): string[] {
-  const base = normalizeApiBase(raw);
-  const withApi = /\/api\/v1$/i.test(base) ? base : `${base}/api/v1`;
-  const candidates = [withApi, base];
-  return Array.from(new Set(candidates.filter(Boolean)));
-}
-
-function getInitialData() {
-  return getHydratedData(TENANT_ID, filePages, fileSiteConfig);
-}
-
-function getInitialCloudSaveUiState(): CloudSaveUiState {
-  return {
-    isOpen: false,
-    phase: 'idle',
-    currentStepId: null,
-    doneSteps: [],
-    progress: 0,
-  };
-}
-
-function stepProgress(doneSteps: StepId[]): number {
-  return Math.round((doneSteps.length / DEPLOY_STEPS.length) * 100);
-}
-
-function isObjectRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function asString(value: unknown, fallback: string): string {
-  return typeof value === 'string' && value.trim() ? value : fallback;
-}
-
-function coercePageConfig(slug: string, value: unknown): PageConfig | null {
-  let input = value;
-  if (typeof input === 'string') {
-    try {
-      input = JSON.parse(input) as unknown;
-    } catch {
-      return null;
-    }
-  }
-  if (!isObjectRecord(input) || !Array.isArray(input.sections)) return null;
-
-  const inputMeta = isObjectRecord(input.meta) ? input.meta : {};
-  const normalizedSlug = asString(input.slug, slug);
-  const normalizedId = asString(input.id, `${normalizedSlug}-page`);
-  const title = asString(inputMeta.title, normalizedSlug);
-  const description = asString(inputMeta.description, '');
-
-  return {
-    id: normalizedId,
-    slug: normalizedSlug,
-    meta: { title, description },
-    sections: input.sections as PageConfig['sections'],
-    ...(typeof input['global-header'] === 'boolean' ? { 'global-header': input['global-header'] } : {}),
-  };
-}
-
-function coerceSiteConfig(value: unknown): SiteConfig | null {
-  let input = value;
-  if (typeof input === 'string') {
-    try {
-      input = JSON.parse(input) as unknown;
-    } catch {
-      return null;
-    }
-  }
-  if (!isObjectRecord(input)) return null;
-  if (!isObjectRecord(input.identity)) return null;
-  if (!Array.isArray(input.pages)) return null;
-
-  return input as unknown as SiteConfig;
-}
-
-function toPagesRecord(value: unknown): Record<string, PageConfig> | null {
-  const directPage = coercePageConfig('home', value);
-  if (directPage) {
-    const directSlug = asString(directPage.slug, 'home')
-      .toLowerCase()
-      .replace(/[^a-z0-9/_-]/g, '-')
-      .replace(/^\/+|\/+$/g, '') || 'home';
-    return { [directSlug]: directPage };
-  }
-
-  if (!isObjectRecord(value)) return null;
-  const next: Record<string, PageConfig> = {};
-  for (const [rawKey, payload] of Object.entries(value)) {
-    const rawKeyTrimmed = rawKey.trim();
-    const slugFromNamespacedKey = rawKeyTrimmed.match(/^t_[a-z0-9-]+_page_(.+)$/i)?.[1];
-    const normalizedSlug = (slugFromNamespacedKey ?? rawKeyTrimmed)
-      .toLowerCase()
-      .replace(/[^a-z0-9/_-]/g, '-')
-      .replace(/^\/+|\/+$/g, '');
-    const slug = normalizedSlug || 'home';
-    const page = coercePageConfig(slug, payload);
-    if (!page) continue;
-    next[slug] = page;
-  }
-  return next;
-}
-
-function normalizePageRegistry(value: unknown): Record<string, PageConfig> {
-  if (!isObjectRecord(value)) return {};
-  const normalized: Record<string, PageConfig> = {};
-
-  for (const [registrySlug, rawPageValue] of Object.entries(value)) {
-    const direct = coercePageConfig(registrySlug, rawPageValue);
-    if (direct) {
-      normalized[direct.slug || registrySlug] = direct;
-      continue;
-    }
-
-    const nested = toPagesRecord(rawPageValue);
-    if (nested && Object.keys(nested).length > 0) {
-      Object.assign(normalized, nested);
-    }
-  }
-
-  return normalized;
-}
-
-function extractContentSources(payload: ContentResponse | Record<string, unknown>): {
-  pagesSource: unknown;
-  siteSource: unknown;
-} {
-  // Canonical contract: { pages, siteConfig }
-  if (isObjectRecord(payload) && isObjectRecord(payload.pages)) {
-    return { pagesSource: payload.pages, siteSource: payload.siteConfig };
-  }
-
-  // Edge public JSON contract: { digest, updatedAt, items: { ... } }
-  if (isObjectRecord(payload) && isObjectRecord(payload.items)) {
-    const items = payload.items;
-    let siteSource: unknown = null;
-    const pageEntries: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(items)) {
-      if (/(_config_site|config_site|config:site)$/i.test(key)) {
-        siteSource = value;
-        continue;
-      }
-      if (/(_page_|^page_|page:)/i.test(key)) {
-        pageEntries[key] = value;
-      }
-    }
-    return { pagesSource: pageEntries, siteSource };
-  }
-
-  // Raw map fallback: treat payload object itself as page map.
-  return { pagesSource: payload, siteSource: null };
-}
-
-type CloudLoadFailure = {
-  reasonCode: string;
-  message: string;
-  correlationId?: string;
-};
-
-function isCloudLoadFailure(value: unknown): value is CloudLoadFailure {
-  return (
-    isObjectRecord(value) &&
-    typeof value.reasonCode === 'string' &&
-    typeof value.message === 'string'
-  );
-}
-
-function toCloudLoadFailure(value: unknown): CloudLoadFailure {
-  if (isCloudLoadFailure(value)) return value;
-  if (value instanceof Error) {
-    return { reasonCode: 'CLOUD_LOAD_FAILED', message: value.message };
-  }
-  return { reasonCode: 'CLOUD_LOAD_FAILED', message: 'Cloud content unavailable.' };
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function isRetryableStatus(status: number): boolean {
-  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
-}
-
-function backoffDelayMs(attempt: number): number {
-  const base = 250 * Math.pow(2, attempt);
-  const jitter = Math.floor(Math.random() * 120);
-  return base + jitter;
-}
-
-function logBootstrapEvent(event: string, details: Record<string, unknown>) {
-  console.info('[boot]', { event, at: new Date().toISOString(), ...details });
-}
-
-function cloudFingerprint(apiBase: string, apiKey: string): string {
-  return `${normalizeApiBase(apiBase)}::${apiKey.slice(-8)}`;
-}
-
-function normalizeSlugForCache(slug: string): string {
-  return (
-    slug
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9/_-]/g, '-')
-      .replace(/^\/+|\/+$/g, '') || 'home'
-  );
-}
-
-function readCachedCloudContent(fingerprint: string): CachedCloudContent | null {
-  try {
-    const raw = localStorage.getItem(CLOUD_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as CachedCloudContent;
-    if (!parsed || parsed.keyFingerprint !== fingerprint) return null;
-    if (!parsed.savedAt || Date.now() - parsed.savedAt > CLOUD_CACHE_TTL_MS) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-function writeCachedCloudContent(entry: CachedCloudContent): void {
-  try {
-    localStorage.setItem(CLOUD_CACHE_KEY, JSON.stringify(entry));
-  } catch {
-    // non-blocking cache path
-  }
-}
-
-function buildThemeFontVarsCss(input: unknown): string {
-  if (!isObjectRecord(input)) return '';
-  const tokens = isObjectRecord(input.tokens) ? input.tokens : null;
-  const typography = tokens && isObjectRecord(tokens.typography) ? tokens.typography : null;
-  const fontFamily = typography && isObjectRecord(typography.fontFamily) ? typography.fontFamily : null;
-  const primary = typeof fontFamily?.primary === 'string' ? fontFamily.primary : "'Instrument Sans', system-ui, sans-serif";
-  const serif = typeof fontFamily?.serif === 'string' ? fontFamily.serif : "'Instrument Serif', Georgia, serif";
-  const mono = typeof fontFamily?.mono === 'string' ? fontFamily.mono : "'JetBrains Mono', monospace";
-  return `:root{--theme-font-primary:${primary};--theme-font-serif:${serif};--theme-font-mono:${mono};}`;
-}
-
-function App() {
-  const isCloudMode = Boolean(CLOUD_API_URL && CLOUD_API_KEY);
-  const localInitialData = useMemo(() => (isCloudMode ? null : getInitialData()), [isCloudMode]);
-  const localInitialPages = useMemo(() => {
-    if (!localInitialData) return {};
-    const normalized = normalizePageRegistry(localInitialData.pages as unknown);
-    return Object.keys(normalized).length > 0 ? normalized : localInitialData.pages;
-  }, [localInitialData]);
-  const [pages, setPages] = useState<Record<string, PageConfig>>(localInitialPages);
-  const [siteConfig, setSiteConfig] = useState<SiteConfig>(
-    localInitialData?.siteConfig ?? fileSiteConfig
-  );
-  const [assetsManifest, setAssetsManifest] = useState<LibraryImageEntry[]>([]);
-  const [cloudSaveUi, setCloudSaveUi] = useState<CloudSaveUiState>(getInitialCloudSaveUiState);
-  const [contentMode, setContentMode] = useState<ContentMode>('cloud');
-  const [contentFallback, setContentFallback] = useState<CloudLoadFailure | null>(null);
-  const [showTopProgress, setShowTopProgress] = useState(false);
-  const [hasInitialCloudResolved, setHasInitialCloudResolved] = useState(!isCloudMode);
-  const [bootstrapRunId, setBootstrapRunId] = useState(0);
-  const activeCloudSaveController = useRef<AbortController | null>(null);
-  const contentLoadInFlight = useRef<Promise<void> | null>(null);
-  const pendingCloudSave = useRef<{ state: ProjectState; slug: string } | null>(null);
-  const cloudApiCandidates = useMemo(
-    () => (isCloudMode && CLOUD_API_URL ? buildApiCandidates(CLOUD_API_URL) : []),
-    [isCloudMode, CLOUD_API_URL]
-  );
-
-  const loadAssetsManifest = useCallback(async (): Promise<void> => {
-    if (isCloudMode && CLOUD_API_URL && CLOUD_API_KEY) {
-      const apiBases = cloudApiCandidates.length > 0 ? cloudApiCandidates : [normalizeApiBase(CLOUD_API_URL)];
-      for (const apiBase of apiBases) {
-        try {
-          const res = await fetch(`${apiBase}/assets/list?limit=200`, {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${CLOUD_API_KEY}`,
-            },
-          });
-          const body = (await res.json().catch(() => ({}))) as { items?: LibraryImageEntry[] };
-          if (!res.ok) continue;
-          const items = Array.isArray(body.items) ? body.items : [];
-          setAssetsManifest(items);
-          return;
-        } catch {
-          // try next candidate
-        }
-      }
-      setAssetsManifest([]);
-      return;
-    }
-
-    fetch('/api/list-assets')
-      .then((r) => (r.ok ? r.json() : []))
-      .then((list: LibraryImageEntry[]) => setAssetsManifest(Array.isArray(list) ? list : []))
-      .catch(() => setAssetsManifest([]));
-  }, [isCloudMode, CLOUD_API_URL, CLOUD_API_KEY, cloudApiCandidates]);
-
-  useEffect(() => {
-    void loadAssetsManifest();
-  }, [loadAssetsManifest]);
-
-  useEffect(() => {
-    return () => {
-      activeCloudSaveController.current?.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isCloudMode || !CLOUD_API_URL || !CLOUD_API_KEY) {
-      setContentMode('cloud');
-      setContentFallback(null);
-      setShowTopProgress(false);
-      setHasInitialCloudResolved(true);
-      logBootstrapEvent('boot.local.ready', { mode: 'local' });
-      return;
-    }
-    if (contentLoadInFlight.current) {
-      return;
-    }
-
-    const controller = new AbortController();
-    const maxRetryAttempts = 2;
-    const startedAt = Date.now();
-    const primaryApiBase = cloudApiCandidates[0] ?? normalizeApiBase(CLOUD_API_URL);
-    const fingerprint = cloudFingerprint(primaryApiBase, CLOUD_API_KEY);
-    const cached = readCachedCloudContent(fingerprint);
-    const cachedPages = cached ? toPagesRecord(cached.pages) : null;
-    const cachedSite = cached ? coerceSiteConfig(cached.siteConfig) : null;
-    const hasCachedFallback = Boolean((cachedPages && Object.keys(cachedPages).length > 0) || cachedSite);
-    if (cached) {
-      logBootstrapEvent('boot.cloud.cache_hit', { ageMs: Date.now() - cached.savedAt });
-    }
-    setContentMode('cloud');
-    setContentFallback(null);
-    setShowTopProgress(true);
-    setHasInitialCloudResolved(false);
-    logBootstrapEvent('boot.start', { mode: 'cloud', apiCandidates: cloudApiCandidates.length });
-
-    const loadCloudContent = async () => {
-      try {
-        let payload: ContentResponse | null = null;
-        let lastFailure: CloudLoadFailure | null = null;
-
-        for (const apiBase of cloudApiCandidates) {
-          for (let attempt = 0; attempt <= maxRetryAttempts; attempt += 1) {
-            try {
-              const res = await fetch(`${apiBase}/content`, {
-                method: 'GET',
-                cache: 'no-store',
-                headers: {
-                  Authorization: `Bearer ${CLOUD_API_KEY}`,
-                },
-                signal: controller.signal,
-              });
-
-              const contentType = (res.headers.get('content-type') || '').toLowerCase();
-              if (!contentType.includes('application/json')) {
-                lastFailure = {
-                  reasonCode: 'NON_JSON_RESPONSE',
-                  message: `Non-JSON response from ${apiBase}/content`,
-                };
-                break;
-              }
-
-              const parsed = (await res.json().catch(() => ({}))) as ContentResponse;
-              if (!res.ok) {
-                lastFailure = {
-                  reasonCode: parsed.code || `HTTP_${res.status}`,
-                  message: parsed.error || `Cloud content read failed: ${res.status} (${apiBase}/content)`,
-                  correlationId: parsed.correlationId,
-                };
-                if (isRetryableStatus(res.status) && attempt < maxRetryAttempts) {
-                  await sleep(backoffDelayMs(attempt));
-                  continue;
-                }
-                break;
-              }
-
-              payload = parsed;
-              break;
-            } catch (error: unknown) {
-              if (controller.signal.aborted) throw error;
-              const message = error instanceof Error ? error.message : 'Network error';
-              lastFailure = {
-                reasonCode: 'NETWORK_TRANSIENT',
-                message: `${message} (${apiBase}/content)`,
-              };
-              if (attempt < maxRetryAttempts) {
-                await sleep(backoffDelayMs(attempt));
-                continue;
-              }
-            }
-          }
-          if (payload) {
-            break;
-          }
-        }
-
-        if (!payload) {
-          throw (
-            lastFailure || {
-              reasonCode: 'CLOUD_ENDPOINT_UNREACHABLE',
-              message: 'Cloud content endpoint not reachable as JSON.',
-            }
-          );
-        }
-
-        const { pagesSource, siteSource } = extractContentSources(payload);
-        const remotePages = toPagesRecord(pagesSource);
-        const remoteSite = coerceSiteConfig(siteSource);
-        const remotePageCount = remotePages ? Object.keys(remotePages).length : 0;
-        if (remotePageCount === 0 && !remoteSite) {
-          throw {
-            reasonCode: payload.contentStatus === 'empty_namespace' ? 'EMPTY_NAMESPACE' : 'EMPTY_PAYLOAD',
-            message: 'Cloud payload is empty for this tenant namespace.',
-            correlationId: payload.correlationId,
-          } satisfies CloudLoadFailure;
-        }
-        if (import.meta.env.DEV) {
-          console.info('[content] cloud diagnostics', {
-            contentStatus: payload.contentStatus ?? 'ok',
-            namespace: payload.namespace,
-            namespaceMatchedKeys: payload.namespaceMatchedKeys,
-            usedUnscopedFallback: payload.usedUnscopedFallback,
-            correlationId: payload.correlationId,
-          });
-        }
-        if (remotePages && remotePageCount > 0) {
-          setPages(remotePages);
-        }
-        if (remoteSite) {
-          setSiteConfig(remoteSite);
-        }
-        writeCachedCloudContent({
-          keyFingerprint: fingerprint,
-          savedAt: Date.now(),
-          siteConfig: remoteSite ?? null,
-          pages: (remotePages ?? {}) as Record<string, unknown>,
-        });
-        setContentMode('cloud');
-        setContentFallback(null);
-        setHasInitialCloudResolved(true);
-        logBootstrapEvent('boot.cloud.success', {
-          mode: 'cloud',
-          elapsedMs: Date.now() - startedAt,
-          contentStatus: payload.contentStatus ?? 'ok',
-          correlationId: payload.correlationId ?? null,
-        });
-      } catch (error: unknown) {
-        if (controller.signal.aborted) return;
-        const failure = toCloudLoadFailure(error);
-        if (hasCachedFallback) {
-          if (cachedPages && Object.keys(cachedPages).length > 0) {
-            setPages(cachedPages);
-          }
-          if (cachedSite) {
-            setSiteConfig(cachedSite);
-          }
-          setContentMode('cloud');
-          setContentFallback({
-            reasonCode: 'CLOUD_REFRESH_FAILED',
-            message: failure.message,
-            correlationId: failure.correlationId,
-          });
-          setHasInitialCloudResolved(true);
-        } else {
-          setContentMode('error');
-          setContentFallback(failure);
-          setHasInitialCloudResolved(true);
-        }
-        logBootstrapEvent('boot.cloud.error', {
-          mode: 'cloud',
-          elapsedMs: Date.now() - startedAt,
-          reasonCode: failure.reasonCode,
-          correlationId: failure.correlationId ?? null,
-        });
-      }
-    };
-
-    let inFlight: Promise<void> | null = null;
-    inFlight = loadCloudContent().finally(() => {
-      setShowTopProgress(false);
-      if (contentLoadInFlight.current === inFlight) {
-        contentLoadInFlight.current = null;
-      }
-    });
-    contentLoadInFlight.current = inFlight;
-    return () => controller.abort();
-  }, [isCloudMode, CLOUD_API_KEY, CLOUD_API_URL, cloudApiCandidates, bootstrapRunId]);
-
-  const runCloudSave = useCallback(
-    async (
-      payload: { state: ProjectState; slug: string },
-      rejectOnError: boolean
-    ): Promise<void> => {
-      if (!CLOUD_API_URL || !CLOUD_API_KEY) {
-        const noCloudError = new Error('Cloud mode is not configured.');
-        if (rejectOnError) throw noCloudError;
-        return;
-      }
-
-      pendingCloudSave.current = payload;
-      activeCloudSaveController.current?.abort();
-      const controller = new AbortController();
-      activeCloudSaveController.current = controller;
-
-      setCloudSaveUi({
-        isOpen: true,
-        phase: 'running',
-        currentStepId: null,
-        doneSteps: [],
-        progress: 0,
-      });
-
-      try {
-        await startCloudSaveStream({
-          apiBaseUrl: CLOUD_API_URL,
-          apiKey: CLOUD_API_KEY,
-          path: `src/data/pages/${payload.slug}.json`,
-          content: payload.state.page,
-          message: `Content update for ${payload.slug} via Visual Editor`,
-          signal: controller.signal,
-          onStep: (event) => {
-            setCloudSaveUi((prev) => {
-              if (event.status === 'running') {
-                return {
-                  ...prev,
-                  isOpen: true,
-                  phase: 'running',
-                  currentStepId: event.id,
-                  errorMessage: undefined,
-                };
-              }
-
-              if (prev.doneSteps.includes(event.id)) {
-                return prev;
-              }
-
-              const nextDone = [...prev.doneSteps, event.id];
-              return {
-                ...prev,
-                isOpen: true,
-                phase: 'running',
-                currentStepId: event.id,
-                doneSteps: nextDone,
-                progress: stepProgress(nextDone),
-              };
-            });
-          },
-          onDone: (event) => {
-            const completed = DEPLOY_STEPS.map((step) => step.id);
-            setCloudSaveUi({
-              isOpen: true,
-              phase: 'done',
-              currentStepId: 'live',
-              doneSteps: completed,
-              progress: 100,
-              deployUrl: event.deployUrl,
-            });
-          },
-        });
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Cloud save failed.';
-        setCloudSaveUi((prev) => ({
-          ...prev,
-          isOpen: true,
-          phase: 'error',
-          errorMessage: message,
-        }));
-        if (rejectOnError) throw new Error(message);
-      } finally {
-        if (activeCloudSaveController.current === controller) {
-          activeCloudSaveController.current = null;
-        }
-      }
-    },
-    []
-  );
-
-  const closeCloudDrawer = useCallback(() => {
-    setCloudSaveUi(getInitialCloudSaveUiState());
-  }, []);
-
-  const retryCloudSave = useCallback(() => {
-    if (!pendingCloudSave.current) return;
-    void runCloudSave(pendingCloudSave.current, false);
-  }, [runCloudSave]);
-
-  const config: JsonPagesConfig = {
-    tenantId: TENANT_ID,
-    registry: ComponentRegistry as JsonPagesConfig['registry'],
-    schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
-    pages,
-    siteConfig,
-    themeConfig,
-    menuConfig,
-    themeCss: { tenant: `${buildThemeFontVarsCss(themeConfig)}\n${tenantCss}` },
-    addSection: addSectionConfig,
-    persistence: {
-      async saveToFile(state: ProjectState, slug: string): Promise<void> {
-        // 💻 LOCAL FILESYSTEM (Development / legacy fallback)
-        console.log(`💻 Saving ${slug} to Local Filesystem...`);
-        const res = await fetch('/api/save-to-file', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectState: state, slug }),
-        });
-        
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
-        if (!res.ok) throw new Error(body.error ?? `Save to file failed: ${res.status}`);
-      },
-      async hotSave(state: ProjectState, slug: string): Promise<void> {
-        if (!isCloudMode || !CLOUD_API_URL || !CLOUD_API_KEY) {
-          throw new Error('Cloud mode is not configured for hot save.');
-        }
-        const apiBase = CLOUD_API_URL.replace(/\/$/, '');
-        const res = await fetch(`${apiBase}/hotSave`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${CLOUD_API_KEY}`,
-          },
-          body: JSON.stringify({
-            slug,
-            page: state.page,
-            siteConfig: state.site,
-          }),
-        });
-        const body = (await res.json().catch(() => ({}))) as { error?: string; code?: string };
-        if (!res.ok) {
-          throw new Error(body.error || body.code || `Hot save failed: ${res.status}`);
-        }
-        const keyFingerprint = cloudFingerprint(apiBase, CLOUD_API_KEY);
-        const normalizedSlug = normalizeSlugForCache(slug);
-        const existing = readCachedCloudContent(keyFingerprint);
-        writeCachedCloudContent({
-          keyFingerprint,
-          savedAt: Date.now(),
-          siteConfig: state.site ?? null,
-          pages: {
-            ...(existing?.pages ?? {}),
-            [normalizedSlug]: state.page,
-          },
-        });
-      },
-      showLegacySave: !isCloudMode,
-      showHotSave: isCloudMode,
-    },
-    assets: {
-      assetsBaseUrl: '/assets',
-      assetsManifest,
-      async onAssetUpload(file: File): Promise<string> {
-        if (!file.type.startsWith('image/')) throw new Error('Invalid file type.');
-        if (!ALLOWED_IMAGE_MIME_TYPES.has(file.type)) {
-          throw new Error('Unsupported image format. Allowed: jpeg, png, webp, gif, avif.');
-        }
-        if (file.size > MAX_UPLOAD_SIZE_BYTES) throw new Error(`File too large. Max ${MAX_UPLOAD_SIZE_BYTES / 1024 / 1024}MB.`);
-
-        if (isCloudMode && CLOUD_API_URL && CLOUD_API_KEY) {
-          const apiBases = cloudApiCandidates.length > 0 ? cloudApiCandidates : [normalizeApiBase(CLOUD_API_URL)];
-          let lastError: Error | null = null;
-          for (const apiBase of apiBases) {
-            for (let attempt = 0; attempt <= ASSET_UPLOAD_MAX_RETRIES; attempt += 1) {
-              try {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('filename', file.name);
-                const controller = new AbortController();
-                const timeout = window.setTimeout(() => controller.abort(), ASSET_UPLOAD_TIMEOUT_MS);
-                const res = await fetch(`${apiBase}/assets/upload`, {
-                  method: 'POST',
-                  headers: {
-                    Authorization: `Bearer ${CLOUD_API_KEY}`,
-                    'X-Correlation-Id': crypto.randomUUID(),
-                  },
-                  body: formData,
-                  signal: controller.signal,
-                }).finally(() => window.clearTimeout(timeout));
-                const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string; code?: string };
-                if (res.ok && typeof body.url === 'string') {
-                  await loadAssetsManifest().catch(() => undefined);
-                  return body.url;
-                }
-                lastError = new Error(body.error || body.code || `Cloud upload failed: ${res.status}`);
-                if (isRetryableStatus(res.status) && attempt < ASSET_UPLOAD_MAX_RETRIES) {
-                  await sleep(backoffDelayMs(attempt));
-                  continue;
-                }
-                break;
-              } catch (error: unknown) {
-                const message = error instanceof Error ? error.message : 'Cloud upload failed.';
-                lastError = new Error(message);
-                if (attempt < ASSET_UPLOAD_MAX_RETRIES) {
-                  await sleep(backoffDelayMs(attempt));
-                  continue;
-                }
-                break;
-              }
-            }
-          }
-          throw lastError ?? new Error('Cloud upload failed.');
-        }
-
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve((reader.result as string).split(',')[1] ?? '');
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
-
-        const res = await fetch('/api/upload-asset', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename: file.name, mimeType: file.type || undefined, data: base64 }),
-        });
-        const body = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-        if (!res.ok) throw new Error(body.error || `Upload failed: ${res.status}`);
-        if (typeof body.url !== 'string') throw new Error('Invalid server response: missing url');
-        await loadAssetsManifest().catch(() => undefined);
-        return body.url;
-      },
-    },
-  };
-
-  const shouldRenderEngine = !isCloudMode || hasInitialCloudResolved;
-
-  return (
-    <>
-      {isCloudMode && showTopProgress ? (
-        <>
-          <style>
-            {`@keyframes jp-top-progress-slide { 0% { transform: translateX(-120%); } 100% { transform: translateX(320%); } }`}
-          </style>
-          <div
-            role="status"
-            aria-live="polite"
-            aria-label="Cloud loading progress"
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 2,
-              zIndex: 1300,
-              background: 'rgba(255,255,255,0.08)',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                width: '32%',
-                height: '100%',
-                background: 'linear-gradient(90deg, rgba(88,166,255,0.15) 0%, rgba(88,166,255,0.85) 50%, rgba(88,166,255,0.15) 100%)',
-                animation: 'jp-top-progress-slide 1.15s ease-in-out infinite',
-                willChange: 'transform',
-              }}
-            />
-          </div>
-        </>
-      ) : null}
-      {isCloudMode && !hasInitialCloudResolved ? (
-        <div className="fixed inset-0 z-[1290] bg-background/80 backdrop-blur-sm">
-          <div className="mx-auto w-full max-w-[1600px] p-6">
-            <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-64" />
-                <Skeleton className="h-[220px] w-full rounded-xl" />
-                <Skeleton className="h-[220px] w-full rounded-xl" />
-              </div>
-              <div className="space-y-3 rounded-xl border border-border/50 bg-card/60 p-4">
-                <Skeleton className="h-8 w-32" />
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-5/6" />
-                <Skeleton className="h-5 w-4/6" />
-                <Skeleton className="h-24 w-full rounded-lg" />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {shouldRenderEngine ? <JsonPagesEngine config={config} /> : null}
-      {isCloudMode && (contentMode === 'error' || contentFallback?.reasonCode === 'CLOUD_REFRESH_FAILED') ? (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            position: 'fixed',
-            top: 12,
-            right: 12,
-            zIndex: 1200,
-            background: 'rgba(179, 65, 24, 0.92)',
-            border: '1px solid rgba(255,255,255,0.18)',
-            color: '#fff',
-            padding: '8px 12px',
-            borderRadius: 10,
-            fontSize: 12,
-            maxWidth: 360,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
-          }}
-        >
-          {contentMode === 'error' ? 'Cloud content unavailable.' : 'Cloud refresh failed, showing cached content.'}
-          {contentFallback ? (
-            <div style={{ opacity: 0.85, marginTop: 4 }}>
-              <div>{contentFallback.message}</div>
-              <div style={{ marginTop: 2 }}>
-                Reason: {contentFallback.reasonCode}
-                {contentFallback.correlationId ? ` | Correlation: ${contentFallback.correlationId}` : ''}
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    contentLoadInFlight.current = null;
-                    setContentMode('cloud');
-                    setContentFallback(null);
-                    setHasInitialCloudResolved(false);
-                    setShowTopProgress(true);
-                    setBootstrapRunId((prev) => prev + 1);
-                  }}
-                  style={{
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: 8,
-                    padding: '4px 10px',
-                    background: 'transparent',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    fontSize: 12,
-                  }}
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      <DopaDrawer
-        isOpen={cloudSaveUi.isOpen}
-        phase={cloudSaveUi.phase}
-        currentStepId={cloudSaveUi.currentStepId}
-        doneSteps={cloudSaveUi.doneSteps}
-        progress={cloudSaveUi.progress}
-        errorMessage={cloudSaveUi.errorMessage}
-        deployUrl={cloudSaveUi.deployUrl}
-        onClose={closeCloudDrawer}
-        onRetry={retryCloudSave}
-      />
-    </>
   );
 }
 
@@ -10671,46 +10105,9 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "data": {
       "logoText": "Olon",
       "badge": "",
-      "links": [
-        {
-          "label": "Platform",
-          "href": "/platform",
-          "children": [
-            {
-              "label": "Overview",
-              "href": "/platform/overview"
-            },
-            {
-              "label": "Architecture",
-              "href": "/platform/architecture"
-            },
-            {
-              "label": "Security",
-              "href": "/platform/security"
-            },
-            {
-              "label": "Integrations",
-              "href": "/platform/integrations"
-            },
-            {
-              "label": "Roadmap",
-              "href": "/platform/roadmap"
-            }
-          ]
-        },
-        {
-          "label": "Solutions",
-          "href": "/solutions"
-        },
-        {
-          "label": "Pricing",
-          "href": "/pricing"
-        },
-        {
-          "label": "Resources",
-          "href": "/resources"
-        }
-      ],
+      "links": {
+        "$ref": "../config/menu.json#/main"
+      },
       "ctaLabel": "Get started →",
       "ctaHref": "#contact",
       "signinHref": "#login"
@@ -10723,10 +10120,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
       "brandText": "Olon",
       "copyright": "© 2025 OlonJS · v1.4 · Holon",
       "links": [
-        {
-          "label": "Docs",
-          "href": "/docs"
-        },
         {
           "label": "GitHub",
           "href": "#"
@@ -10928,13 +10321,11 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/design-system.json"
 {
   "id": "design-system-page",
   "slug": "design-system",
-  "global-header": false,
   "meta": {
     "title": "Olon Design System — Design Language",
     "description": "Token reference, color system, typography, components and brand identity for the OlonJS design language."
   },
   "sections": [
-   
     {
       "id": "ds-main",
       "type": "design-system",
@@ -10943,9 +10334,9 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/design-system.json"
       },
       "settings": {}
     }
-  ]
+  ],
+  "global-header": false
 }
-
 END_OF_FILE_CONTENT
 # SKIP: src/data/pages/design-system.json:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/data/pages/docs.json..."
@@ -10954,20 +10345,21 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/docs.json"
   "id": "docs-page",
   "slug": "docs",
   "meta": {
-    "title": "OlonJS Architecture Specifications v1.3",
-    "description": "Mandatory Standard — Sovereign Core Edition. Architecture, Studio/ICE UX, Path-Deterministic Nested Editing."
+    "title": "OlonJS Architecture Specifications v1.5",
+    "description": "Mandatory Standard — Sovereign Core Edition. Canonical Studio actions, SSG, Save to file, and Hot Save."
   },
   "sections": [
     {
       "id": "docs-main",
       "type": "tiptap",
       "data": {
-        "content": "# 📐 OlonJS Architecture Specifications v1.5s\n\n**Status:** Mandatory Standard\\\n**Version:** 1.5.0 (Sovereign Core Edition — Architecture + Studio/ICE UX, Path-Deterministic Nested Editing, Deterministic Local Design Tokens, Three-Layer CSS Bridge Contract)\\\n**Target:** Senior Architects / AI Agents / Enterprise Governance\n\n**Scope v1.5:** This edition preserves the complete v1.4 architecture (MTRP, JSP, TBP, CIP, ECIP, JAP + Studio/ICE UX contract: IDAC, TOCC, BSDS, ASC, JEB + Tenant Type & Code-Generation Annex + strict path-based/nested-array behavior) as a **faithful superset**, and upgrades **Local Design Tokens** from a principle to a deterministic implementation contract.\\\n⚠️ **Scope note (breaking):** In strict v1.3+ Studio semantics, the legacy flat protocol (`itemField` / `itemId`) is removed in favor of `itemPath` (root-to-leaf path segments).\\\nℹ️ **Scope note (clarification):** In v1.5, `theme.json` is the tenant theme source of truth for themed tenants; runtime theme publication is mandatory for compliant themed tenants; section-local tokens (`--local-*`) are the required scoping layer for section-owned color and radius concerns.\n\n---\n\n## 1. 📐 Modular Type Registry Pattern (MTRP) v1.2\n\n**Objective:** Establish a strictly typed, open-ended protocol for extending content data structures where the **Core Engine** is the orchestrator and the **Tenant** is the provider.\n\n### 1.1 The Sovereign Dependency Inversion\n\nThe **Core** defines the empty `SectionDataRegistry`. The **Tenant** \"injects\" its specific definitions using **Module Augmentation**. This allows the Core to be distributed as a compiled NPM package while remaining aware of Tenant-specific types at compile-time.\n\n### 1.2 Technical Implementation (`@olonjs/core/kernel`)\n\n```typescript\nexport interface SectionDataRegistry {} // Augmented by Tenant\nexport interface SectionSettingsRegistry {} // Augmented by Tenant\n\nexport interface BaseSection<K extends keyof SectionDataRegistry> {\n  id: string;\n  type: K;\n  data: SectionDataRegistry[K];\n  settings?: K extends keyof SectionSettingsRegistry\n    ? SectionSettingsRegistry[K]\n    : BaseSectionSettings;\n}\n\nexport type Section = {\n  [K in keyof SectionDataRegistry]: BaseSection<K>\n}[keyof SectionDataRegistry];\n```\n\n**SectionType:** Core exports (or Tenant infers) `SectionType` as `keyof SectionDataRegistry`. After Tenant module augmentation, this is the union of all section type keys (e.g. `'header' | 'footer' | 'hero' | ...`). The Tenant uses this type for the ComponentRegistry and SECTION_SCHEMAS keys.\n\n**Why ❔:** The Core must be able to render section without knowing the concrete types to compile-time; the Tenant must be able to add new types without modifying the Core. Empty registry + module augmentation allow you to deploy Core as an NPM package and keep type-safety end-to-end (Section, registry, config). Without MTRP, each new type would require changes in the Core or weak types (any).\n\n---\n\n## 2. 📐 JsonPages Site Protocol (JSP) v1.8\n\n**Objective:** Define the deterministic file system and the **Sovereign Projection Engine** (CLI).\n\n### 2.1 The File System Ontology (The Silo Contract)\n\nEvery site must reside in an isolated directory. Global Governance is physically separated from Local Content.\n\n- `/config/site.json` — Global Identity & Reserved System Blocks (Header/Footer). See Appendix A for typed shape.\n- `/config/menu.json` — Navigation Tree (SSOT for System Header). See Appendix A.\n- `/config/theme.json` — Theme tokens for themed tenants. See Appendix A.\n- `/pages/[slug].json` — Local Body Content per page. See Appendix A (PageConfig).\n\n**Application path convention:** The runtime app typically imports these via an alias (e.g. `@/data/config/` and `@/data/pages/`). The physical silo may be `src/data/config/` and `src/data/pages/` so that `site.json`, `menu.json`, `theme.json` live under `src/data/config/`, and page JSONs under `src/data/pages/`. The CLI or projection script may use `/config/` and `/pages/` at repo root; the **contract** is that the app receives **siteConfig**, **menuConfig**, **themeConfig**, and **pages** as defined in JEB (§10) and Appendix A.\n\n**Rule:** For a tenant that claims v1.4 design-token compliance, `theme.json` is not optional in practice. If a tenant omits a physical `theme.json`, it must still provide an equivalent `ThemeConfig` object before bootstrap; otherwise the tenant is outside full v1.4 theme compliance.\n\n### 2.2 Deterministic Projection (CLI Workflow)\n\nThe CLI (`@olonjs/cli`) creates new tenants by:\n\n1. **Infra Projection:** Generating `package.json`, `tsconfig.json`, and `vite.config.ts` (The Shell).\n2. **Source Projection:** Executing a deterministic script (`src_tenant_alpha.sh`) to reconstruct the `src` folder (The DNA).\n3. **Dependency Resolution:** Enforcing specific versions of React, Radix, and Tailwind v4.\n\n**Why they are needed:** A deterministic file structure (config vs pages) separates global governance (site, menu, theme) from content per page; CLI can regenerate tenants and tooling can find data and schematics always in the same paths. Without JSP, each tenant would be an ad hoc structure and ingestion/export/Bake would be fragile.\n\n---\n\n## 3. 🧱 Tenant Block Protocol (TBP) v1.0\n\n**Objective:** Standardize the \"Capsule\" structure for components to enable automated ingestion (Pull) by the SaaS.\n\n### 3.1 The Atomic Capsule Structure\n\nComponents are self-contained directories under `src/components/<sectionType>/`:\n\n- `View.tsx` — The pure React component (Dumb View). Props: see Appendix A (SectionComponentPropsMap).\n- `schema.ts` — Zod schema(s) for the **data** contract (and optionally **settings**). Exports at least one schema (e.g. `HeroSchema`) used as the **data** schema for that type. Must extend BaseSectionData (§8) for data; array items must extend BaseArrayItem (§8).\n- `types.ts` — TypeScript interfaces inferred from the schema (e.g. `HeroData`, `HeroSettings`). Export types with names `<SectionType>Data` and `<SectionType>Settings` (or equivalent) so the Tenant can aggregate them in a single types module.\n- `index.ts` — Public API: re-exports View, schema(s), and types.\n\n### 3.2 Reserved System Types\n\n- `type: 'header'` — Reserved for `site.json`. Receives `menu: MenuItem[]` in addition to `data` and `settings`. Menu is sourced from `menu.json` (see Appendix A). The Tenant **must** type `SectionComponentPropsMap['header']` as `{ data: HeaderData; settings?: HeaderSettings; menu: MenuItem[] }`.\n- `type: 'footer'` — Reserved for `site.json`. Props: `{ data: FooterData; settings?: FooterSettings }` only (no `menu`).\n- `type: 'sectionHeader'` — A standard local block. Must define its own `links` array in its local schema if used.\n\n**Perché servono:** La capsula (View + schema + types + index) è l’unità di estensione: il Core e il Form Factory possono scoprire tipi e contratti per tipo senza convenzioni ad hoc. Header/footer riservati evitano conflitti tra globale e locale. Senza TBP, aggregazione di SECTION_SCHEMAS e registry sarebbe incoerente e l’ingestion da SaaS non sarebbe automatizzabile.\n\n---\n\n## 4. 🧱 Component Implementation Protocol (CIP) v1.6\n\n**Objective:** Ensure system-wide stability and Admin UI integrity.\n\n1. **The \"Sovereign View\" Law:** Components receive `data` and `settings` (and `menu` for header only) and return JSX. They are metadata-blind (never import Zod schemas).\n2. **Z-Index Neutrality:** Components must not use `z-index > 1`. Layout delegation (sticky/fixed) is managed by the `SectionRenderer`.\n3. **Agnostic Asset Protocol:** Use `resolveAssetUrl(path, tenantId)` for all media. Resolved URLs are under `/assets/...` with no tenantId segment in the path (e.g. relative `img/hero.jpg` → `/assets/img/hero.jpg`).\n\n### 4.4 Local Design Tokens (v1.4)\n\n**Objective:** Standardize how a section consumes tenant theme values without leaking global styling assumptions into the section implementation.\n\n#### 4.4.1 The Required Four-Layer Chain\n\nFor any section that controls background, text color, border color, accent color, or radii, the following chain is normative:\n\n1. **Tenant theme source of truth** — Values are declared in `src/data/config/theme.json`.\n2. **Runtime theme publication** — The Core and/or tenant bootstrap **must** publish those values as CSS custom properties.\n3. **Section-local scope** — The View root **must** define `--local-*` variables mapped to the published theme variables for the concerns the section owns.\n4. **Rendered classes** — Section-owned color/radius utilities **must** consume `var(--local-*)`.\n\n**Rule:** A section may not skip layer 3 when it visually owns those concerns. Directly using global theme variables throughout the JSX is non-canonical for a fully themed section and must be treated as non-compliant unless the usage falls under an explicitly allowed exception.\n\n#### 4.4.2 Source Of Truth: `theme.json`\n\n`theme.json` is the tenant-level source of truth for theme values. Example:\n\n```json\n{\n  \"name\": \"JsonPages Landing\",\n  \"tokens\": {\n    \"colors\": {\n      \"primary\": \"#3b82f6\",\n      \"secondary\": \"#22d3ee\",\n      \"accent\": \"#60a5fa\",\n      \"background\": \"#060d1b\",\n      \"surface\": \"#0b1529\",\n      \"surfaceAlt\": \"#101e38\",\n      \"text\": \"#e2e8f0\",\n      \"textMuted\": \"#94a3b8\",\n      \"border\": \"#162a4d\"\n    },\n    \"typography\": {\n      \"fontFamily\": {\n        \"primary\": \"'Instrument Sans', system-ui, sans-serif\",\n        \"mono\": \"'JetBrains Mono', monospace\",\n        \"display\": \"'Bricolage Grotesque', system-ui, sans-serif\"\n      }\n    },\n    \"borderRadius\": {\n      \"sm\": \"0px\",\n      \"md\": \"0px\",\n      \"lg\": \"2px\"\n    }\n  }\n}\n```\n\n**Rule:** For a themed tenant, `theme.json` must contain the canonical semantic keys defined in Appendix A. Extra brand-specific keys are allowed only as extensions to those canonical groups, not as replacements for them.\n\n#### 4.4.3 Runtime Theme Publication\n\nThe tenant and/or Core **must** expose theme values as CSS variables before section rendering. The compliant bridge is a **three-layer chain** implemented in the tenant's `index.css`. Runtime publication is mandatory for themed tenants.\n\n##### Layer architecture\n\n```\ntheme.json  →  engine injection  →  :root bridge  →  @theme (Tailwind)  →  JSX classes\n```\n\n**Layer 0 — Engine injection (Core-provided)** `@olonjs/core` reads `theme.json` and injects all token values as flattened CSS custom properties before section rendering. The naming convention is:\n\nJSON path Injected CSS var `tokens.colors.{name}` `--theme-colors-{name}` `tokens.typography.fontFamily.{role}` `--theme-font-{role}` `tokens.typography.scale.{step}` `--theme-typography-scale-{step}` `tokens.typography.tracking.{name}` `--theme-typography-tracking-{name}` `tokens.typography.leading.{name}` `--theme-typography-leading-{name}` `tokens.typography.wordmark.*` `--theme-typography-wordmark-*` `tokens.borderRadius.{name}` `--theme-border-radius-{name}` `tokens.spacing.{name}` `--theme-spacing-{name}` `tokens.zIndex.{name}` `--theme-z-index-{name}` `tokens.modes.{mode}.colors.{name}` `--theme-modes-{mode}-colors-{name}`\n\nThe engine also publishes shorthand aliases for the most common radius and font tokens (e.g. `--theme-radius-sm`, `--theme-font-primary`). Tokens not covered by the shorthand aliases must be bridged in the tenant `:root`.\n\n**Layer 1 —** `:root` **semantic bridge (Tenant-provided,** `index.css`**)** The tenant maps engine-injected vars to its own semantic naming. **The naming in this layer is the tenant's sovereign choice** — it is not imposed by the Core. Any naming convention is valid as long as it is consistent throughout the tenant.\n\n```css\n:root {\n  /* Backgrounds */\n  --background:           var(--theme-colors-background);\n  --card:                 var(--theme-colors-card);\n  --elevated:             var(--theme-colors-elevated);\n  --overlay:              var(--theme-colors-overlay);\n  --popover:              var(--theme-colors-popover);\n  --popover-foreground:   var(--theme-colors-popover-foreground);\n\n  /* Foregrounds */\n  --foreground:           var(--theme-colors-foreground);\n  --card-foreground:      var(--theme-colors-card-foreground);\n  --muted-foreground:     var(--theme-colors-muted-foreground);\n  --placeholder:          var(--theme-colors-placeholder);\n\n  /* Brand ramp */\n  --primary:              var(--theme-colors-primary);\n  --primary-foreground:   var(--theme-colors-primary-foreground);\n  --primary-light:        var(--theme-colors-primary-light);\n  --primary-dark:         var(--theme-colors-primary-dark);\n  /* ... full ramp --primary-50 through --primary-900 ... */\n\n  /* Accent, secondary, muted, border, input, ring */\n  --accent:               var(--theme-colors-accent);\n  --accent-foreground:    var(--theme-colors-accent-foreground);\n  --secondary:            var(--theme-colors-secondary);\n  --secondary-foreground: var(--theme-colors-secondary-foreground);\n  --muted:                var(--theme-colors-muted);\n  --border:               var(--theme-colors-border);\n  --border-strong:        var(--theme-colors-border-strong);\n  --input:                var(--theme-colors-input);\n  --ring:                 var(--theme-colors-ring);\n\n  /* Feedback */\n  --destructive:              var(--theme-colors-destructive);\n  --destructive-foreground:   var(--theme-colors-destructive-foreground);\n  --success:                  var(--theme-colors-success);\n  --success-foreground:       var(--theme-colors-success-foreground);\n  --warning:                  var(--theme-colors-warning);\n  --warning-foreground:       var(--theme-colors-warning-foreground);\n  --info:                     var(--theme-colors-info);\n  --info-foreground:          var(--theme-colors-info-foreground);\n\n  /* Typography scale, tracking, leading */\n  --theme-text-xs:        var(--theme-typography-scale-xs);\n  --theme-text-sm:        var(--theme-typography-scale-sm);\n  /* ... full scale ... */\n  --theme-tracking-tight: var(--theme-typography-tracking-tight);\n  --theme-leading-normal: var(--theme-typography-leading-normal);\n  /* ... */\n\n  /* Spacing */\n  --theme-container-max:  var(--theme-spacing-container-max);\n  --theme-section-y:      var(--theme-spacing-section-y);\n  --theme-header-h:       var(--theme-spacing-header-h);\n  --theme-sidebar-w:      var(--theme-spacing-sidebar-w);\n\n  /* Z-index */\n  --z-base:     var(--theme-z-index-base);\n  --z-elevated: var(--theme-z-index-elevated);\n  --z-dropdown: var(--theme-z-index-dropdown);\n  --z-sticky:   var(--theme-z-index-sticky);\n  --z-overlay:  var(--theme-z-index-overlay);\n  --z-modal:    var(--theme-z-index-modal);\n  --z-toast:    var(--theme-z-index-toast);\n}\n```\n\n**Layer 2 —** `@theme` **Tailwind v4 bridge (Tenant-provided,** `index.css`**)** Every semantic variable from Layer 1 is re-exposed under the Tailwind v4 `@theme` namespace so it becomes a utility class. Pattern: `--color-{slug}: var(--{slug})`.\n\n```css\n@theme {\n  --color-background:    var(--background);\n  --color-card:          var(--card);\n  --color-foreground:    var(--foreground);\n  --color-primary:       var(--primary);\n  --color-accent:        var(--accent);\n  --color-border:        var(--border);\n  /* ... full token set ... */\n\n  --font-primary:        var(--theme-font-primary);\n  --font-mono:           var(--theme-font-mono);\n  --font-display:        var(--theme-font-display);\n\n  --radius-sm:           var(--theme-radius-sm);\n  --radius-md:           var(--theme-radius-md);\n  --radius-lg:           var(--theme-radius-lg);\n  --radius-xl:           var(--theme-radius-xl);\n  --radius-full:         var(--theme-radius-full);\n}\n```\n\nAfter this bridge, the full Tailwind utility vocabulary (`bg-primary`, `text-foreground`, `rounded-lg`, `font-display`, etc.) resolves to live theme values — with no hardcoded hex anywhere in the React layer.\n\n**Light mode / additional modes** are bridged by overriding the Layer 1 semantic vars under a `[data-theme=\"light\"]` selector (or equivalent), pointing to the engine-injected mode vars (`--theme-modes-light-colors-*`). The `@theme` layer requires no changes.\n\n**Rule:** A tenant `index.css` must implement all three layers. Skipping Layer 2 breaks Tailwind utility resolution. Skipping Layer 1 couples sections to engine-internal naming. Hardcoding values in either layer is non-compliant.\n\n#### 4.4.4 Section-Local Scope\n\nIf a section controls its own visual language, it **shall** establish a local token scope on the section root. Example:\n\n```tsx\n<section\n  style={{\n    '--local-bg': 'var(--background)',\n    '--local-text': 'var(--foreground)',\n    '--local-text-muted': 'var(--muted-foreground)',\n    '--local-primary': 'var(--primary)',\n    '--local-border': 'var(--border)',\n    '--local-surface': 'var(--card)',\n    '--local-radius-sm': 'var(--theme-radius-sm)',\n    '--local-radius-md': 'var(--theme-radius-md)',\n    '--local-radius-lg': 'var(--theme-radius-lg)',\n  } as React.CSSProperties}\n>\n```\n\n**Rule:** `--local-*` values must map to published theme variables. They must **not** be defined as hardcoded brand values such as `#fff`, `#111827`, `12px`, or `Inter, sans-serif` if those values belong to the tenant theme layer.\n\n**Rule:** Local tokens are **mandatory** for section-owned color and radius concerns. They are **optional** for font-family concerns unless the section must remap or isolate font roles locally.\n\n#### 4.4.5 Canonical Typography Rule\n\nTypography follows a deterministic rule distinct from color/radius:\n\n1. **Canonical font publication** — Tenant/Core must publish semantic font variables such as `--theme-font-primary`, `--theme-font-mono`, and `--theme-font-display` when those roles exist in the theme.\n2. **Canonical font consumption** — Sections must consume typography through semantic tenant font utilities or variables backed by those published theme roles (for example `.font-display` backed by `--font-display`, itself backed by `--theme-font-display`).\n3. **Local font tokens** — `--local-font-*` is optional and should be used only when a section needs to remap a font role locally rather than simply consume the canonical tenant font role.\n\nExample of canonical global semantic bridge:\n\n```css\n:root {\n  --font-primary: var(--theme-font-primary);\n  --font-display: var(--theme-font-display);\n}\n\n.font-display {\n  font-family: var(--font-display, var(--font-primary));\n}\n```\n\n**Rule:** A section is compliant if it consumes themed fonts through this published semantic chain. It is **not** required to define `--local-font-display` unless the section needs local remapping. This closes the ambiguity between global semantic typography utilities and local color/radius scoping.\n\n#### 4.4.6 View Consumption\n\nAll section-owned classes that affect color or radius must consume local variables. Font consumption must follow the typography rule above. Example:\n\n```tsx\n<section\n  style={{\n    '--local-bg': 'var(--background)',\n    '--local-text': 'var(--foreground)',\n    '--local-primary': 'var(--primary)',\n    '--local-border': 'var(--border)',\n    '--local-radius-md': 'var(--theme-radius-md)',\n    '--local-radius-lg': 'var(--theme-radius-lg)',\n  } as React.CSSProperties}\n  className=\"bg-[var(--local-bg)]\"\n>\n  <h1 className=\"font-display text-[var(--local-text)]\">Build Tenant DNA</h1>\n\n  <a className=\"bg-[var(--local-primary)] rounded-[var(--local-radius-md)] text-white\">\n    Read the Docs\n  </a>\n\n  <div className=\"border border-[var(--local-border)] rounded-[var(--local-radius-lg)]\">\n    {/* illustration / mockup / card */}\n  </div>\n</section>\n```\n\n#### 4.4.7 Compliance Rules\n\nA section is compliant when all of the following are true:\n\n1. `theme.json` is the source of truth for the theme values being used.\n2. Those values are published at runtime as CSS custom properties before the section renders.\n3. The section root defines a local token scope for the color/radius concerns it controls.\n4. Local color/radius tokens map to published theme variables rather than hardcoded literals.\n5. JSX classes use `var(--local-*)` for section-owned color/radius concerns.\n6. Fonts are consumed through the published semantic font chain, and only use local font tokens when local remapping is required.\n7. Hardcoded colors/radii are absent from the primary visual contract of the section.\n\n#### 4.4.8 Allowed Exceptions\n\nThe following are acceptable if documented and intentionally limited:\n\n- Tiny decorative one-off values that are not part of the tenant theme contract (for example an isolated translucent pixel-grid overlay).\n- Temporary compatibility shims during migration, provided the section still exposes a clear compliant path and the literal is not the primary themed value.\n- Semantic alias bridges in tenant CSS (for example `--font-display: var(--theme-font-display)`), as long as the source remains the theme layer.\n\n#### 4.4.9 Non-Compliant Patterns\n\nThe following are non-compliant:\n\n- `style={{ '--local-bg': '#060d1b' }}` when that background belongs to tenant theme.\n- Buttons using `rounded-[7px]`, `bg-blue-500`, `text-zinc-100`, or similar hardcoded utilities inside a section that claims to be theme-driven.\n- A section root that defines `--local-*`, but child elements still use raw `bg-*`, `text-*`, or `rounded-*` utilities for the same owned concerns.\n- Reading `theme.json` directly inside a View instead of consuming published runtime theme variables.\n- Treating brand-specific extension keys as a replacement for canonical semantic keys such as `primary`, `background`, `text`, `border`, or `fontFamily.primary`.\n\n#### 4.4.10 Practical Interpretation\n\n`--local-*` is not the source of truth. It is the **local scoping layer** between tenant theme and section implementation.\n\nCanonical chain:\n\n`theme.json` → published runtime theme vars → section `--local-*` → JSX classes\\`\n\nCanonical font chain:\n\n`theme.json` → published semantic font vars → tenant font utility/variable → section typography\\`\n\n### 4.5 Z-Index & Overlay Governance (v1.2)\n\nSection content root **must** stay at `z-index` **≤ 1** (prefer `z-0`) so the Sovereign Overlay can sit above with high z-index in Tenant CSS (§7). Header/footer may use a higher z-index (e.g. 50) only as a documented exception for global chrome.\n\n**Perché servono (CIP):** View “dumb” (solo data/settings) e senza import di Zod evita accoppiamento e permette al Form Factory di essere l’unica fonte di verità sugli schemi. Z-index basso evita che il contenuto copra l’overlay di selezione in Studio. Asset via `resolveAssetUrl`: i path relativi vengono risolti in `/assets/...` (senza segmento tenantId nel path). In v1.4 la catena `theme.json -> runtime vars -> --local-* -> JSX classes` rende i tenant temabili, riproducibili e compatibili con la Studio UX; senza questa separazione, stili “nudi” o valori hardcoded creano drift visivo, rompono il contratto del brand, e rendono ambiguo ciò che appartiene al tema contro ciò che appartiene alla section.\n\n---\n\n## 5. 🛠️ Editor Component Implementation Protocol (ECIP) v1.5\n\n**Objective:** Standardize the Polymorphic ICE engine.\n\n1. **Recursive Form Factory:** The Admin UI builds forms by traversing the Zod ontology.\n2. **UI Metadata:** Use `.describe('ui:[widget]')` in schemas to pass instructions to the Form Factory.\n3. **Deterministic IDs:** Every object in a `ZodArray` must extend `BaseArrayItem` (containing an `id`) to ensure React reconciliation stability during reordering.\n\n### 5.4 UI Metadata Vocabulary (v1.2)\n\nStandard keys for the Form Factory:\n\nKey Use case `ui:text` Single-line text input. `ui:textarea` Multi-line text. `ui:select` Enum / single choice. `ui:number` Numeric input. `ui:list` Array of items; list editor (add/remove/reorder). `ui:icon-picker` Icon selection.\n\nUnknown keys may be treated as `ui:text`. Array fields must use `BaseArrayItem` for items.\n\n### 5.5 Path-Only Nested Selection & Expansion (v1.3, breaking)\n\nIn strict v1.3 Studio/Inspector behavior, nested editing targets are represented by **path segments from root to leaf**.\n\n```typescript\nexport type SelectionPathSegment = { fieldKey: string; itemId?: string };\nexport type SelectionPath = SelectionPathSegment[];\n```\n\nRules:\n\n- Expansion and focus for nested arrays **must** be computed from `SelectionPath` (root → leaf), not from a single flat pair.\n- Matching by `fieldKey` alone is non-compliant for nested structures.\n- Legacy flat payload fields `itemField` and `itemId` are removed in strict v1.3 selection protocol.\n\n**Perché servono (ECIP):** Il Form Factory deve sapere quale widget usare (text, textarea, select, list, …) senza hardcodare per tipo; `.describe('ui:...')` è il contratto. BaseArrayItem con `id` su ogni item di array garantisce chiavi stabili in React e reorder/delete corretti nell’Inspector. In v1.3 la selezione/espansione path-only elimina ambiguità su array annidati: senza path completo root→leaf, la sidebar può aprire il ramo sbagliato o non aprire il target.\n\n---\n\n## 6. 🎯 ICE Data Attribute Contract (IDAC) v1.1\n\n**Objective:** Mandatory data attributes so the Stage (iframe) and Inspector can bind selection and field/item editing without coupling to Tenant DOM.\n\n### 6.1 Section-Level Markup (Core-Provided)\n\n**SectionRenderer** (Core) wraps each section root with:\n\n- `data-section-id` — Section instance ID (e.g. UUID). On the wrapper that contains content + overlay.\n- Sibling overlay element `data-jp-section-overlay` — Selection ring and type label. **Tenant does not add this;** Core injects it.\n\nTenant Views render the **content** root only (e.g. `<section>` or `<div>`), placed **inside** the Core wrapper.\n\n### 6.2 Field-Level Binding (Tenant-Provided)\n\nFor every **editable scalar field** the View **must** attach `data-jp-field=\"<fieldKey>\"` (key matches schema path: e.g. `title`, `description`, `sectionTitle`, `label`).\n\n### 6.3 Array-Item Binding (Tenant-Provided)\n\nFor every **editable array item** the View **must** attach:\n\n- `data-jp-item-id=\"<stableId>\"` — Prefer `item.id`; fallback e.g. `legacy-${index}` only outside strict mode.\n- `data-jp-item-field=\"<arrayKey>\"` — e.g. `cards`, `layers`, `products`, `paragraphs`.\n\n### 6.4 Compliance\n\n**Reserved types** (`header`, `footer`): ICE attributes optional unless Studio edits them. **All other section types** in the Stage and in `SECTION_SCHEMAS` **must** implement §6.2 and §6.3 for every editable field and array item.\n\n### 6.5 Strict Path Extraction for Nested Arrays (v1.3, breaking)\n\nFor nested array targets, the Core/Inspector contract is path-based:\n\n- The runtime selection target is expressed as `itemPath: SelectionPath` (root → leaf).\n- Flat identity (`itemField` + `itemId`) is not sufficient for nested structures and is removed in strict v1.3 payloads.\n- In strict mode, index-based identity fallback is non-compliant for editable object arrays.\n\n**Perché servono (IDAC):** Lo Stage è in un iframe e l’Inspector deve sapere **quale campo o item** corrisponde al click (o alla selezione) senza conoscere la struttura DOM del Tenant. `data-jp-field` associa un nodo DOM al path dello schema (es. `title`, `description`): così il Core può evidenziare la riga giusta nella sidebar, applicare opacità attivo/inattivo e aprire il form sul campo corretto. `data-jp-item-id` e `data-jp-item-field` fanno lo stesso per gli item di array (liste, reorder, delete). In v1.3, `itemPath` rende deterministico anche il caso nested (array dentro array), eliminando mismatch tra selezione canvas e ramo aperto in sidebar.\n\n---\n\n## 7. 🎨 Tenant Overlay CSS Contract (TOCC) v1.0\n\n**Objective:** The Stage iframe loads only Tenant HTML/CSS. Core injects overlay **markup** but does **not** ship overlay styles. The Tenant **must** supply CSS so overlay is visible.\n\n### 7.1 Required Selectors (Tenant global CSS)\n\n1. `[data-jp-section-overlay]` — `position: absolute; inset: 0`; `pointer-events: none`; base state transparent.\n2. `[data-section-id]:hover [data-jp-section-overlay]` — Hover: e.g. dashed border, subtle tint.\n3. `[data-section-id][data-jp-selected] [data-jp-section-overlay]` — Selected: solid border, optional tint.\n4. `[data-jp-section-overlay] > div` (type label) — Position and visibility (e.g. visible on hover/selected).\n\n### 7.2 Z-Index\n\nOverlay **z-index** high (e.g. 9999). Section content at or below CIP limit (§4.5).\n\n### 7.3 Responsibility\n\n**Core:** Injects wrapper and overlay DOM; sets `data-jp-selected`. **Tenant:** All overlay **visual** rules.\n\n**Perché servono (TOCC):** L’iframe dello Stage carica solo HTML/CSS del Tenant; il Core inietta il markup dell’overlay ma non gli stili. Senza CSS Tenant per i selettori TOCC, bordo hover/selected e type label non sarebbero visibili: l’autore non vedrebbe quale section è selezionata né il label del tipo. TOCC chiarisce la responsabilità (Core = markup, Tenant = aspetto) e garantisce UX uniforme tra tenant.\n\n---\n\n## 8. 📦 Base Section Data & Settings (BSDS) v1.0\n\n**Objective:** Standardize base schema fragments for anchors, array items, and section settings.\n\n### 8.1 BaseSectionData\n\nEvery section data schema **must** extend a base with at least `anchorId` (optional string). Canonical Zod (Tenant `lib/base-schemas.ts` or equivalent):\n\n```typescript\nexport const BaseSectionData = z.object({\n  anchorId: z.string().optional().describe('ui:text'),\n});\n```\n\n### 8.2 BaseArrayItem\n\nEvery array item schema editable in the Inspector **must** include `id` (optional string minimum). Canonical Zod:\n\n```typescript\nexport const BaseArrayItem = z.object({\n  id: z.string().optional(),\n});\n```\n\nRecommended: required UUID for new items. Used by `data-jp-item-id` and React reconciliation.\n\n### 8.3 BaseSectionSettings (Optional)\n\nCommon section-level settings. Canonical Zod (name **BaseSectionSettingsSchema** or as exported by Core):\n\n```typescript\nexport const BaseSectionSettingsSchema = z.object({\n  paddingTop: z.enum(['none', 'sm', 'md', 'lg', 'xl', '2xl']).default('md').describe('ui:select'),\n  paddingBottom: z.enum(['none', 'sm', 'md', 'lg', 'xl', '2xl']).default('md').describe('ui:select'),\n  theme: z.enum(['dark', 'light', 'accent']).default('dark').describe('ui:select'),\n  container: z.enum(['boxed', 'fluid']).default('boxed').describe('ui:select'),\n});\n```\n\nCapsules may extend this for type-specific settings. Core may export **BaseSectionSettings** as the TypeScript type inferred from this or a superset.\n\n**Perché servono (BSDS):** anchorId permette deep-link e navigazione in-page; id sugli array item è necessario per `data-jp-item-id`, reorder e React reconciliation. BaseSectionSettings comuni (padding, theme, container) evitano ripetizione e allineano il Form Factory tra capsule. Senza base condivisi, ogni capsule inventa convenzioni e validazione/add-section diventano fragili.\n\n---\n\n## 9. 📌 AddSectionConfig (ASC) v1.0\n\n**Objective:** Formalize the \"Add Section\" contract used by the Studio.\n\n**Type (Core exports** `AddSectionConfig`**):**\n\n```typescript\ninterface AddSectionConfig {\n  addableSectionTypes: readonly string[];\n  sectionTypeLabels: Record<string, string>;\n  getDefaultSectionData(sectionType: string): Record<string, unknown>;\n}\n```\n\n**Shape:** Tenant provides one object (e.g. `addSectionConfig`) with:\n\n- `addableSectionTypes` — Readonly array of section type keys. Only these types appear in the Add Section Library. Must be a subset of (or equal to) the keys in SectionDataRegistry.\n- `sectionTypeLabels` — Map type key → display string (e.g. `{ hero: 'Hero', 'cta-banner': 'CTA Banner' }`).\n- `getDefaultSectionData(sectionType: string): Record<string, unknown>` — Returns default `data` for a new section. Must conform to the capsule’s data schema so the new section validates.\n\nCore creates a new section with deterministic UUID, `type`, and `data` from `getDefaultSectionData(type)`.\n\n**Perché servono (ASC):** Lo Studio deve mostrare una libreria “Aggiungi sezione” con nomi leggibili e, alla scelta, creare una section con dati iniziali validi. addableSectionTypes, sectionTypeLabels e getDefaultSectionData sono il contratto: il Tenant è l’unica fonte di verità su quali tipi sono addabili e con quali default. Senza ASC, il Core non saprebbe cosa mostrare in modal né come popolare i dati della nuova section.\n\n---\n\n## 10. ⚙️ JsonPagesConfig & Engine Bootstrap (JEB) v1.1\n\n**Objective:** Bootstrap contract between Tenant app and `@olonjs/core`.\n\n### 10.1 JsonPagesConfig (required fields)\n\nThe Tenant passes a single **config** object to **JsonPagesEngine**. Required fields:\n\nField Type Description **tenantId** string Passed to `resolveAssetUrl(path, tenantId)`; resolved asset URLs are `/assets/...` with no tenantId segment in the path. **registry** `{ [K in SectionType]: React.FC<SectionComponentPropsMap[K]> }` Component registry. Must match MTRP keys. See Appendix A. **schemas** `Record<SectionType, ZodType>` or equivalent SECTION_SCHEMAS: type → **data** Zod schema. Form Factory uses this. See Appendix A. **pages** `Record<string, PageConfig>` Slug → page config. See Appendix A. **siteConfig** SiteConfig Global site (identity, header/footer blocks). See Appendix A. **themeConfig** ThemeConfig Theme tokens. See Appendix A. **menuConfig** MenuConfig Navigation tree (SSOT for header menu). See Appendix A. **themeCss** `{ tenant: string }` At least **tenant**: string (inline CSS or URL) for Stage iframe injection. **addSection** AddSectionConfig Add-section config (§9).\n\nCore may define optional fields. The Tenant must not omit required fields.\n\n### 10.2 JsonPagesEngine\n\nRoot component: `<JsonPagesEngine config={config} />`. Responsibilities: route → page, SectionRenderer per section; in Studio mode Sovereign Shell (Inspector, Control Bar, postMessage); section wrappers and overlay per IDAC and JAP. Tenant does not implement the Shell.\n\n### 10.3 Studio Selection Event Contract (v1.3, breaking)\n\nIn strict v1.3 Studio, section selection payload for nested targets is path-based:\n\n```typescript\ntype SectionSelectMessage = {\n  type: 'SECTION_SELECT';\n  section: { id: string; type: string; scope: 'global' | 'local' };\n  itemPath?: SelectionPath; // root -> leaf\n};\n```\n\nRemoved from strict protocol:\n\n- `itemField`\n- `itemId`\n\n**Perché servono (JEB):** Un unico punto di bootstrap (config + Engine) evita che il Tenant replichi logica di routing, Shell e overlay. I campi obbligatori in JsonPagesConfig (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss, addSection) sono il minimo per far funzionare rendering, Studio e Form Factory; omissioni causano errori a runtime. In v1.3, il payload `itemPath` sincronizza in modo non ambiguo Stage e Inspector su nested arrays.\n\n---\n\n# 🏛️ OlonJS_ADMIN_PROTOCOL (JAP) v1.2\n\n**Status:** Mandatory Standard\\\n**Version:** 1.2.0 (Sovereign Shell Edition — Path/Nested Strictness)\\\n**Objective:** Deterministic orchestration of the \"Studio\" environment (ICE Level 1).\n\n---\n\n## 1. The Sovereign Shell Topology\n\nThe Admin interface is a **Sovereign Shell** from `@olonjs/core`.\n\n1. **The Stage (Canvas):** Isolated Iframe; postMessage for data updates and selection mirroring. Section markup follows **IDAC** (§6); overlay styling follows **TOCC** (§7).\n2. **The Inspector (Sidebar):** Consumes Tenant Zod schemas to generate editors; binding via `data-jp-field` and `data-jp-item-*`.\n3. **The Control Bar:** Save, Export, Add Section.\n\n## 2. State Orchestration & Persistence\n\n- **Working Draft:** Reactive local state for unsaved changes.\n- **Sync Law:** Inspector changes → Working Draft → Stage via `STUDIO_EVENTS.UPDATE_DRAFTS`.\n- **Bake Protocol:** \"Bake HTML\" requests snapshot from Iframe, injects `ProjectState` as JSON, triggers download.\n\n## 3. Context Switching (Global vs. Local)\n\n- **Header/Footer** selection → Global Mode, `site.json`.\n- Any other section → Page Mode, current `[slug].json`.\n\n## 4. Section Lifecycle Management\n\n1. **Add Section:** Modal from Tenant `SECTION_SCHEMAS`; UUID + default data via **AddSectionConfig** (§9).\n2. **Reorder:** Inspector or Stage Overlay; array mutation in Working Draft.\n3. **Delete:** Confirmation; remove from array, clear selection.\n\n## 5. Stage Isolation & Overlay\n\n- **CSS Shielding:** Stage in Iframe; Tenant CSS does not leak into Admin.\n- **Sovereign Overlay:** Selection ring and type labels injected per **IDAC** (§6); Tenant styles them per **TOCC** (§7).\n\n## 6. \"Green Build\" Validation\n\nStudio enforces `tsc && vite build`. No export with TypeScript errors.\n\n## 7. Path-Deterministic Selection & Sidebar Expansion (v1.3, breaking)\n\n- Section/item focus synchronization uses `itemPath` (root → leaf), not flat `itemField/itemId`.\n- Sidebar expansion state for nested arrays must be derived from all path segments.\n- Flat-only matching may open/close wrong branches and is non-compliant in strict mode.\n\n**Perché servono (JAP):** Stage in iframe + Inspector + Control Bar separano il contesto di editing dal sito; postMessage e Working Draft permettono modifiche senza toccare subito i file. Bake ed Export richiedono uno stato coerente. Global vs Page mode evita confusione su dove si sta editando (site.json vs \\[slug\\].json). Add/Reorder/Delete sono gestiti in un solo modo (Working Draft + ASC). Green Build garantisce che ciò che si esporta compili. In v1.3, il path completo elimina ambiguità nella sincronizzazione Stage↔Sidebar su strutture annidate.\n\n---\n\n## Compliance: Legacy vs Full UX (v1.4)\n\nDimension Legacy / Less UX Full UX (Core-aligned) **ICE binding** No `data-jp-*`; Inspector cannot bind. IDAC (§6) on every editable section/field/item. **Section wrapper** Plain `<section>`; no overlay contract. Core wrapper + overlay; Tenant CSS per TOCC (§7). **Design tokens** Raw BEM / fixed classes, or local vars fed by literals. `theme.json` as source of truth, mandatory runtime publication, local color/radius scope via `--local-*`, typography via canonical semantic font chain, no primary hardcoded themed values. **Base schemas** Ad hoc. BSDS (§8): BaseSectionData, BaseArrayItem, BaseSectionSettings. **Add Section** Ad hoc defaults. ASC (§9): addableSectionTypes, labels, getDefaultSectionData. **Bootstrap** Implicit. JEB (§10): JsonPagesConfig + JsonPagesEngine. **Selection payload** Flat `itemField/itemId`. Path-only `itemPath: SelectionPath` (JEB §10.3). **Nested array expansion** Single-segment or field-only heuristics. Root-to-leaf path expansion (ECIP §5.5, JAP §7). **Array item identity (strict)** Index fallback tolerated. Stable `id` required for editable object arrays.\n\n**Rule:** Every page section (non-header/footer) that appears in the Stage and in `SECTION_SCHEMAS` must comply with §6, §7, §4.4, §8, §9, §10 for full Studio UX.\n\n---\n\n## Summary of v1.5 Additions\n\n§ Title Purpose 4.4.3 Three-Layer CSS Bridge Replaces the informal \"publish CSS vars\" rule with the deterministic Layer 0 (engine injection) → Layer 1 (`:root` semantic bridge) → Layer 2 (`@theme` Tailwind bridge) architecture. Documents the engine's `--theme-colors-{name}` naming convention and the tenant's sovereign naming freedom in Layer 1. A.2.6 ThemeConfig (v1.5) Replaces the incorrect `surface/surfaceAlt/text/textMuted` canonical keys with the actual schema-aligned keys (`card`, `elevated`, `foreground`, `muted-foreground`, etc.). Adds `spacing`, `zIndex`, full typography sub-interfaces (`scale`, `tracking`, `leading`, `wordmark`), and `modes`. Establishes `theme.json` as SOT with schema as the formalisation layer.\n\n---\n\n## Summary of v1.4 Additions\n\n§ Title Purpose 4.4 Local Design Tokens Makes the `theme.json -> runtime vars -> --local-* -> JSX classes` chain explicit and normative. 4.4.3 Runtime Theme Publication Makes runtime CSS publication mandatory for themed tenants. 4.4.5 Canonical Typography Rule Removes ambiguity between global semantic font utilities and local token scoping. 4.4.7 Compliance Rules Turns Local Design Tokens into a checklist-grade compliance contract. 4.4.9 Non-Compliant Patterns Makes hardcoded token anti-patterns explicit. **Appendix A.2.6** **Deterministic ThemeConfig** Aligns the spec-level theme contract with the core’s structured semantic keys plus extension policy. **Appendix A.7** **Local Design Tokens Implementation Addendum** Operational checklist and implementation examples for compliant tenant sections.\n\n---\n\n# Appendix A — Tenant Type & Code-Generation Annex\n\n**Objective:** Make the specification **sufficient** to generate or audit a full tenant (new site, new components, new data) without a reference codebase. Defines TypeScript types, JSON shapes, schema contract, file paths, and integration pattern.\n\n**Status:** Mandatory for code-generation and governance. Compliance ensures generated tenants are typed and wired like the reference implementation.\n\n---\n\n## A.1 Core-Provided Types (from `@olonjs/core`)\n\nThe following are assumed to be exported by Core. The Tenant augments **SectionDataRegistry** and **SectionSettingsRegistry**; all other types are consumed as-is.\n\nType Description **SectionType** `keyof SectionDataRegistry` (after Tenant augmentation). Union of all section type keys. **Section** Union of `BaseSection<K>` for all K in SectionDataRegistry. See MTRP §1.2. **BaseSectionSettings** Optional base type for section settings (may align with BSDS §8.3). **MenuItem** Navigation item. **Minimum shape:** `{ label: string; href: string }`. Core may extend (e.g. `children?: MenuItem[]`). **AddSectionConfig** See §9. **JsonPagesConfig** See §10.1.\n\n**Perché servono (A.1):** Il Tenant deve conoscere i tipi esportati dal Core (SectionType, MenuItem, AddSectionConfig, JsonPagesConfig) per tipizzare registry, config e augmentation senza dipendere da implementazioni interne.\n\n---\n\n## A.2 Tenant-Provided Types (single source: `src/types.ts` or equivalent)\n\nThe Tenant **must** define the following in one module (e.g. `src/types.ts`). This module **must** perform the **module augmentation** of `@olonjs/core` for **SectionDataRegistry** and **SectionSettingsRegistry**, and **must** export **SectionComponentPropsMap** and re-export from `@olonjs/core` so that **SectionType** is available after augmentation.\n\n### A.2.1 SectionComponentPropsMap\n\nMaps each section type to the props of its React component. **Header** is the only type that receives **menu**.\n\n**Option A — Explicit (recommended for clarity and tooling):** For each section type K, add one entry. Header receives **menu**.\n\n```typescript\nimport type { MenuItem } from '@olonjs/core';\n// Import Data/Settings from each capsule.\n\nexport type SectionComponentPropsMap = {\n  'header': { data: HeaderData; settings?: HeaderSettings; menu: MenuItem[] };\n  'footer': { data: FooterData; settings?: FooterSettings };\n  'hero': { data: HeroData; settings?: HeroSettings };\n  // ... one entry per SectionType, e.g. 'feature-grid', 'cta-banner', etc.\n};\n```\n\n**Option B — Mapped type (DRY, requires SectionDataRegistry/SectionSettingsRegistry in scope):**\n\n```typescript\nimport type { MenuItem } from '@olonjs/core';\n\nexport type SectionComponentPropsMap = {\n  [K in SectionType]: K extends 'header'\n    ? { data: SectionDataRegistry[K]; settings?: SectionSettingsRegistry[K]; menu: MenuItem[] }\n    : { data: SectionDataRegistry[K]; settings?: K extends keyof SectionSettingsRegistry ? SectionSettingsRegistry[K] : BaseSectionSettings };\n};\n```\n\nSectionType is imported from Core (after Tenant augmentation). In practice Option A is the reference pattern; Option B is valid if the Tenant prefers a single derived definition.\n\n**Perché servono (A.2):** SectionComponentPropsMap e i tipi di config (PageConfig, SiteConfig, MenuConfig, ThemeConfig) definiscono il contratto tra dati (JSON, API) e componente; l’augmentation è l’unico modo per estendere i registry del Core senza fork. Senza questi tipi, generazione tenant e refactor sarebbero senza guida e il type-check fallirebbe.\n\n### A.2.2 ComponentRegistry type\n\nThe registry object **must** be typed as:\n\n```typescript\nimport type { SectionType } from '@olonjs/core';\nimport type { SectionComponentPropsMap } from '@/types';\n\nexport const ComponentRegistry: {\n  [K in SectionType]: React.FC<SectionComponentPropsMap[K]>;\n} = { /* ... */ };\n```\n\nFile: `src/lib/ComponentRegistry.tsx` (or equivalent). Imports one View per section type and assigns it to the corresponding key.\n\n### A.2.3 PageConfig\n\nMinimum shape for a single page (used in **pages** and in each `[slug].json`):\n\n```typescript\nexport interface PageConfig {\n  id?: string;\n  slug: string;\n  meta?: {\n    title?: string;\n    description?: string;\n  };\n  sections: Section[];\n}\n```\n\n**Section** is the union type from MTRP (§1.2). Each element of **sections** has **id**, **type**, **data**, **settings** and conforms to the capsule schemas.\n\n### A.2.4 SiteConfig\n\nMinimum shape for **site.json** (and for **siteConfig** in JsonPagesConfig):\n\n```typescript\nexport interface SiteConfigIdentity {\n  title?: string;\n  logoUrl?: string;\n}\n\nexport interface SiteConfig {\n  identity?: SiteConfigIdentity;\n  pages?: Array<{ slug: string; label: string }>;\n  header: {\n    id: string;\n    type: 'header';\n    data: HeaderData;\n    settings?: HeaderSettings;\n  };\n  footer: {\n    id: string;\n    type: 'footer';\n    data: FooterData;\n    settings?: FooterSettings;\n  };\n}\n```\n\n**HeaderData**, **FooterData**, **HeaderSettings**, **FooterSettings** are the types exported from the header and footer capsules.\n\n### A.2.5 MenuConfig\n\nMinimum shape for **menu.json** (and for **menuConfig** in JsonPagesConfig). Structure is tenant-defined; Core expects the header to receive **MenuItem\\[\\]**. Common pattern: an object with a key (e.g. **main**) whose value is **MenuItem\\[\\]**.\n\n```typescript\nexport interface MenuConfig {\n  main?: MenuItem[];\n  [key: string]: MenuItem[] | undefined;\n}\n```\n\nOr simply `MenuItem[]` if the app uses a single flat list. The Tenant must ensure that the value passed to the header component as **menu** conforms to **MenuItem\\[\\]** (e.g. `menuConfig.main` or `menuConfig` if it is the array).\n\n### A.2.6 ThemeConfig\n\nMinimum shape for **theme.json** (and for **themeConfig** in JsonPagesConfig). `theme.json` is the **source of truth** for the entire visual contract of the tenant. The schema (`design-system.schema.json`) is the machine-readable formalisation of this contract — if the TypeScript interfaces and the JSON Schema diverge, the JSON Schema wins.\n\n**Naming policy:** The keys within `tokens.colors` are the tenant's sovereign choice. The engine flattens all keys to `--theme-colors-{name}` regardless of naming convention. The required keys listed below are the ones the engine's `:root` bridge and the `@theme` Tailwind bridge must be able to resolve. Extra brand-specific keys are always allowed as additive extensions.\n\n```typescript\nexport interface ThemeColors {\n  /* Required — backgrounds */\n  background: string;\n  card: string;\n  elevated: string;\n  overlay: string;\n  popover: string;\n  'popover-foreground': string;\n\n  /* Required — foregrounds */\n  foreground: string;\n  'card-foreground': string;\n  'muted-foreground': string;\n  placeholder: string;\n\n  /* Required — brand */\n  primary: string;\n  'primary-foreground': string;\n  'primary-light': string;\n  'primary-dark': string;\n\n  /* Optional — brand ramp (50–900) */\n  'primary-50'?: string;\n  'primary-100'?: string;\n  'primary-200'?: string;\n  'primary-300'?: string;\n  'primary-400'?: string;\n  'primary-500'?: string;\n  'primary-600'?: string;\n  'primary-700'?: string;\n  'primary-800'?: string;\n  'primary-900'?: string;\n\n  /* Required — accent, secondary, muted */\n  accent: string;\n  'accent-foreground': string;\n  secondary: string;\n  'secondary-foreground': string;\n  muted: string;\n\n  /* Required — border, form */\n  border: string;\n  'border-strong': string;\n  input: string;\n  ring: string;\n\n  /* Required — feedback */\n  destructive: string;\n  'destructive-foreground': string;\n  'destructive-border': string;\n  'destructive-ring': string;\n  success: string;\n  'success-foreground': string;\n  'success-border': string;\n  'success-indicator': string;\n  warning: string;\n  'warning-foreground': string;\n  'warning-border': string;\n  info: string;\n  'info-foreground': string;\n  'info-border': string;\n\n  [key: string]: string | undefined;\n}\n\nexport interface ThemeFontFamily {\n  primary: string;\n  mono: string;\n  display?: string;\n  [key: string]: string | undefined;\n}\n\nexport interface ThemeWordmark {\n  fontFamily: string;\n  weight: string;\n  width: string;\n}\n\nexport interface ThemeTypography {\n  fontFamily: ThemeFontFamily;\n  wordmark?: ThemeWordmark;\n  scale?: Record<string, string>;     /* xs sm base md lg xl 2xl 3xl 4xl 5xl 6xl 7xl */\n  tracking?: Record<string, string>;  /* tight display normal wide label */\n  leading?: Record<string, string>;   /* none tight snug normal relaxed */\n}\n\nexport interface ThemeBorderRadius {\n  sm: string;\n  md: string;\n  lg: string;\n  xl?: string;\n  full?: string;\n  [key: string]: string | undefined;\n}\n\nexport interface ThemeSpacing {\n  'container-max'?: string;\n  'section-y'?: string;\n  'header-h'?: string;\n  'sidebar-w'?: string;\n  [key: string]: string | undefined;\n}\n\nexport interface ThemeZIndex {\n  base?: string;\n  elevated?: string;\n  dropdown?: string;\n  sticky?: string;\n  overlay?: string;\n  modal?: string;\n  toast?: string;\n  [key: string]: string | undefined;\n}\n\nexport interface ThemeModes {\n  [mode: string]: { colors: Partial<ThemeColors> };\n}\n\nexport interface ThemeTokens {\n  colors: ThemeColors;\n  typography: ThemeTypography;\n  borderRadius: ThemeBorderRadius;\n  spacing?: ThemeSpacing;\n  zIndex?: ThemeZIndex;\n  modes?: ThemeModes;\n}\n\nexport interface ThemeConfig {\n  name: string;\n  tokens: ThemeTokens;\n}\n```\n\n**Rule:** `theme.json` is the single source of truth. All layers downstream (engine injection, `:root` bridge, `@theme` bridge, React JSX) are read-only consumers. No layer below `theme.json` may hardcode a value that belongs to the theme contract.\n\n**Rule:** Brand-specific extension keys (e.g. `colors.primary-50` through `primary-900`, custom spacing tokens) are always allowed as additive extensions within the canonical groups. They must not replace the required semantic keys.\n\n---\n\n## A.3 Schema Contract (SECTION_SCHEMAS)\n\n**Location:** `src/lib/schemas.ts` (or equivalent).\n\n**Contract:**\n\n- **SECTION_SCHEMAS** is a **single object** whose keys are **SectionType** and whose values are **Zod schemas for the section data** (not settings, unless the Form Factory contract expects a combined or per-type settings schema; then each value may be the data schema only, and settings may be defined per capsule and aggregated elsewhere if needed).\n- The Tenant **must** re-export **BaseSectionData**, **BaseArrayItem**, and optionally **BaseSectionSettingsSchema** from `src/lib/base-schemas.ts` (or equivalent). Each capsule’s data schema **must** extend BaseSectionData; each array item schema **must** extend or include BaseArrayItem.\n- **SECTION_SCHEMAS** is typed as `Record<SectionType, ZodType>` or `{ [K in SectionType]: ZodType }` so that keys match the registry and SectionDataRegistry.\n\n**Export:** The app imports **SECTION_SCHEMAS** and passes it as **config.schemas** to JsonPagesEngine. The Form Factory traverses these schemas to build editors.\n\n**Perché servono (A.3):** Un unico oggetto SECTION_SCHEMAS con chiavi = SectionType e valori = schema data permette al Form Factory di costruire form per tipo senza convenzioni ad hoc; i base schema garantiscono anchorId e id su item. Senza questo contratto, l’Inspector non saprebbe quali campi mostrare né come validare.\n\n---\n\n## A.4 File Paths & Data Layout\n\nPurpose Path (conventional) Description Site config `src/data/config/site.json` SiteConfig (identity, header, footer, pages list). Menu config `src/data/config/menu.json` MenuConfig (e.g. main nav). Theme config `src/data/config/theme.json` ThemeConfig (tokens). Page data `src/data/pages/<slug>.json` One file per page; content is PageConfig (slug, meta, sections). Base schemas `src/lib/base-schemas.ts` BaseSectionData, BaseArrayItem, BaseSectionSettingsSchema. Schema aggregate `src/lib/schemas.ts` SECTION_SCHEMAS; re-exports base schemas. Registry `src/lib/ComponentRegistry.tsx` ComponentRegistry object. Add-section config `src/lib/addSectionConfig.ts` addSectionConfig (AddSectionConfig). Tenant types & augmentation `src/types.ts` SectionComponentPropsMap, PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@olonjs/core'** for SectionDataRegistry and SectionSettingsRegistry; re-export from `@olonjs/core`. Bootstrap `src/App.tsx` Imports config (site, theme, menu, pages), registry, schemas, addSection, themeCss; builds JsonPagesConfig; renders .\n\nThe app entry (e.g. **main.tsx**) renders **App**. No other bootstrap contract is specified; the Tenant may use Vite aliases (e.g. **@/**) for the paths above.\n\n**Perché servono (A.4):** Path fissi (data/config, data/pages, lib/schemas, types.ts, App.tsx) permettono a CLI, tooling e agenti di trovare sempre gli stessi file; l’onboarding e la generazione da spec sono deterministici. Senza convenzione, ogni tenant sarebbe una struttura diversa.\n\n---\n\n## A.5 Integration Checklist (Code-Generation)\n\nWhen generating or auditing a tenant, ensure the following in order:\n\n 1. **Capsules** — For each section type, create `src/components/<type>/` with View.tsx, schema.ts, types.ts, index.ts. Data schema extends BaseSectionData; array items extend BaseArrayItem; View complies with CIP and IDAC (§6.2–6.3 for non-reserved types).\n 2. **Base schemas** — **src/lib/base-schemas.ts** exports BaseSectionData, BaseArrayItem, BaseSectionSettingsSchema (and optional CtaSchema or similar shared fragments).\n 3. **types.ts** — Define SectionComponentPropsMap (header with **menu**), PageConfig, SiteConfig, MenuConfig, ThemeConfig; **declare module '@olonjs/core'** and augment SectionDataRegistry and SectionSettingsRegistry; re-export from `@olonjs/core`.\n 4. **ComponentRegistry** — Import every View; build object **{ \\[K in SectionType\\]: ViewComponent }**; type as **{ \\[K in SectionType\\]: React.FC&lt;SectionComponentPropsMap\\[K\\]&gt; }**.\n 5. **schemas.ts** — Import base schemas and each capsule’s data schema; export SECTION_SCHEMAS as **{ \\[K in SectionType\\]: SchemaK }**; export SectionType as **keyof typeof SECTION_SCHEMAS** if not using Core’s SectionType.\n 6. **addSectionConfig** — addableSectionTypes, sectionTypeLabels, getDefaultSectionData; export as AddSectionConfig.\n 7. **App.tsx** — Import site, theme, menu, pages from data paths; build config (tenantId, registry, schemas, pages, siteConfig, themeConfig, menuConfig, themeCss: { tenant }, addSection); render JsonPagesEngine.\n 8. **Data files** — Create or update site.json, menu.json, theme.json, and one or more **.json** under the paths in A.4. Ensure JSON shapes match SiteConfig, MenuConfig, ThemeConfig, PageConfig.\n 9. **Runtime theme publication** — Publish the theme contract as runtime CSS custom properties before themed sections render.\n10. **Tenant CSS** — Include TOCC (§7) selectors in global CSS so the Stage overlay is visible, and bridge semantic theme variables where needed.\n11. **Reserved types** — Header and footer capsules receive props per SectionComponentPropsMap; menu is populated from menuConfig (e.g. menuConfig.main) when building the config or inside Core when rendering the header.\n\n**Perché servono (A.5):** La checklist in ordine evita di dimenticare passi (es. augmentation prima del registry, TOCC dopo le View) e rende la spec sufficiente per generare o verificare un tenant senza codebase di riferimento.\n\n---\n\n## A.6 v1.3 Path/Nested Strictness Addendum (breaking)\n\nThis addendum extends Appendix A without removing prior v1.2 obligations:\n\n1. **Type exports** — Core and/or shared types module should expose `SelectionPathSegment` and `SelectionPath` for Studio messaging and Inspector expansion logic.\n2. **Protocol migration** — Replace flat payload fields `itemField` / `itemId` with `itemPath?: SelectionPath` in strict v1.3 channels.\n3. **Nested array compliance** — For editable object arrays, item identity must be stable (`id`) and propagated to DOM attributes (`data-jp-item-id`), schema items (BaseArrayItem), and selection path segments (`itemId` when segment targets array item).\n4. **Backward compatibility policy** — Legacy flat fields may exist only in transitional adapters outside strict mode; normative v1.3 contract is path-only.\n\n---\n\n## A.7 v1.4 Local Design Tokens Implementation Addendum\n\nThis addendum extends Appendix A without removing prior v1.3 obligations:\n\n1. **Theme source of truth** — Tenant theme values belong in `src/data/config/theme.json`.\n2. **Runtime publication** — Core and/or tenant bootstrap **must** expose those values as runtime CSS custom properties before section rendering.\n3. **Local scope** — A themed section must define `--local-*` variables on its root for the color/radius concerns it owns.\n4. **Class consumption** — Section-owned color/radius utilities must consume `var(--local-*)`, not raw hardcoded theme values.\n5. **Typography policy** — Fonts must consume the published semantic font chain; local font tokens are optional and only for local remapping.\n6. **Migration policy** — Hardcoded colors/radii may exist only as temporary compatibility shims or purely decorative exceptions, not as the primary section contract.\n\nCanonical implementation pattern:\n\n```text\ntheme.json -> published runtime theme vars -> section --local-* -> JSX classes\n```\n\nCanonical typography pattern:\n\n```text\ntheme.json -> published semantic font vars -> tenant font utility/variable -> section typography\n```\n\nMinimal compliant example:\n\n```tsx\n<section\n  style={{\n    '--local-bg': 'var(--background)',\n    '--local-text': 'var(--foreground)',\n    '--local-primary': 'var(--primary)',\n    '--local-radius-md': 'var(--theme-radius-md)',\n  } as React.CSSProperties}\n  className=\"bg-[var(--local-bg)]\"\n>\n  <h2 className=\"font-display text-[var(--local-text)]\">Title</h2>\n  <a className=\"bg-[var(--local-primary)] rounded-[var(--local-radius-md)]\">CTA</a>\n</section>\n```\n\nDeterministic compliance checklist:\n\n1. Canonical semantic theme keys exist.\n2. Runtime publication exists.\n3. Section-local color/radius scope exists.\n4. Section-owned color/radius classes consume `var(--local-*)`.\n5. Fonts consume the semantic published font chain.\n6. Primary themed values are not hardcoded.\n\n---\n\n**Validation:** Align with current `@olonjs/core` exports (SectionType, MenuItem, AddSectionConfig, JsonPagesConfig, and in v1.3+ path types for Studio selection), with the deterministic `ThemeConfig` contract, and with the runtime theme publication contract used by tenant CSS.\\\n**Distribution:** Core via `.yalc`; tenant projections via `@olonjs/cli`. This annex makes the spec **necessary and sufficient** for tenant code-generation and governance at enterprise grade."
+        "content": "# 📐 OlonJS Architecture Specifications v1.5\n\n**Status:** Mandatory Standard\\\n**Version:** 1.5.0 (Sovereign Core Edition — Architecture + Studio/ICE UX, Path-Deterministic Nested Editing, Deterministic Local Design Tokens, Three-Layer CSS Bridge Contract)\\\n**Target:** Senior Architects / AI Agents / Enterprise Governance\n\nThis tenant follows the current OlonJS source-of-truth model: the tenant app owns content, schemas, theme, and persistence wiring; `@olonjs/core` owns the Studio shell, routing, preview, and editing engine.\n\n---\n\n## Canonical Editorial Flows\n\nThe supported Studio flows are now:\n\n- `SSG` for static HTML and route output.\n- `Save to file` for local JSON persistence back into tenant source files.\n- `Hot Save` for cloud/editorial persistence when the tenant config provides it.\n- `Add Section` for deterministic section lifecycle management inside Studio.\n\nPrevious one-off bake and JSON export paths are no longer part of Studio.\n\n---\n\n## Persistence Model\n\n`@olonjs/core` no longer performs HTML bake or ZIP export. Studio now invokes tenant-provided persistence callbacks:\n\n- `saveToFile(state, slug)`\n- `hotSave(state, slug)`\n\nThis keeps persistence explicit, tenant-owned, and aligned with the current `JsonPagesConfig` contract.\n\n---\n\n## Tenant Source Of Truth\n\n`apps/tenant-alpha` is the DNA source of truth for this tenant. Generated CLI templates are downstream artifacts and should be regenerated from source apps instead of being edited manually.\n\nThe canonical content and design files remain:\n\n- `src/data/config/site.json`\n- `src/data/config/menu.json`\n- `src/data/config/theme.json`\n- `src/data/pages/<slug>.json`\n\n---\n\n## Reference Specs\n\nUse these monorepo sources for the full protocol and architecture details:\n\n- `specs/olonjsSpecs_V_1_5.md`\n- `apps/tenant-alpha/specs/olonjsSpecs_V.1.3.md`\n\nThese source specs are the maintained references for architecture, Studio behavior, and tenant compliance."
       },
       "settings": {}
     }
   ]
 }
+
 END_OF_FILE_CONTENT
 echo "Creating src/data/pages/home.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
@@ -10984,7 +10376,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
       "type": "hero",
       "data": {
         "eyebrow": "Contract layer · v1.4 · Open Core",
-        "title": "Start building   ",
+        "title": "Start Building",
         "titleHighlight": "for the agentic web.",
         "description": "AI agents are becoming operational actors in commerce, marketing, and support. But websites are still built for humans first: HTML-heavy, CMS-fragmented, and inconsistent across properties. That makes agent integration slow, brittle, and expensive. Olon introduces a deterministic machine contract for websites OlonJS. This makes content reliably readable and operable by agents while preserving normal human UI.",
         "ctas": [
@@ -11001,8 +10393,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
             "variant": "secondary"
           }
         ],
-        "docsLabel": "Read the docs",
-        "docsHref": "#",
+        "docsLabel": "Explore platform",
+        "docsHref": "/platform/overview",
         "heroImage": {
           "url": "https://bat5elmxofxdroan.public.blob.vercel-storage.com/tenant-assets/511f18d7-d8ac-4292-ad8a-b0efa99401a3/1774286598548-adac7c36-9001-451d-9b16-c3787ac27f57-signup-hero-olon-graded_1_.png",
           "alt": ""
@@ -11160,8 +10552,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/platform/overview.json"
   "id": "overview-page",
   "slug": "platform/overview",
   "meta": {
-    "title": "OlonJS — Documentation",
-    "description": "Architecture specifications, tenant protocol, and developer reference for the OlonJS contract layer."
+    "title": "OlonJS — Platform Overview",
+    "description": "Overview of the OlonJS platform, architecture direction, and product surface."
   },
   "sections": [
     {
@@ -11175,15 +10567,15 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/platform/overview.json"
             "href": "/"
           },
           {
-            "id": "crumb-docs",
-            "label": "Docs",
-            "href": "/doc"
+            "id": "crumb-platform",
+            "label": "Platform",
+            "href": "/platform/overview"
           }
         ],
         "badge": "",
         "title": "Platform",
         "titleItalic": "Overview",
-        "description": "The platform overview page."
+        "description": "High-level overview of the OlonJS platform."
       }
     }
   ]
@@ -11673,6 +11065,18 @@ export function getPageMeta(slug: string): { title: string; description: string 
   const title = typeof rawMeta.title === 'string' ? rawMeta.title : resolved.slug;
   const description = typeof rawMeta.description === 'string' ? rawMeta.description : '';
   return { title, description };
+}
+
+export function getWebMcpBuildState(): {
+  pages: Record<string, PageConfig>;
+  schemas: JsonPagesConfig['schemas'];
+  siteConfig: SiteConfig;
+} {
+  return {
+    pages,
+    schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+    siteConfig,
+  };
 }
 
 END_OF_FILE_CONTENT
@@ -13366,7 +12770,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13414,6 +12818,20 @@ function isTenantPageJsonRequest(req, pathname) {
   const viteOrStaticPrefixes = ['/api/', '/assets/', '/src/', '/node_modules/', '/public/', '/@'];
   return !viteOrStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
+
+function normalizeManifestSlug(raw) {
+  return decodeURIComponent(raw || '')
+    .replace(/^\/+|\/+$/g, '')
+    .replace(/\\/g, '/')
+    .replace(/(\.schema)?\.json$/i, '');
+}
+
+async function loadWebMcpBuilders() {
+  const moduleUrl = pathToFileURL(
+    path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'lib', 'webmcp-contracts.mjs')
+  ).href;
+  return import(moduleUrl);
+}
 export default defineConfig({
   plugins: [
     react(),
@@ -13424,6 +12842,75 @@ export default defineConfig({
         server.middlewares.use((req, res, next) => {
           const pathname = (req.url || '').split('?')[0];
           const isPageJsonRequest = isTenantPageJsonRequest(req, pathname);
+
+          const handleManifestRequest = async () => {
+            const { buildPageContract, buildPageManifest, buildSiteManifest } = await loadWebMcpBuilders();
+            const ssrEntry = await server.ssrLoadModule('/src/entry-ssg.tsx');
+            const buildState = ssrEntry.getWebMcpBuildState();
+
+            if (req.method === 'GET' && pathname === '/mcp-manifest.json') {
+              sendJson(res, 200, buildSiteManifest({
+                pages: buildState.pages,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
+              return true;
+            }
+
+            const pageManifestMatch = pathname.match(/^\/mcp-manifests\/(.+)\.json$/i);
+            if (pageManifestMatch && req.method === 'GET') {
+              const slug = normalizeManifestSlug(pageManifestMatch[1]);
+              const pageConfig = buildState.pages[slug];
+              if (!pageConfig) {
+                sendJson(res, 404, { error: 'Page manifest not found' });
+                return true;
+              }
+
+              sendJson(res, 200, buildPageManifest({
+                slug,
+                pageConfig,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
+              return true;
+            }
+
+            const schemaMatch = pathname.match(/^\/schemas\/(.+)\.schema\.json$/i);
+            if (!schemaMatch || req.method !== 'GET') return false;
+
+            const slug = normalizeManifestSlug(schemaMatch[1]);
+            const pageConfig = buildState.pages[slug];
+            if (!pageConfig) {
+              sendJson(res, 404, { error: 'Schema contract not found' });
+              return true;
+            }
+
+            sendJson(res, 200, buildPageContract({
+              slug,
+              pageConfig,
+              schemas: buildState.schemas,
+              siteConfig: buildState.siteConfig,
+            }));
+            return true;
+          };
+
+          if (
+            req.method === 'GET' &&
+            (
+              pathname === '/mcp-manifest.json'
+              || /^\/mcp-manifests\/.+\.json$/i.test(pathname)
+              || /^\/schemas\/.+\.schema\.json$/i.test(pathname)
+            )
+          ) {
+            void handleManifestRequest()
+              .then((handled) => {
+                if (!handled) next();
+              })
+              .catch((error) => {
+                sendJson(res, 500, { error: error?.message || 'Manifest generation failed' });
+              });
+            return;
+          }
 
           if (isPageJsonRequest) {
             const normalizedPath = decodeURIComponent(pathname).replace(/\\/g, '/');
@@ -13490,7 +12977,19 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@olonjs/core': path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'index.ts'),
       'next/link': path.resolve(__dirname, './src/shims/next-link.tsx'),
+    },
+  },
+  server: {
+    fs: {
+      allow: [
+        path.resolve(__dirname, '..', '..'),
+      ],
+    },
+    watch: {
+      usePolling: true,
+      interval: 300,
     },
   },
 });

@@ -583,6 +583,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
   "scripts": {
     "dev": "vite",
     "dev:clean": "vite --force",
+    "verify:webmcp": "node scripts/webmcp-feature-check.mjs",
     "prebuild": "node scripts/sync-pages-to-public.mjs",
     "build": "tsc && vite build",
     "dist": "bash ./src2Code.sh --template agritourism src vercel.json index.html vite.config.ts scripts docs package.json",
@@ -596,7 +597,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.85",
+    "@olonjs/core": "^1.0.86",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
     "react": "^19.0.0",
@@ -893,6 +894,206 @@ main().catch((error) => {
 });
 
 END_OF_FILE_CONTENT
+echo "Creating scripts/bake.mjs..."
+cat << 'END_OF_FILE_CONTENT' > "scripts/bake.mjs"
+/**
+ * olon bake - production SSG
+ *
+ * 1) Build client bundle (dist/)
+ * 2) Build SSR entry bundle (dist-ssr/)
+ * 3) Discover all page slugs from JSON files under src/data/pages
+ * 4) Render each slug via SSR and write dist/<slug>/index.html
+ */
+
+import { build } from 'vite';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+import fs from 'fs/promises';
+import {
+  buildPageContract,
+  buildPageManifest,
+  buildPageManifestHref,
+  buildSiteManifest,
+} from '../../../packages/core/src/lib/webmcp-contracts.mjs';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(__dirname, '..');
+const pagesDir = path.resolve(root, 'src/data/pages');
+const publicDir = path.resolve(root, 'public');
+const distDir = path.resolve(root, 'dist');
+
+async function writeJsonTargets(relativePath, value) {
+  const targets = [
+    path.resolve(publicDir, relativePath),
+    path.resolve(distDir, relativePath),
+  ];
+
+  for (const targetPath of targets) {
+    await fs.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.writeFile(targetPath, `${JSON.stringify(value, null, 2)}\n`, 'utf-8');
+  }
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function toCanonicalSlug(relativeJsonPath) {
+  const normalized = relativeJsonPath.replace(/\\/g, '/');
+  const slug = normalized.replace(/\.json$/i, '').replace(/^\/+|\/+$/g, '');
+  if (!slug) throw new Error('[bake] Invalid page slug: empty path segment');
+  return slug;
+}
+
+async function listJsonFilesRecursive(dir) {
+  const items = await fs.readdir(dir, { withFileTypes: true });
+  const files = [];
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      files.push(...(await listJsonFilesRecursive(fullPath)));
+      continue;
+    }
+    if (item.isFile() && item.name.toLowerCase().endsWith('.json')) files.push(fullPath);
+  }
+  return files;
+}
+
+async function discoverTargets() {
+  let files = [];
+  try {
+    files = await listJsonFilesRecursive(pagesDir);
+  } catch {
+    files = [];
+  }
+
+  const rawSlugs = files.map((fullPath) => toCanonicalSlug(path.relative(pagesDir, fullPath)));
+  const slugs = Array.from(new Set(rawSlugs)).sort((a, b) => a.localeCompare(b));
+
+  return slugs.map((slug) => {
+    const depth = slug === 'home' ? 0 : slug.split('/').length;
+    const out = slug === 'home' ? 'dist/index.html' : `dist/${slug}/index.html`;
+    return { slug, out, depth };
+  });
+}
+
+console.log('\n[bake] Building client...');
+await build({ root, mode: 'production', logLevel: 'warn' });
+console.log('[bake] Client build done.');
+
+console.log('\n[bake] Building SSR bundle...');
+await build({
+  root,
+  mode: 'production',
+  logLevel: 'warn',
+  build: {
+    ssr: 'src/entry-ssg.tsx',
+    outDir: 'dist-ssr',
+    rollupOptions: {
+      output: { format: 'esm' },
+    },
+  },
+  ssr: {
+    noExternal: ['@olonjs/core'],
+  },
+});
+console.log('[bake] SSR build done.');
+
+const targets = await discoverTargets();
+if (targets.length === 0) {
+  throw new Error('[bake] No pages discovered under src/data/pages');
+}
+console.log(`[bake] Targets: ${targets.map((t) => t.slug).join(', ')}`);
+
+const ssrEntryUrl = pathToFileURL(path.resolve(root, 'dist-ssr/entry-ssg.js')).href;
+const { render, getCss, getPageMeta, getWebMcpBuildState } = await import(ssrEntryUrl);
+
+const template = await fs.readFile(path.resolve(root, 'dist/index.html'), 'utf-8');
+const hasCommentMarker = template.includes('<!--app-html-->');
+const hasRootDivMarker = template.includes('<div id="root"></div>');
+if (!hasCommentMarker && !hasRootDivMarker) {
+  throw new Error('[bake] Missing template marker. Expected <!--app-html--> or <div id="root"></div>.');
+}
+
+const inlinedCss = getCss();
+const styleTag = `<style data-bake="inline">${inlinedCss}</style>`;
+const webMcpBuildState = getWebMcpBuildState();
+
+for (const { slug } of targets) {
+  const pageConfig = webMcpBuildState.pages[slug];
+  if (!pageConfig) continue;
+  const contract = buildPageContract({
+    slug,
+    pageConfig,
+    schemas: webMcpBuildState.schemas,
+    siteConfig: webMcpBuildState.siteConfig,
+  });
+  await writeJsonTargets(`schemas/${slug}.schema.json`, contract);
+  const pageManifest = buildPageManifest({
+    slug,
+    pageConfig,
+    schemas: webMcpBuildState.schemas,
+    siteConfig: webMcpBuildState.siteConfig,
+  });
+  await writeJsonTargets(buildPageManifestHref(slug).replace(/^\//, ''), pageManifest);
+}
+
+const mcpManifest = buildSiteManifest({
+  pages: webMcpBuildState.pages,
+  schemas: webMcpBuildState.schemas,
+  siteConfig: webMcpBuildState.siteConfig,
+});
+await writeJsonTargets('mcp-manifest.json', mcpManifest);
+
+for (const { slug, out, depth } of targets) {
+  console.log(`\n[bake] Rendering /${slug === 'home' ? '' : slug}...`);
+
+  const appHtml = render(slug);
+  const { title, description } = getPageMeta(slug);
+  const safeTitle = String(title).replace(/"/g, '&quot;');
+  const safeDescription = String(description).replace(/"/g, '&quot;');
+  const metaTags = [
+    `<meta name="description" content="${safeDescription}">`,
+    `<meta property="og:title" content="${safeTitle}">`,
+    `<meta property="og:description" content="${safeDescription}">`,
+  ].join('\n    ');
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: title,
+    description,
+    url: slug === 'home' ? '/' : `/${slug}`,
+  });
+
+  const prefix = depth > 0 ? '../'.repeat(depth) : './';
+  const fixedTemplate = depth > 0 ? template.replace(/(['"])\.\//g, `$1${prefix}`) : template;
+  const mcpManifestHref = `${prefix}${buildPageManifestHref(slug).replace(/^\//, '')}`;
+  const contractHref = `${prefix}schemas/${slug}.schema.json`;
+  const contractLinks = [
+    `<link rel="mcp-manifest" href="${escapeHtmlAttribute(mcpManifestHref)}">`,
+    `<link rel="olon-contract" href="${escapeHtmlAttribute(contractHref)}">`,
+    `<script type="application/ld+json">${jsonLd}</script>`,
+  ].join('\n  ');
+
+  let bakedHtml = fixedTemplate
+    .replace('</head>', `  ${styleTag}\n  ${contractLinks}\n</head>`)
+    .replace(/<title>.*?<\/title>/, `<title>${safeTitle}</title>\n    ${metaTags}`);
+
+  if (hasCommentMarker) {
+    bakedHtml = bakedHtml.replace('<!--app-html-->', appHtml);
+  } else {
+    bakedHtml = bakedHtml.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
+  }
+
+  const outPath = path.resolve(root, out);
+  await fs.mkdir(path.dirname(outPath), { recursive: true });
+  await fs.writeFile(outPath, bakedHtml, 'utf-8');
+  console.log(`[bake] Written -> ${out} [title: "${safeTitle}"]`);
+}
+
+console.log('\n[bake] All pages baked. OK\n');
+
+END_OF_FILE_CONTENT
 echo "Creating scripts/sync-pages-to-public.mjs..."
 cat << 'END_OF_FILE_CONTENT' > "scripts/sync-pages-to-public.mjs"
 import fs from 'fs';
@@ -915,6 +1116,308 @@ fs.mkdirSync(targetDir, { recursive: true });
 fs.cpSync(sourceDir, targetDir, { recursive: true });
 
 console.log('[sync-pages-to-public] Synced pages to public/pages');
+
+END_OF_FILE_CONTENT
+echo "Creating scripts/webmcp-feature-check.mjs..."
+cat << 'END_OF_FILE_CONTENT' > "scripts/webmcp-feature-check.mjs"
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, '..');
+const baseUrl = process.env.WEBMCP_BASE_URL ?? 'http://127.0.0.1:4173';
+
+function pageFilePathFromSlug(slug) {
+  return path.resolve(rootDir, 'src', 'data', 'pages', `${slug}.json`);
+}
+
+function adminUrlFromSlug(slug) {
+  return `${baseUrl}/admin${slug === 'home' ? '' : `/${slug}`}`;
+}
+
+function isStringSchema(schema) {
+  if (!schema || typeof schema !== 'object') return false;
+  if (schema.type === 'string') return true;
+  if (Array.isArray(schema.anyOf)) {
+    return schema.anyOf.some((entry) => entry && typeof entry === 'object' && entry.type === 'string');
+  }
+  return false;
+}
+
+function findTopLevelStringField(sectionSchema) {
+  const properties = sectionSchema?.properties;
+  if (!properties || typeof properties !== 'object') return null;
+  const preferred = ['title', 'sectionTitle', 'label', 'headline', 'name'];
+  for (const key of preferred) {
+    if (isStringSchema(properties[key])) return key;
+  }
+  for (const [key, value] of Object.entries(properties)) {
+    if (isStringSchema(value)) return key;
+  }
+  return null;
+}
+
+async function loadPlaywright() {
+  const require = createRequire(import.meta.url);
+  try {
+    return require('playwright');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Playwright is required for WebMCP verification. Install it before running this script. Original error: ${message}`
+    );
+  }
+}
+
+async function readPageJson(slug) {
+  const pageFilePath = pageFilePathFromSlug(slug);
+  const raw = await fs.readFile(pageFilePath, 'utf8');
+  return { raw, json: JSON.parse(raw), pageFilePath };
+}
+
+async function waitFor(predicate, timeoutMs, label) {
+  const startedAt = Date.now();
+  for (;;) {
+    const result = await predicate();
+    if (result) return result;
+    if (Date.now() - startedAt > timeoutMs) {
+      throw new Error(`Timed out while waiting for ${label}.`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  }
+}
+
+async function waitForFileFieldValue(slug, sectionId, fieldKey, expectedValue) {
+  await waitFor(async () => {
+    const { json } = await readPageJson(slug);
+    const section = Array.isArray(json.sections)
+      ? json.sections.find((item) => item?.id === sectionId)
+      : null;
+    return section?.data?.[fieldKey] === expectedValue;
+  }, 8_000, `file field "${fieldKey}" = "${expectedValue}"`);
+}
+
+async function ensureResponseOk(response, label) {
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`${label} failed with ${response.status}: ${text}`);
+  }
+  return response;
+}
+
+async function fetchJson(relativePath, label) {
+  const response = await ensureResponseOk(await fetch(`${baseUrl}${relativePath}`), label);
+  return response.json();
+}
+
+async function selectTarget() {
+  const siteIndex = await fetchJson('/mcp-manifest.json', 'Manifest index request');
+  const requestedSlug = typeof process.env.WEBMCP_TARGET_SLUG === 'string' && process.env.WEBMCP_TARGET_SLUG.trim()
+    ? process.env.WEBMCP_TARGET_SLUG.trim()
+    : null;
+
+  const candidatePages = requestedSlug
+    ? (siteIndex.pages ?? []).filter((page) => page?.slug === requestedSlug)
+    : (siteIndex.pages ?? []);
+
+  for (const pageEntry of candidatePages) {
+    if (!pageEntry?.slug || !pageEntry?.manifestHref || !pageEntry?.contractHref) continue;
+    const pageManifest = await fetchJson(pageEntry.manifestHref, `Page manifest request for ${pageEntry.slug}`);
+    const pageContract = await fetchJson(pageEntry.contractHref, `Page contract request for ${pageEntry.slug}`);
+    const localInstances = Array.isArray(pageContract.sectionInstances)
+      ? pageContract.sectionInstances.filter((section) => section?.scope === 'local')
+      : [];
+    const tools = Array.isArray(pageManifest.tools) ? pageManifest.tools : [];
+
+    for (const tool of tools) {
+      const sectionType = tool?.sectionType;
+      if (typeof tool?.name !== 'string' || typeof sectionType !== 'string') continue;
+      const targetInstance = localInstances.find((section) => section?.type === sectionType);
+      if (!targetInstance?.id) continue;
+      const targetFieldKey = findTopLevelStringField(pageContract.sectionSchemas?.[sectionType]);
+      if (!targetFieldKey) continue;
+      const pageState = await readPageJson(pageEntry.slug);
+      const section = Array.isArray(pageState.json.sections)
+        ? pageState.json.sections.find((item) => item?.id === targetInstance.id)
+        : null;
+      const originalValue = section?.data?.[targetFieldKey];
+      if (typeof originalValue !== 'string') continue;
+
+      return {
+        slug: pageEntry.slug,
+        manifestHref: pageEntry.manifestHref,
+        contractHref: pageEntry.contractHref,
+        toolName: tool.name,
+        sectionId: targetInstance.id,
+        fieldKey: targetFieldKey,
+        originalValue,
+        originalState: pageState,
+      };
+    }
+  }
+
+  throw new Error(
+    requestedSlug
+      ? `No valid WebMCP verification target found for page "${requestedSlug}".`
+      : 'No valid WebMCP verification target found in manifest index.'
+  );
+}
+
+async function main() {
+  const { chromium } = await loadPlaywright();
+  const target = await selectTarget();
+  const nextValue = `${target.originalValue} WebMCP ${Date.now()}`;
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const consoleEvents = [];
+  let mutationApplied = false;
+
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') {
+      consoleEvents.push(`[console:${message.type()}] ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) => {
+    consoleEvents.push(`[pageerror] ${error.message}`);
+  });
+
+  const restoreOriginal = async () => {
+    try {
+      await page.evaluate(
+        async ({ toolName, slug, sectionId, fieldKey, value }) => {
+          const runtime = navigator.modelContextTesting;
+          if (!runtime?.executeTool) return;
+          await runtime.executeTool(
+            toolName,
+            JSON.stringify({
+              slug,
+              sectionId,
+              fieldKey,
+              value,
+            })
+          );
+        },
+        {
+          toolName: target.toolName,
+          slug: target.slug,
+          sectionId: target.sectionId,
+          fieldKey: target.fieldKey,
+          value: target.originalValue,
+        }
+      );
+      await waitForFileFieldValue(target.slug, target.sectionId, target.fieldKey, target.originalValue);
+    } catch {
+      await fs.writeFile(target.originalState.pageFilePath, target.originalState.raw, 'utf8');
+    }
+  };
+
+  try {
+    const pageManifest = await fetchJson(target.manifestHref, `Manifest request for ${target.slug}`);
+    if (!Array.isArray(pageManifest.tools) || !pageManifest.tools.some((tool) => tool?.name === target.toolName)) {
+      throw new Error(`Manifest does not expose ${target.toolName}.`);
+    }
+
+    const pageContract = await fetchJson(target.contractHref, `Contract request for ${target.slug}`);
+    if (!Array.isArray(pageContract.tools) || !pageContract.tools.some((tool) => tool?.name === target.toolName)) {
+      throw new Error(`Page contract does not expose ${target.toolName}.`);
+    }
+
+    await page.goto(adminUrlFromSlug(target.slug), { waitUntil: 'networkidle' });
+
+    try {
+      await page.waitForFunction(
+        ({ manifestHref, contractHref }) => {
+          const manifestLink = document.head.querySelector('link[rel="mcp-manifest"]');
+          const contractLink = document.head.querySelector('link[rel="olon-contract"]');
+          return manifestLink?.getAttribute('href') === manifestHref
+            && contractLink?.getAttribute('href') === contractHref;
+        },
+        { manifestHref: target.manifestHref, contractHref: target.contractHref },
+        { timeout: 10_000 }
+      );
+    } catch (error) {
+      const diagnostics = await page.evaluate(() => ({
+        head: document.head.innerHTML,
+        bodyText: document.body.innerText,
+      }));
+      throw new Error(
+        [
+          error instanceof Error ? error.message : String(error),
+          `head=${diagnostics.head}`,
+          `body=${diagnostics.bodyText}`,
+          ...consoleEvents,
+        ].join('\n')
+      );
+    }
+
+    const toolNames = await page.evaluate(() => {
+      const runtime = navigator.modelContextTesting;
+      return runtime?.listTools?.().map((tool) => tool.name) ?? [];
+    });
+    if (!toolNames.includes(target.toolName)) {
+      throw new Error(`Runtime did not register ${target.toolName}. Found: ${toolNames.join(', ')}`);
+    }
+
+    const rawResult = await page.evaluate(
+      async ({ toolName, slug, sectionId, fieldKey, value }) => {
+        const runtime = navigator.modelContextTesting;
+        if (!runtime?.executeTool) {
+          throw new Error('navigator.modelContextTesting.executeTool is unavailable.');
+        }
+        return runtime.executeTool(
+          toolName,
+          JSON.stringify({
+            slug,
+            sectionId,
+            fieldKey,
+            value,
+          })
+        );
+      },
+      {
+        toolName: target.toolName,
+        slug: target.slug,
+        sectionId: target.sectionId,
+        fieldKey: target.fieldKey,
+        value: nextValue,
+      }
+    );
+
+    const parsedResult = JSON.parse(rawResult);
+    if (parsedResult?.isError) {
+      throw new Error(`WebMCP tool returned an error: ${rawResult}`);
+    }
+
+    mutationApplied = true;
+    await waitForFileFieldValue(target.slug, target.sectionId, target.fieldKey, nextValue);
+    await page.frameLocator('iframe').getByText(nextValue, { exact: true }).waitFor({ state: 'attached' });
+
+    console.log(
+      JSON.stringify({
+        ok: true,
+        slug: target.slug,
+        manifestHref: target.manifestHref,
+        contractHref: target.contractHref,
+        toolName: target.toolName,
+        sectionId: target.sectionId,
+        fieldKey: target.fieldKey,
+        toolNames,
+      })
+    );
+  } finally {
+    if (mutationApplied) {
+      await restoreOriginal();
+    }
+    await browser.close();
+  }
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  process.exit(1);
+});
 
 END_OF_FILE_CONTENT
 mkdir -p "src"
@@ -1114,6 +1617,10 @@ function App() {
     menuConfig,
     themeCss: { tenant: fontsCss + '\n' + tenantCss },
     addSection: addSectionConfig,
+    webmcp: {
+      enabled: true,
+      namespace: typeof window !== 'undefined' ? window.location.href : '',
+    },
     persistence: {
       async saveToFile(state: ProjectState, slug: string): Promise<void> {
         if (isCloudMode) { await runCloudSave({ state, slug }, true); return; }
@@ -9946,6 +10453,170 @@ export function LeadSenderConfirmationEmail({
 export default LeadSenderConfirmationEmail;
 
 END_OF_FILE_CONTENT
+echo "Creating src/entry-ssg.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/entry-ssg.tsx"
+import { renderToString } from 'react-dom/server';
+import { StaticRouter } from 'react-router-dom/server';
+import { ConfigProvider, PageRenderer, StudioProvider, resolveRuntimeConfig } from '@olonjs/core';
+import type { JsonPagesConfig, MenuConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
+import { ComponentRegistry } from '@/lib/ComponentRegistry';
+import { SECTION_SCHEMAS } from '@/lib/schemas';
+import { getFilePages } from '@/lib/getFilePages';
+import siteData from '@/data/config/site.json';
+import menuData from '@/data/config/menu.json';
+import themeData from '@/data/config/theme.json';
+import tenantCss from '@/index.css?inline';
+
+const siteConfig = siteData as unknown as SiteConfig;
+const menuConfig: MenuConfig = { main: [] };
+const themeConfig = themeData as unknown as ThemeConfig;
+const pages = getFilePages();
+const refDocuments = {
+  'menu.json': menuData,
+  'config/menu.json': menuData,
+  'src/data/config/menu.json': menuData,
+} satisfies NonNullable<JsonPagesConfig['refDocuments']>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeSlug(input: string): string {
+  return input.trim().toLowerCase().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+}
+
+function getSortedSlugs(): string[] {
+  return Object.keys(pages).sort((a, b) => a.localeCompare(b));
+}
+
+function resolvePage(slug: string): { slug: string; page: PageConfig } {
+  const normalized = normalizeSlug(slug);
+  if (normalized && pages[normalized]) {
+    return { slug: normalized, page: pages[normalized] };
+  }
+
+  const slugs = getSortedSlugs();
+  if (slugs.length === 0) {
+    throw new Error('[SSG_CONFIG_ERROR] No pages found under src/data/pages');
+  }
+
+  const home = slugs.find((item) => item === 'home');
+  const fallbackSlug = home ?? slugs[0];
+  return { slug: fallbackSlug, page: pages[fallbackSlug] };
+}
+
+function flattenThemeTokens(
+  input: unknown,
+  pathSegments: string[] = [],
+  out: Array<{ name: string; value: string }> = []
+): Array<{ name: string; value: string }> {
+  if (typeof input === 'string') {
+    const cleaned = input.trim();
+    if (cleaned.length > 0 && pathSegments.length > 0) {
+      out.push({ name: `--theme-${pathSegments.join('-')}`, value: cleaned });
+    }
+    return out;
+  }
+
+  if (!isRecord(input)) return out;
+
+  const entries = Object.entries(input).sort(([a], [b]) => a.localeCompare(b));
+  for (const [key, value] of entries) {
+    flattenThemeTokens(value, [...pathSegments, key], out);
+  }
+  return out;
+}
+
+function buildThemeCssFromSot(theme: ThemeConfig): string {
+  const root: Record<string, unknown> = isRecord(theme) ? theme : {};
+  const tokens = root['tokens'];
+  const flattened = flattenThemeTokens(tokens);
+  if (flattened.length === 0) return '';
+  const serialized = flattened.map((item) => `${item.name}:${item.value}`).join(';');
+  return `:root{${serialized}}`;
+}
+
+function resolveTenantId(): string {
+  const site: Record<string, unknown> = isRecord(siteConfig) ? siteConfig : {};
+  const identityRaw = site['identity'];
+  const identity: Record<string, unknown> = isRecord(identityRaw) ? identityRaw : {};
+  const titleRaw = typeof identity.title === 'string' ? identity.title : '';
+  const title = titleRaw.trim();
+  if (title.length > 0) {
+    const normalized = title.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+    if (normalized.length > 0) return normalized;
+  }
+
+  const slugs = getSortedSlugs();
+  if (slugs.length === 0) {
+    throw new Error('[SSG_CONFIG_ERROR] Cannot resolve tenantId without site.identity.title or pages');
+  }
+  return slugs[0].replace(/\//g, '-');
+}
+
+export function render(slug: string): string {
+  const resolved = resolvePage(slug);
+  const location = resolved.slug === 'home' ? '/' : `/${resolved.slug}`;
+  const resolvedRuntime = resolveRuntimeConfig({
+    pages,
+    siteConfig,
+    themeConfig,
+    menuConfig,
+    refDocuments,
+  });
+  const resolvedPage = resolvedRuntime.pages[resolved.slug] ?? resolved.page;
+
+  return renderToString(
+    <StaticRouter location={location}>
+      <ConfigProvider
+        config={{
+          registry: ComponentRegistry as JsonPagesConfig['registry'],
+          schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+          tenantId: resolveTenantId(),
+        }}
+      >
+        <StudioProvider mode="visitor">
+          <PageRenderer
+            pageConfig={resolvedPage}
+            siteConfig={resolvedRuntime.siteConfig}
+            menuConfig={resolvedRuntime.menuConfig}
+          />
+        </StudioProvider>
+      </ConfigProvider>
+    </StaticRouter>
+  );
+}
+
+export function getCss(): string {
+  const themeCss = buildThemeCssFromSot(themeConfig);
+  if (!themeCss) return tenantCss;
+  return `${themeCss}\n${tenantCss}`;
+}
+
+export function getPageMeta(slug: string): { title: string; description: string } {
+  const resolved = resolvePage(slug);
+  const rawMeta = isRecord((resolved.page as unknown as { meta?: unknown }).meta)
+    ? ((resolved.page as unknown as { meta?: Record<string, unknown> }).meta as Record<string, unknown>)
+    : {};
+
+  const title = typeof rawMeta.title === 'string' ? rawMeta.title : resolved.slug;
+  const description = typeof rawMeta.description === 'string' ? rawMeta.description : '';
+  return { title, description };
+}
+
+export function getWebMcpBuildState(): {
+  pages: Record<string, PageConfig>;
+  schemas: JsonPagesConfig['schemas'];
+  siteConfig: SiteConfig;
+} {
+  return {
+    pages,
+    schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+    siteConfig,
+  };
+}
+
+END_OF_FILE_CONTENT
 echo "Creating src/fonts.css..."
 cat << 'END_OF_FILE_CONTENT' > "src/fonts.css"
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -10919,14 +11590,14 @@ END_OF_FILE_CONTENT
 echo "Creating vite.config.ts..."
 cat << 'END_OF_FILE_CONTENT' > "vite.config.ts"
 /**
- * Generated by @olonjs/cli. Dev server API: /api/save-to-file, /api/upload-asset, /api/list-assets.
+ * Generated by @jsonpages/cli. Dev server API: /api/save-to-file, /api/upload-asset, /api/list-assets.
  */
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -10974,6 +11645,20 @@ function isTenantPageJsonRequest(req, pathname) {
   const viteOrStaticPrefixes = ['/api/', '/assets/', '/src/', '/node_modules/', '/public/', '/@'];
   return !viteOrStaticPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
+
+function normalizeManifestSlug(raw) {
+  return decodeURIComponent(raw || '')
+    .replace(/^\/+|\/+$/g, '')
+    .replace(/\\/g, '/')
+    .replace(/(\.schema)?\.json$/i, '');
+}
+
+async function loadWebMcpBuilders() {
+  const moduleUrl = pathToFileURL(
+    path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'lib', 'webmcp-contracts.mjs')
+  ).href;
+  return import(moduleUrl);
+}
 export default defineConfig({
   plugins: [
     react(),
@@ -10984,6 +11669,75 @@ export default defineConfig({
         server.middlewares.use((req, res, next) => {
           const pathname = (req.url || '').split('?')[0];
           const isPageJsonRequest = isTenantPageJsonRequest(req, pathname);
+
+          const handleManifestRequest = async () => {
+            const { buildPageContract, buildPageManifest, buildSiteManifest } = await loadWebMcpBuilders();
+            const ssrEntry = await server.ssrLoadModule('/src/entry-ssg.tsx');
+            const buildState = ssrEntry.getWebMcpBuildState();
+
+            if (req.method === 'GET' && pathname === '/mcp-manifest.json') {
+              sendJson(res, 200, buildSiteManifest({
+                pages: buildState.pages,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
+              return true;
+            }
+
+            const pageManifestMatch = pathname.match(/^\/mcp-manifests\/(.+)\.json$/i);
+            if (pageManifestMatch && req.method === 'GET') {
+              const slug = normalizeManifestSlug(pageManifestMatch[1]);
+              const pageConfig = buildState.pages[slug];
+              if (!pageConfig) {
+                sendJson(res, 404, { error: 'Page manifest not found' });
+                return true;
+              }
+
+              sendJson(res, 200, buildPageManifest({
+                slug,
+                pageConfig,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
+              return true;
+            }
+
+            const schemaMatch = pathname.match(/^\/schemas\/(.+)\.schema\.json$/i);
+            if (!schemaMatch || req.method !== 'GET') return false;
+
+            const slug = normalizeManifestSlug(schemaMatch[1]);
+            const pageConfig = buildState.pages[slug];
+            if (!pageConfig) {
+              sendJson(res, 404, { error: 'Schema contract not found' });
+              return true;
+            }
+
+            sendJson(res, 200, buildPageContract({
+              slug,
+              pageConfig,
+              schemas: buildState.schemas,
+              siteConfig: buildState.siteConfig,
+            }));
+            return true;
+          };
+
+          if (
+            req.method === 'GET' &&
+            (
+              pathname === '/mcp-manifest.json'
+              || /^\/mcp-manifests\/.+\.json$/i.test(pathname)
+              || /^\/schemas\/.+\.schema\.json$/i.test(pathname)
+            )
+          ) {
+            void handleManifestRequest()
+              .then((handled) => {
+                if (!handled) next();
+              })
+              .catch((error) => {
+                sendJson(res, 500, { error: error?.message || 'Manifest generation failed' });
+              });
+            return;
+          }
 
           if (isPageJsonRequest) {
             const normalizedPath = decodeURIComponent(pathname).replace(/\\/g, '/');
@@ -11015,7 +11769,6 @@ export default defineConfig({
                 if (!fs.existsSync(DATA_PAGES_DIR)) fs.mkdirSync(DATA_PAGES_DIR, { recursive: true });
                 if (projectState.site != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'site.json'), JSON.stringify(projectState.site, null, 2), 'utf8');
                 if (projectState.theme != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'theme.json'), JSON.stringify(projectState.theme, null, 2), 'utf8');
-                if (projectState.menu != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'menu.json'), JSON.stringify(projectState.menu, null, 2), 'utf8');
                 if (projectState.page != null) {
                   const safeSlug = (slug.replace(/[^a-zA-Z0-9-_]/g, '_') || 'page');
                   fs.writeFileSync(path.join(DATA_PAGES_DIR, `${safeSlug}.json`), JSON.stringify(projectState.page, null, 2), 'utf8');
@@ -11048,7 +11801,24 @@ export default defineConfig({
       },
     },
   ],
-  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@olonjs/core': path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'index.ts'),
+      'next/link': path.resolve(__dirname, './src/shims/next-link.tsx'),
+    },
+  },
+  server: {
+    fs: {
+      allow: [
+        path.resolve(__dirname, '..', '..'),
+      ],
+    },
+    watch: {
+      usePolling: true,
+      interval: 300,
+    },
+  },
 });
 
 
