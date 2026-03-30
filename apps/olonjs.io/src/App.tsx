@@ -345,6 +345,28 @@ function App() {
     return Object.keys(normalized).length > 0 ? normalized : localInitialData.pages;
   }, [localInitialData]);
   const [pages, setPages] = useState<Record<string, PageConfig>>(localInitialPages);
+
+  // GitHub Pages sub-directory routing fix.
+  // BrowserRouter (in @olonjs/core) has no basename and reads window.location.pathname
+  // raw, including the Vite base prefix. e.g. with base '/core/', visiting
+  // /core/index → resolveSlugFromPathname returns 'core/index' → no page found → 404.
+  // Adding base-prefixed aliases lets the registry match without changing the URL.
+  const pagesWithBaseAliases = useMemo<Record<string, PageConfig>>(() => {
+    const viteBase = import.meta.env.BASE_URL; // '/core/' in prod, '/' or './' in dev
+    if (!viteBase || viteBase === '/' || viteBase === './') return pages;
+    const base = viteBase.replace(/^\/|\/$/g, ''); // '/core/' → 'core'
+    if (!base) return pages;
+    const aliased: Record<string, PageConfig> = { ...pages };
+    for (const [slug, page] of Object.entries(pages)) {
+      aliased[`${base}/${slug}`] = page; // 'core/docs' → docs config
+      if (slug === 'home') {
+        aliased[base] = page;                // /core/  → home (slug 'core')
+        aliased[`${base}/index`] = page;     // /core/index → home (GH Pages index alias)
+      }
+    }
+    return aliased;
+  }, [pages]);
+
   const [siteConfig, setSiteConfig] = useState<SiteConfig>(
     localInitialData?.siteConfig ?? fileSiteConfig
   );
@@ -695,7 +717,7 @@ function App() {
     tenantId: TENANT_ID,
     registry: ComponentRegistry as JsonPagesConfig['registry'],
     schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
-    pages,
+    pages: pagesWithBaseAliases,
     siteConfig,
     themeConfig,
     menuConfig,
