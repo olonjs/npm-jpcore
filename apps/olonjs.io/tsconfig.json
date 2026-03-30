@@ -19,8 +19,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@olonjs/core": ["../../packages/core/src/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],

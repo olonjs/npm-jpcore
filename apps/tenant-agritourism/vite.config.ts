@@ -63,9 +63,8 @@ function normalizeManifestSlug(raw) {
 }
 
 async function loadWebMcpBuilders() {
-  const moduleUrl = pathToFileURL(
-    path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'lib', 'webmcp-contracts.mjs')
-  ).href;
+  const corePkgPath = path.dirname(fileURLToPath(import.meta.resolve('@olonjs/core/package.json')));
+  const moduleUrl = pathToFileURL(path.resolve(corePkgPath, 'src', 'lib', 'webmcp-contracts.mjs')).href;
   return import(moduleUrl);
 }
 export default defineConfig({
@@ -213,7 +212,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@olonjs/core': path.resolve(__dirname, '..', '..', 'packages', 'core', 'src', 'index.ts'),
       'next/link': path.resolve(__dirname, './src/shims/next-link.tsx'),
     },
   },
