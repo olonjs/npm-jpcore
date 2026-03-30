@@ -231,6 +231,7 @@ function stepBuildAll() {
 function stepStack() {
   log("Step 2/6: @olonjs/stack — version patch & publish (from root -w)");
   run("npm version patch --no-git-tag-version -w @olonjs/stack");
+  run("npm install --package-lock-only");
   const newVersion = getVersion(path.join(ROOT, "packages", "stack"));
   if (!dryRun) {
     run("npm publish --access public -w @olonjs/stack");
@@ -243,8 +244,9 @@ function stepStack() {
 function stepCore() {
   log("Step 3/6: @olonjs/core — build, version patch & publish (from root -w)");
   const dir = path.join(ROOT, "packages", "core");
-  run("npm run build -w @olonjs/core");
   run("npm version patch --no-git-tag-version -w @olonjs/core");
+  run("npm install --package-lock-only");
+  run("npm run build -w @olonjs/core");
   const newVersion = getVersion(dir);
   if (!dryRun) {
     run("npm publish --access public -w @olonjs/core");
@@ -265,15 +267,17 @@ function stepTenant(tenantName, coreVersion) {
   }
   writePackageJson(dir, pkg);
   log(`Updated ${tenantName} @olonjs/core: ${prev ?? "(unset)"} -> ^${coreVersion}`);
-  run(`npm install -w ${tenantName}`);
+  run(`npm install -w ${tenantName} --package-lock-only`);
+  run(`npm install --package-lock-only`);
   run(`npm run build -w ${tenantName}`);
   run(`npm run dist -w ${tenantName}`);
 }
 
 function stepCli() {
   log("Step 5/6: @olonjs/cli — build, version patch & publish (from root -w)");
-  run("npm run build -w @olonjs/cli");
   run("npm version patch --no-git-tag-version -w @olonjs/cli");
+  run("npm install --package-lock-only");
+  run("npm run build -w @olonjs/cli");
   const newVersion = getVersion(path.join(ROOT, "packages", "cli"));
   if (!dryRun) {
     run("npm publish --access public -w @olonjs/cli");
