@@ -551,7 +551,6 @@ Senza questo, in Studio l'overlay non si vede nell'iframe.
 Usando questo percorso hai **governance** piena: tipi, schema, editor, Add Section e overlay allineati alle spec v1.2. Per le versioni con tutti i "Perché servono" usa il file **JSONPAGES_Specs_v1.2_completo.md**.
 
 END_OF_FILE_CONTENT
-mkdir -p "docs/ver"
 echo "Creating index.html..."
 cat << 'END_OF_FILE_CONTENT' > "index.html"
 <!DOCTYPE html>
@@ -597,7 +596,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.86",
+    "@olonjs/core": "^1.0.90",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
     "react": "^19.0.0",
@@ -4750,7 +4749,6 @@ export type ImageBreakData = z.infer<typeof ImageBreakSchema>;
 export type ImageBreakSettings = Record<string, unknown>;
 
 END_OF_FILE_CONTENT
-mkdir -p "src/components/image-test"
 mkdir -p "src/components/kitchen-showcase"
 echo "Creating src/components/kitchen-showcase/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/kitchen-showcase/View.tsx"
@@ -11446,7 +11444,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 END_OF_FILE_CONTENT
 # SKIP: src/registry-types.ts is binary and cannot be embedded as text.
-mkdir -p "src/server"
 mkdir -p "src/types"
 echo "Creating src/types.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/types.ts"

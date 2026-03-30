@@ -1646,7 +1646,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.86",
+    "@olonjs/core": "^1.0.90",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -5574,7 +5574,6 @@ export type DevexData     = z.infer<typeof DevexSchema>;
 export type DevexSettings = z.infer<typeof BaseSectionSettingsSchema>;
 
 END_OF_FILE_CONTENT
-mkdir -p "src/components/docs-layout"
 mkdir -p "src/components/feature-grid"
 echo "Creating src/components/feature-grid/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/feature-grid/View.tsx"
@@ -12593,7 +12592,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 END_OF_FILE_CONTENT
 # SKIP: src/registry-types.ts is binary and cannot be embedded as text.
-mkdir -p "src/server"
 mkdir -p "src/types"
 echo "Creating src/types.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/types.ts"
