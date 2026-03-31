@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0",
+  "kind": "olonjs-page-mcp-manifest",
+  "generatedAt": "2026-03-31T06:39:43.154Z",
+  "slug": "design-system",
+  "title": "Olon Design System — Design Language",
+  "description": "Token reference, color system, typography, components and brand identity for the OlonJS design language.",
+  "contractHref": "/schemas/design-system.schema.json",
+  "transport": {
+    "kind": "window-message",
+    "requestType": "olonjs:webmcp:tool-call",
+    "resultType": "olonjs:webmcp:tool-result",
+    "target": "window"
+  },
+  "capabilities": {
+    "resources": [
+      {
+        "uri": "olon://pages/design-system",
+        "name": "Olon Design System — Design Language Data",
+        "mimeType": "application/json",
+        "description": "Structured content for the design-system page."
+      }
+    ]
+  },
+  "sectionTypes": [
+    "footer",
+    "design-system"
+  ],
+  "sectionInstances": [
+    {
+      "id": "global-footer",
+      "type": "footer",
+      "scope": "global",
+      "label": "footer"
+    },
+    {
+      "id": "ds-main",
+      "type": "design-system",
+      "scope": "local",
+      "label": "Olon"
+    }
+  ],
+  "tools": [
+    {
+      "name": "update-footer",
+      "sectionType": "footer",
+      "description": "Update a footer section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-design-system",
+      "sectionType": "design-system",
+      "description": "Update a design-system section in OlonJS Studio and persist immediately to file."
+    }
+  ]
+}

@@ -1,0 +1,1297 @@
+{
+  "version": "1.0.0",
+  "kind": "olonjs-page-contract",
+  "slug": "home",
+  "title": "OlonJS — The Contract Layer for the Agentic Web",
+  "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance.",
+  "manifestHref": "/mcp-manifests/home.json",
+  "systemPrompt": "You are operating the \"OlonJS — The Contract Layer for the Agentic Web\" page in OlonJS Studio. Use only the declared tools and keep mutations valid against the section schema.",
+  "sectionTypes": [
+    "header",
+    "footer",
+    "hero",
+    "feature-grid",
+    "contact",
+    "login"
+  ],
+  "sectionInstances": [
+    {
+      "id": "global-header",
+      "type": "header",
+      "scope": "global",
+      "label": "header"
+    },
+    {
+      "id": "global-footer",
+      "type": "footer",
+      "scope": "global",
+      "label": "footer"
+    },
+    {
+      "id": "hero-main",
+      "type": "hero",
+      "scope": "local",
+      "label": "Start Building"
+    },
+    {
+      "id": "features-section",
+      "type": "feature-grid",
+      "scope": "local",
+      "label": "A whole in itself,"
+    },
+    {
+      "id": "contact-section",
+      "type": "contact",
+      "scope": "local",
+      "label": "Ready to define"
+    },
+    {
+      "id": "login-section",
+      "type": "login",
+      "scope": "local",
+      "label": "Start your journey"
+    }
+  ],
+  "sectionSchemas": {
+    "header": {
+      "type": "object",
+      "properties": {
+        "logoText": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "badge": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "href": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "variant": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "ui:text"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "href"
+                  ]
+                },
+                "description": "ui:list"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "href"
+            ]
+          },
+          "description": "ui:list"
+        },
+        "ctaLabel": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "ctaHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "signinHref": {
+          "type": "string",
+          "description": "ui:text"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "logoText",
+        "links"
+      ]
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "brandText": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "copyright": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "href": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "href"
+            ]
+          },
+          "description": "ui:list"
+        },
+        "designSystemHref": {
+          "type": "string",
+          "description": "ui:text"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "brandText",
+        "copyright"
+      ]
+    },
+    "hero": {
+      "type": "object",
+      "properties": {
+        "anchorId": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "eyebrow": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "title": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "titleHighlight": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "description": {
+          "type": "string",
+          "description": "ui:textarea"
+        },
+        "ctas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "href": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "variant": {
+                "type": "string",
+                "enum": [
+                  "primary",
+                  "secondary",
+                  "accent"
+                ],
+                "description": "ui:select",
+                "default": "primary"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "href"
+            ]
+          },
+          "description": "ui:list"
+        },
+        "docsLabel": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "docsHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "codeLabel": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "heroImage": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "alt": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "url"
+          ],
+          "description": "ui:image-picker"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ]
+    },
+    "feature-grid": {
+      "type": "object",
+      "properties": {
+        "anchorId": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "label": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "sectionTitle": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "sectionTitleItalic": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "sectionLead": {
+          "type": "string",
+          "description": "ui:textarea"
+        },
+        "cards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "alt": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "url"
+                ],
+                "description": "ui:image-picker"
+              },
+              "title": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "description": {
+                "type": "string",
+                "description": "ui:textarea"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "description"
+            ]
+          },
+          "description": "ui:list"
+        },
+        "proofStatement": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "proofSub": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "label"
+            ]
+          },
+          "description": "ui:list"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sectionTitle",
+        "cards"
+      ]
+    },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "anchorId": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "label": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "title": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "titleHighlight": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "description": {
+          "type": "string",
+          "description": "ui:textarea"
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "desc": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "sub": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "desc"
+            ]
+          },
+          "description": "ui:list"
+        },
+        "formTitle": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "successTitle": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "successBody": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "disclaimer": {
+          "type": "string",
+          "description": "ui:text"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ]
+    },
+    "login": {
+      "type": "object",
+      "properties": {
+        "anchorId": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "title": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "forgotHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "signupHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "termsHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "privacyHref": {
+          "type": "string",
+          "description": "ui:text"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "update-header",
+      "sectionType": "header",
+      "description": "Update a header section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "logoText": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "badge": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "variant": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "children": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "description": "ui:text"
+                          },
+                          "href": {
+                            "type": "string",
+                            "description": "ui:text"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "label",
+                          "href"
+                        ]
+                      },
+                      "description": "ui:list"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "href"
+                  ]
+                },
+                "description": "ui:list"
+              },
+              "ctaLabel": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "ctaHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "signinHref": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "logoText",
+              "links"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-footer",
+      "sectionType": "footer",
+      "description": "Update a footer section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "brandText": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "copyright": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "ui:text"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "href"
+                  ]
+                },
+                "description": "ui:list"
+              },
+              "designSystemHref": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "brandText",
+              "copyright"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-hero",
+      "sectionType": "hero",
+      "description": "Update a hero section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "anchorId": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "eyebrow": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "title": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "titleHighlight": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "description": {
+                "type": "string",
+                "description": "ui:textarea"
+              },
+              "ctas": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "variant": {
+                      "type": "string",
+                      "enum": [
+                        "primary",
+                        "secondary",
+                        "accent"
+                      ],
+                      "description": "ui:select",
+                      "default": "primary"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "href"
+                  ]
+                },
+                "description": "ui:list"
+              },
+              "docsLabel": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "docsHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "codeLabel": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "heroImage": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "alt": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "url"
+                ],
+                "description": "ui:image-picker"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "title"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-feature-grid",
+      "sectionType": "feature-grid",
+      "description": "Update a feature-grid section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "anchorId": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "sectionTitle": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "sectionTitleItalic": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "sectionLead": {
+                "type": "string",
+                "description": "ui:textarea"
+              },
+              "cards": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "alt": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "required": [
+                        "url"
+                      ],
+                      "description": "ui:image-picker"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "ui:textarea"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "title",
+                    "description"
+                  ]
+                },
+                "description": "ui:list"
+              },
+              "proofStatement": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "proofSub": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "tiers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label"
+                  ]
+                },
+                "description": "ui:list"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "sectionTitle",
+              "cards"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-contact",
+      "sectionType": "contact",
+      "description": "Update a contact section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "anchorId": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "title": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "titleHighlight": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "description": {
+                "type": "string",
+                "description": "ui:textarea"
+              },
+              "tiers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "desc": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "sub": {
+                      "type": "string",
+                      "description": "ui:text"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "desc"
+                  ]
+                },
+                "description": "ui:list"
+              },
+              "formTitle": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "successTitle": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "successBody": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "disclaimer": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "title"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-login",
+      "sectionType": "login",
+      "description": "Update a login section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "anchorId": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "title": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "subtitle": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "forgotHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "signupHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "termsHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "privacyHref": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "title"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

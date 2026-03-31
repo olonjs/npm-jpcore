@@ -1,0 +1,67 @@
+{
+  "version": "1.0.0",
+  "kind": "olonjs-page-mcp-manifest",
+  "generatedAt": "2026-03-31T07:25:37.194Z",
+  "slug": "post",
+  "title": "Post",
+  "description": "Smoke test page for header + tiptap + footer flow.",
+  "contractHref": "/schemas/post.schema.json",
+  "transport": {
+    "kind": "window-message",
+    "requestType": "olonjs:webmcp:tool-call",
+    "resultType": "olonjs:webmcp:tool-result",
+    "target": "window"
+  },
+  "capabilities": {
+    "resources": [
+      {
+        "uri": "olon://pages/post",
+        "name": "Post Data",
+        "mimeType": "application/json",
+        "description": "Structured content for the post page."
+      }
+    ]
+  },
+  "sectionTypes": [
+    "header",
+    "footer",
+    "tiptap"
+  ],
+  "sectionInstances": [
+    {
+      "id": "global-header",
+      "type": "header",
+      "scope": "global",
+      "label": "header"
+    },
+    {
+      "id": "global-footer",
+      "type": "footer",
+      "scope": "global",
+      "label": "footer"
+    },
+    {
+      "id": "post-editorial-main",
+      "type": "tiptap",
+      "scope": "local",
+      "label": "tiptap"
+    }
+  ],
+  "tools": [
+    {
+      "name": "update-header",
+      "sectionType": "header",
+      "description": "Update a header section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-footer",
+      "sectionType": "footer",
+      "description": "Update a footer section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-tiptap",
+      "sectionType": "tiptap",
+      "description": "Update a tiptap section in OlonJS Studio and persist immediately to file."
+    }
+  ]
+}

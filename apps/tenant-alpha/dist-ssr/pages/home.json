@@ -7,28 +7,11 @@
   },
   "sections": [
     {
-      "id": "global-header",
-      "type": "header",
-      "data": {
-        "logoText": "Olon",
-        "badge": "",
-        "links": {
-          "$ref": "../config/menu.json#/main"
-        },
-        "ctaLabel": "Get started →",
-        "ctaHref": "#contact",
-        "signinHref": "#login"
-      },
-      "settings": {
-        "sticky": true
-      }
-    },
-    {
       "id": "hero-main",
       "type": "hero",
       "data": {
         "eyebrow": "Contract layer · v1.4 · Open Core",
-        "title": "Start building   ",
+        "title": "Start Building",
         "titleHighlight": "for the agentic web.",
         "description": "AI agents are becoming operational actors in commerce, marketing, and support. But websites are still built for humans first: HTML-heavy, CMS-fragmented, and inconsistent across properties. That makes agent integration slow, brittle, and expensive. Olon introduces a deterministic machine contract for websites OlonJS. This makes content reliably readable and operable by agents while preserving normal human UI.",
         "ctas": [
@@ -45,8 +28,8 @@
             "variant": "secondary"
           }
         ],
-        "docsLabel": "Read the docs",
-        "docsHref": "#",
+        "docsLabel": "Explore platform",
+        "docsHref": "/platform/overview",
         "heroImage": {
           "url": "https://bat5elmxofxdroan.public.blob.vercel-storage.com/tenant-assets/511f18d7-d8ac-4292-ad8a-b0efa99401a3/1774286598548-adac7c36-9001-451d-9b16-c3787ac27f57-signup-hero-olon-graded_1_.png",
           "alt": ""
@@ -193,6 +176,5 @@
         "showOauth": true
       }
     }
-  ],
-  "global-header": false
+  ]
 }

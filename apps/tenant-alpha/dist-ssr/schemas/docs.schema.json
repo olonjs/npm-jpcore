@@ -1,0 +1,507 @@
+{
+  "version": "1.0.0",
+  "kind": "olonjs-page-contract",
+  "slug": "docs",
+  "title": "OlonJS Architecture Specifications v1.5",
+  "description": "Mandatory Standard — Sovereign Core Edition. Canonical Studio actions, SSG, Save to file, and Hot Save.",
+  "manifestHref": "/mcp-manifests/docs.json",
+  "systemPrompt": "You are operating the \"OlonJS Architecture Specifications v1.5\" page in OlonJS Studio. Use only the declared tools and keep mutations valid against the section schema.",
+  "sectionTypes": [
+    "header",
+    "footer",
+    "tiptap"
+  ],
+  "sectionInstances": [
+    {
+      "id": "global-header",
+      "type": "header",
+      "scope": "global",
+      "label": "header"
+    },
+    {
+      "id": "global-footer",
+      "type": "footer",
+      "scope": "global",
+      "label": "footer"
+    },
+    {
+      "id": "docs-main",
+      "type": "tiptap",
+      "scope": "local",
+      "label": "tiptap"
+    }
+  ],
+  "sectionSchemas": {
+    "header": {
+      "type": "object",
+      "properties": {
+        "logoText": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "badge": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "href": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "variant": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "children": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "ui:text"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "href"
+                  ]
+                },
+                "description": "ui:list"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "href"
+            ]
+          },
+          "description": "ui:list"
+        },
+        "ctaLabel": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "ctaHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "signinHref": {
+          "type": "string",
+          "description": "ui:text"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "logoText",
+        "links"
+      ]
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "brandText": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "copyright": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "href": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "label",
+              "href"
+            ]
+          },
+          "description": "ui:list"
+        },
+        "designSystemHref": {
+          "type": "string",
+          "description": "ui:text"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "brandText",
+        "copyright"
+      ]
+    },
+    "tiptap": {
+      "type": "object",
+      "properties": {
+        "anchorId": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "content": {
+          "type": "string",
+          "description": "ui:editorial-markdown",
+          "default": ""
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "tools": [
+    {
+      "name": "update-header",
+      "sectionType": "header",
+      "description": "Update a header section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "logoText": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "badge": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "variant": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "children": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "description": "ui:text"
+                          },
+                          "href": {
+                            "type": "string",
+                            "description": "ui:text"
+                          }
+                        },
+                        "additionalProperties": false,
+                        "required": [
+                          "label",
+                          "href"
+                        ]
+                      },
+                      "description": "ui:list"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "href"
+                  ]
+                },
+                "description": "ui:list"
+              },
+              "ctaLabel": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "ctaHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "signinHref": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "logoText",
+              "links"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-footer",
+      "sectionType": "footer",
+      "description": "Update a footer section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "brandText": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "copyright": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "description": "ui:text"
+                    },
+                    "href": {
+                      "type": "string",
+                      "description": "ui:text"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "label",
+                    "href"
+                  ]
+                },
+                "description": "ui:list"
+              },
+              "designSystemHref": {
+                "type": "string",
+                "description": "ui:text"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "brandText",
+              "copyright"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-tiptap",
+      "sectionType": "tiptap",
+      "description": "Update a tiptap section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "anchorId": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "content": {
+                "type": "string",
+                "description": "ui:editorial-markdown",
+                "default": ""
+              }
+            },
+            "additionalProperties": false
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

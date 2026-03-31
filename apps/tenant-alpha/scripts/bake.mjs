@@ -11,12 +11,18 @@ import { build } from 'vite';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import fs from 'fs/promises';
-import {
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const corePkgPath = require.resolve('@olonjs/core/package.json');
+const contractsUrl = pathToFileURL(corePkgPath.replace('package.json', 'src/lib/webmcp-contracts.mjs')).href;
+
+const {
   buildPageContract,
   buildPageManifest,
   buildPageManifestHref,
   buildSiteManifest,
-} from '../../../packages/core/src/lib/webmcp-contracts.mjs';
+} = await import(contractsUrl);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');

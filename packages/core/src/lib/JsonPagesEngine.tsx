@@ -1016,8 +1016,14 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
     } catch (e) {
       console.warn('[JsonPages] setTheme failed', e);
     }
+    
+    // Globally ensure WebMCP runtime is available for readResource if enabled
+    if (config.webmcp?.enabled) {
+      ensureWebMcpRuntime();
+    }
+    
     setIsReady(true);
-  }, [baseResolvedRuntime.themeConfig]);
+  }, [baseResolvedRuntime.themeConfig, config.webmcp?.enabled]);
 
   if (!isReady) {
     return (

@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "kind": "olonjs-page-mcp-manifest",
+  "generatedAt": "2026-03-31T06:39:43.162Z",
+  "slug": "home",
+  "title": "OlonJS — The Contract Layer for the Agentic Web",
+  "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance.",
+  "contractHref": "/schemas/home.schema.json",
+  "transport": {
+    "kind": "window-message",
+    "requestType": "olonjs:webmcp:tool-call",
+    "resultType": "olonjs:webmcp:tool-result",
+    "target": "window"
+  },
+  "capabilities": {
+    "resources": [
+      {
+        "uri": "olon://pages/home",
+        "name": "OlonJS — The Contract Layer for the Agentic Web Data",
+        "mimeType": "application/json",
+        "description": "Structured content for the home page."
+      }
+    ]
+  },
+  "sectionTypes": [
+    "header",
+    "footer",
+    "hero",
+    "feature-grid",
+    "contact",
+    "login"
+  ],
+  "sectionInstances": [
+    {
+      "id": "global-header",
+      "type": "header",
+      "scope": "global",
+      "label": "header"
+    },
+    {
+      "id": "global-footer",
+      "type": "footer",
+      "scope": "global",
+      "label": "footer"
+    },
+    {
+      "id": "hero-main",
+      "type": "hero",
+      "scope": "local",
+      "label": "Start Building"
+    },
+    {
+      "id": "features-section",
+      "type": "feature-grid",
+      "scope": "local",
+      "label": "A whole in itself,"
+    },
+    {
+      "id": "contact-section",
+      "type": "contact",
+      "scope": "local",
+      "label": "Ready to define"
+    },
+    {
+      "id": "login-section",
+      "type": "login",
+      "scope": "local",
+      "label": "Start your journey"
+    }
+  ],
+  "tools": [
+    {
+      "name": "update-header",
+      "sectionType": "header",
+      "description": "Update a header section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-footer",
+      "sectionType": "footer",
+      "description": "Update a footer section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-hero",
+      "sectionType": "hero",
+      "description": "Update a hero section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-feature-grid",
+      "sectionType": "feature-grid",
+      "description": "Update a feature-grid section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-contact",
+      "sectionType": "contact",
+      "description": "Update a contact section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-login",
+      "sectionType": "login",
+      "description": "Update a login section in OlonJS Studio and persist immediately to file."
+    }
+  ]
+}

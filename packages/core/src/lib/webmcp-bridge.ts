@@ -183,8 +183,8 @@ async function resolveResource(uri: string): Promise<unknown> {
       .replace(/\/admin(\/.*)?$/, '')
       .replace(/\/$/, '');
     
-    const response = await fetch(`${baseUrl}/pages/${slug}.json`);
-    if (!response.ok) throw new Error(`Resource not found: ${uri} (at ${baseUrl}/pages/${slug}.json)`);
+    const response = await fetch(`${baseUrl}/${slug}.json`);
+    if (!response.ok) throw new Error(`Resource not found: ${uri} (at ${baseUrl}/${slug}.json)`);
     return await response.json();
   }
   throw new Error(`Unsupported URI scheme: ${uri}`);
@@ -202,37 +202,35 @@ export function ensureWebMcpRuntime(): void {
   };
 
   if (!currentNavigator.modelContext) {
-    currentNavigator.modelContext = {
-      registerTool(tool: WebMcpTool) {
-        registry.set(tool.name, tool);
-      },
-      unregisterTool(name: string) {
-        registry.delete(name);
-      },
-      readResource: resolveResource,
-    };
+    currentNavigator.modelContext = {};
   }
+  currentNavigator.modelContext.registerTool = function (tool: WebMcpTool) {
+    registry.set(tool.name, tool);
+  };
+  currentNavigator.modelContext.unregisterTool = function (name: string) {
+    registry.delete(name);
+  };
+  currentNavigator.modelContext.readResource = resolveResource;
 
   if (!currentNavigator.modelContextTesting) {
-    currentNavigator.modelContextTesting = {
-      listTools() {
-        return Array.from(registry.values()).map(({ execute: _execute, ...toolInfo }) => toolInfo);
-      },
-      async executeTool(toolName: string, inputArgsJson: string) {
-        const tool = registry.get(toolName);
-        if (!tool) {
-          throw new Error(`Unknown WebMCP tool: ${toolName}`);
-        }
-        const parsedArgs = inputArgsJson ? (JSON.parse(inputArgsJson) as unknown) : {};
-        const result = await tool.execute(parsedArgs);
-        return JSON.stringify(result);
-      },
-      async readResource(uri: string) {
-        const data = await resolveResource(uri);
-        return JSON.stringify(data);
-      }
-    };
+    currentNavigator.modelContextTesting = {};
   }
+  currentNavigator.modelContextTesting.listTools = function () {
+    return Array.from(registry.values()).map(({ execute: _execute, ...toolInfo }) => toolInfo);
+  };
+  currentNavigator.modelContextTesting.executeTool = async function (toolName: string, inputArgsJson: string) {
+    const tool = registry.get(toolName);
+    if (!tool) {
+      throw new Error(`Unknown WebMCP tool: ${toolName}`);
+    }
+    const parsedArgs = inputArgsJson ? (JSON.parse(inputArgsJson) as unknown) : {};
+    const result = await tool.execute(parsedArgs);
+    return JSON.stringify(result);
+  };
+  currentNavigator.modelContextTesting.readResource = async function (uri: string) {
+    const data = await resolveResource(uri);
+    return JSON.stringify(data);
+  };
 }
 
 export function registerWebMcpTool(tool: WebMcpTool): () => void {
