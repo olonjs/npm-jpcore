@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { OlonMark } from '@/components/ui/OlonMark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 import type { MenuItem } from '@olonjs/core';
 import type { HeaderData, HeaderSettings } from './types';
 
@@ -15,15 +16,16 @@ export const Header: React.FC<{
 
   return (
     <>
-      <div style={{ height: '56px' }} aria-hidden />
+      <div style={{ height: '80px' }} aria-hidden />
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 w-full h-14 z-50 transition-all duration-300',
-          'flex items-center',
+          'fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300',
+          'flex flex-col',
           'bg-background/88 backdrop-blur-[16px] border-b border-border/60'
         )}
       >
-        <div className="max-w-[1040px] w-full mx-auto px-8 flex items-center gap-3">
+        <div className="max-w-[1040px] w-full h-14 mx-auto px-8 flex items-center gap-3">
+
 
           <a
             href="#"
@@ -96,9 +98,18 @@ export const Header: React.FC<{
           </button>
         </div>
 
+        {/* Banner Sotto il Menu */}
+        <div className="border-t border-border/60 py-1 px-4 text-center text-[10px] uppercase font-semibold tracking-wider text-muted-foreground flex justify-center items-center gap-1.5 bg-background/50">
+          <Sparkles className="w-2.5 h-2.5 text-primary-light" />
+          <span>Built with</span>
+          <a href="https://github.com/olonjs/npm-jpcore" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary-light transition-colors font-bold">
+            OlonJS
+          </a>
+        </div>
+
         {mobileMenuOpen && (
           <nav
-            className="absolute top-14 left-0 right-0 md:hidden border-b border-border bg-background/95 backdrop-blur-[16px]"
+            className="absolute top-[82px] left-0 right-0 md:hidden border-b border-border bg-background/95 backdrop-blur-[16px]"
             aria-label="Mobile menu"
           >
             <div className="max-w-[1040px] mx-auto px-8 py-4 flex flex-col gap-1">

@@ -16,7 +16,7 @@ export function OlonHeroView({ data }: Props) {
         '--local-primary': 'var(--primary)',
         '--local-p300':    'var(--primary-light)',
       } as React.CSSProperties}
-      className="relative min-h-screen bg-[var(--local-bg)] text-[var(--local-fg)] pt-36 pb-24 overflow-hidden"
+      className="relative min-h-[calc(100vh-80px)] flex items-center w-full bg-[var(--local-bg)] text-[var(--local-fg)] pt-14 pb-14 overflow-hidden"
       data-jp-section-id={data.id}
       data-jp-section-type="olon-hero"
     >
