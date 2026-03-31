@@ -21,70 +21,44 @@
       "badge": "JS",
       "links": [
         {
-          "label": "Platform",
-          "href": "/platform",
-          "children": [
-            {
-              "label": "Overview",
-              "href": "/platform/overview"
-            },
-            {
-              "label": "Architecture",
-              "href": "/platform/architecture"
-            },
-            {
-              "label": "Security",
-              "href": "/platform/security"
-            },
-            {
-              "label": "Integrations",
-              "href": "/platform/integrations"
-            },
-            {
-              "label": "Roadmap",
-              "href": "/platform/roadmap"
-            }
-          ]
+          "label": "Why",
+          "href": "#Why"
         },
         {
-          "label": "Solutions",
-          "href": "/solutions"
+          "label": "Architecture",
+          "href": "#Architecture"
         },
         {
-          "label": "Pricing",
-          "href": "/pricing"
+          "label": "Example",
+          "href": "#Example"
         },
         {
-          "label": "Resources",
-          "href": "/resources"
+          "label": "Get started",
+          "href": "#Getstarted"
+        },
+        {
+          "label": "GitHub",
+          "href": "https://github.com/olonjs/core"
         }
       ],
-      "ctaLabel": "Get started →",
-      "ctaHref": "#contact",
-      "signinHref": "#login"
+      "ctaLabel": "",
+      "ctaHref": "",
+      "signinHref": ""
     }
   },
   "footer": {
     "id": "global-footer",
     "type": "footer",
     "data": {
-      "brandText": "Olon",
-      "copyright": "© 2025 OlonJS · v1.4 · Holon",
+      "brandText": "OlonJS",
+      "copyright": "© 2026 OlonJS · v1.5 · Guido Serio",
       "links": [
         {
           "label": "GitHub",
-          "href": "#"
-        },
-        {
-          "label": "Privacy",
-          "href": "#"
-        },
-        {
-          "label": "Terms",
-          "href": "#"
+          "href": "https://github.com/olonjs/core"
         }
       ],
-      "designSystemHref": "/design-system"
+      "designSystemHref": ""
     },
     "settings": {
       "showLogo": true

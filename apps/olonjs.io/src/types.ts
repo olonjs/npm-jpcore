@@ -9,6 +9,13 @@ import type { GitSectionData,       GitSectionSettings }       from '@/component
 import type { DevexData,            DevexSettings }            from '@/components/devex';
 import type { TiptapData,           TiptapSettings }           from '@/components/tiptap';
 
+
+import type { OlonHeroData }         from '@/components/olon-hero';
+import type { OlonWhyData }          from '@/components/olon-why';
+import type { OlonArchitectureData } from '@/components/olon-architecture';
+import type { OlonExampleData }      from '@/components/olon-example';
+import type { OlonGetStartedData }   from '@/components/olon-getstarted';
+
 export type SectionComponentPropsMap = {
   'header':            { data: HeaderData;           settings?: HeaderSettings;           menu: MenuItem[] };
   'footer':            { data: FooterData;            settings?: FooterSettings            };
@@ -19,6 +26,12 @@ export type SectionComponentPropsMap = {
   'git-section':       { data: GitSectionData;        settings?: GitSectionSettings        };
   'devex':             { data: DevexData;             settings?: DevexSettings             };
   'tiptap':            { data: TiptapData;            settings?: TiptapSettings            };
+  
+  'olon-hero':         { data: OlonHeroData };
+  'olon-why':          { data: OlonWhyData };
+  'olon-architecture': { data: OlonArchitectureData };
+  'olon-example':      { data: OlonExampleData };
+  'olon-getstarted':   { data: OlonGetStartedData };
 };
 
 declare module '@olonjs/core' {
@@ -32,6 +45,14 @@ declare module '@olonjs/core' {
     'git-section':       GitSectionData;
     'devex':             DevexData;
     'tiptap':            TiptapData;
+
+    'olon-hero':         OlonHeroData;
+    'olon-why':          OlonWhyData;
+    'olon-architecture': OlonArchitectureData;
+    'olon-example':      OlonExampleData;
+    'olon-getstarted':   OlonGetStartedData;
+
+    
   }
   export interface SectionSettingsRegistry {
     'header':            HeaderSettings;

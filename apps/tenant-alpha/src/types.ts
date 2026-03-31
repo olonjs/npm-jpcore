@@ -10,6 +10,13 @@ import type { CloudAiNativeGridData,   CloudAiNativeGridSettings   } from '@/com
 import type { PageHeroData,            PageHeroSettings            } from '@/components/page-hero';
 import type { TiptapData,              TiptapSettings              } from '@/components/tiptap';
 
+
+import type { OlonHeroData }         from '@/components/olon-hero';
+import type { OlonWhyData }          from '@/components/olon-why';
+import type { OlonArchitectureData } from '@/components/olon-architecture';
+import type { OlonExampleData }      from '@/components/olon-example';
+import type { OlonGetStartedData }   from '@/components/olon-getstarted';
+
 export type SectionComponentPropsMap = {
   'header':                { data: HeaderData;              settings?: HeaderSettings;              menu: MenuItem[] };
   'footer':                { data: FooterData;              settings?: FooterSettings               };
@@ -21,6 +28,13 @@ export type SectionComponentPropsMap = {
   'cloud-ai-native-grid':  { data: CloudAiNativeGridData;   settings?: CloudAiNativeGridSettings    };
   'page-hero':             { data: PageHeroData;            settings?: PageHeroSettings             };
   'tiptap':                { data: TiptapData;               settings?: TiptapSettings                };
+  
+  
+  'olon-hero':         { data: OlonHeroData };
+  'olon-why':          { data: OlonWhyData };
+  'olon-architecture': { data: OlonArchitectureData };
+  'olon-example':      { data: OlonExampleData };
+  'olon-getstarted':   { data: OlonGetStartedData };
 };
 
 declare module '@olonjs/core' {
@@ -35,6 +49,11 @@ declare module '@olonjs/core' {
     'cloud-ai-native-grid':  CloudAiNativeGridData;
     'page-hero':             PageHeroData;
     'tiptap':                TiptapData;
+	 'olon-hero':         OlonHeroData;
+    'olon-why':          OlonWhyData;
+    'olon-architecture': OlonArchitectureData;
+    'olon-example':      OlonExampleData;
+    'olon-getstarted':   OlonGetStartedData;
   }
   export interface SectionSettingsRegistry {
     'header':                HeaderSettings;

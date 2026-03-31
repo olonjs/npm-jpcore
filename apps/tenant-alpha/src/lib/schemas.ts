@@ -9,6 +9,12 @@ import { CloudAiNativeGridSchema }    from '@/components/cloud-ai-native-grid';
 import { PageHeroSchema }             from '@/components/page-hero';
 import { TiptapSchema }           from '@/components/tiptap';
 
+import { OlonHeroSchema }         from '@/components/olon-hero';
+import { OlonWhySchema }          from '@/components/olon-why';
+import { OlonArchitectureSchema } from '@/components/olon-architecture';
+import { OlonExampleSchema }      from '@/components/olon-example';
+import { OlonGetStartedSchema }   from '@/components/olon-getstarted';
+
 export const SECTION_SCHEMAS = {
   'header':                HeaderSchema,
   'footer':                FooterSchema,
@@ -19,7 +25,13 @@ export const SECTION_SCHEMAS = {
   'design-system':         DesignSystemSchema,
   'cloud-ai-native-grid':  CloudAiNativeGridSchema,
   'page-hero':             PageHeroSchema,
-  'tiptap':            TiptapSchema,
+  'tiptap':           	   TiptapSchema,
+  
+  'olon-hero':         OlonHeroSchema,
+  'olon-why':          OlonWhySchema,
+  'olon-architecture': OlonArchitectureSchema,
+  'olon-example':      OlonExampleSchema,
+  'olon-getstarted':   OlonGetStartedSchema,
 } as const;
 
 export type SectionType = keyof typeof SECTION_SCHEMAS;
