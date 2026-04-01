@@ -1,5 +1,4 @@
 import type { OlonWhyData } from './types';
-import { Separator } from '@/components/ui/separator';
 
 const ICONS = {
   contract: (
@@ -71,7 +70,7 @@ export function OlonWhyView({ data }: Props) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden"
              data-jp-array="pillars">
-          {data.pillars.map((pillar, i) => (
+          {data.pillars.map((pillar) => (
             <div key={pillar.id}
                  className="bg-[var(--local-card)] p-8 flex flex-col gap-4 border-r last:border-r-0 border-[var(--local-border)]"
                  data-jp-item-id={pillar.id}>

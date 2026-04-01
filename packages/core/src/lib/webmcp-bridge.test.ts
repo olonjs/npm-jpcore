@@ -3,16 +3,13 @@ import {
   applyValueAtSelectionPath,
   buildWebMcpToolName,
   ensureWebMcpRuntime,
-  parseWebMcpToolName,
   registerWebMcpTool,
   resolveWebMcpMutationData,
 } from './webmcp-bridge';
 
 describe('webmcp-bridge', () => {
   it('builds and parses deterministic tool names', () => {
-    expect(buildWebMcpToolName('feature-grid')).toBe('update-feature-grid');
-    expect(parseWebMcpToolName('update-feature-grid')).toBe('feature-grid');
-    expect(parseWebMcpToolName('unknown')).toBeNull();
+    expect(buildWebMcpToolName()).toBe('update-section');
   });
 
   it('applies scalar updates through a root field path', () => {
@@ -77,8 +74,8 @@ describe('webmcp-bridge', () => {
 
     try {
       const unregister = registerWebMcpTool({
-        name: 'update-hero',
-        description: 'Update hero',
+        name: 'update-section',
+        description: 'Update section',
         inputSchema: { type: 'object', properties: {} },
         execute: async () => ({
           content: [{ type: 'text', text: 'ok' }],
@@ -87,9 +84,9 @@ describe('webmcp-bridge', () => {
       });
 
       const tools = navigator.modelContextProtocol?.listTools?.() ?? [];
-      expect(tools.map((tool) => tool.name)).toContain('update-hero');
+      expect(tools.map((tool) => tool.name)).toContain('update-section');
 
-      const result = await navigator.modelContextProtocol?.executeTool?.('update-hero', '{}');
+      const result = await navigator.modelContextProtocol?.executeTool?.('update-section', '{}');
       expect(JSON.parse(result ?? '{}')).toMatchObject({
         content: [{ type: 'text', text: 'ok' }],
         isError: false,

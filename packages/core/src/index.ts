@@ -20,7 +20,6 @@ export {
   buildWebMcpToolName,
   createWebMcpToolInputSchema,
   ensureWebMcpRuntime,
-  parseWebMcpToolName,
   registerWebMcpTool,
   resolveWebMcpMutationData,
   type WebMcpMutationArgs,

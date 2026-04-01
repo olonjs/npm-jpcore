@@ -3,6 +3,7 @@ import type { SelectionPath } from './types-engine';
 export interface WebMcpMutationArgs {
   slug?: string;
   sectionId: string;
+  sectionType?: string;
   scope?: 'global' | 'local';
   data?: Record<string, unknown>;
   itemPath?: SelectionPath;
@@ -52,25 +53,22 @@ function getToolRegistry(): Map<string, WebMcpTool> | null {
   return webMcpWindow.__olonWebMcpTools__;
 }
 
-export function buildWebMcpToolName(sectionType: string): string {
-  return `update-${sectionType}`;
+export function buildWebMcpToolName(): string {
+  return `update-section`;
 }
 
-export function parseWebMcpToolName(toolName: string): string | null {
-  return toolName.startsWith('update-') ? toolName.slice('update-'.length) : null;
-}
-
-export function createWebMcpToolInputSchema(sectionType: string): Record<string, unknown> {
+export function createWebMcpToolInputSchema(): Record<string, unknown> {
   return {
     type: 'object',
     additionalProperties: false,
     properties: {
       slug: { type: 'string' },
-      sectionId: { type: 'string' },
+      sectionId: { type: 'string', description: 'The unique ID of the section to update (found via data-jp-section-id or MCP read).' },
+      sectionType: { type: 'string', description: 'The type of the section being updated (e.g. "olon-hero"). Used to pick the correct validation schema.' },
       scope: { type: 'string', enum: ['local', 'global'], default: 'local' },
       data: {
         type: 'object',
-        description: `Full replacement payload validated against the "${sectionType}" section schema.`,
+        description: `Full replacement payload validated against the section's schema.`,
       },
       itemPath: {
         type: 'array',

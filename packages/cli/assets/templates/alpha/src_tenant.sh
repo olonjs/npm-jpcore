@@ -1607,11 +1607,9 @@ cat << 'END_OF_FILE_CONTENT' > "index.html"
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Olon — Agentic Content Infrastructure" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-sans/style.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/fonts/geist-mono/style.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500;1,700&display=swap" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/merriweather@5.2.6/wdth.css" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap" rel="stylesheet">
     <title>Olon</title>
   </head>
   <body>
@@ -1646,7 +1644,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.96",
+    "@olonjs/core": "^1.0.97",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -4141,7 +4139,7 @@ export function OlonMark({ size = 32, className }: OlonMarkProps) {
 
   // Dark:  nucleus = Parchment #E2D5B0 (warm, human)
   // Light: nucleus = Primary   #1E1814 (brand, on white bg)
-  const nucleusFill = theme === 'dark' ? '#E2D5B0' : '#1E1814'
+  const nucleusFill = theme === 'dark' ? '#F4F3EF' : '#080808'
 
   return (
     <svg
@@ -4153,8 +4151,8 @@ export function OlonMark({ size = 32, className }: OlonMarkProps) {
     >
       <defs>
         <linearGradient id="olon-ring" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#B8A4E0" />
-          <stop offset="100%" stopColor="#5B3F9A" />
+          <stop offset="0%" stopColor="#84ABFF" />
+          <stop offset="100%" stopColor="#0F52E0" />
         </linearGradient>
       </defs>
       <circle cx="50" cy="50" r="38" stroke="url(#olon-ring)" strokeWidth="20" />
@@ -6055,8 +6053,8 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 shrink-0" aria-label="OlonJS home">
           <OlonMark size={26} className="mb-0.5" />
-          <span
-            className="text-2xl text-accent leading-none"
+          <div className="flex items-center gap-1"><span
+            className="text-2xl text-foreground leading-none"
             style={{
               fontFamily:           'var(--wordmark-font)',
               letterSpacing:        'var(--wordmark-tracking)',
@@ -6065,12 +6063,9 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
             }}
           >
             {data.logoText}
-          </span>
-          {data.badge && (
-            <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono-olon bg-primary-900 text-primary-light border border-primary-800 rounded-sm">
-              {data.badge}
-            </span>
-          )}
+            </span> 
+            <span className="text-primary-light font-mono">{data.badge}</span>
+            </div>
         </a>
 
         {/* Desktop nav */}
@@ -6341,8 +6336,96 @@ export type HeaderSettings = z.infer<typeof HeaderSettingsSchema>;
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/hero"
+# SKIP: src/components/hero/RadialBackground - Copy.tsx:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/components/hero/RadialBackground.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/hero/RadialBackground.tsx"
+import { useEffect, useRef, useState } from 'react';
+import { motion } from 'motion/react';
+
+// CSS var names — order matches STOPS
+const TOKEN_VARS = [
+  '--background',   // #0B0907 center
+  '--background',         // #130F0D
+  '--background',     // #1E1814
+  '--background',       // #2E271F
+  '--background',      // #241D17
+  '--elevated',     // #1E1814
+  '--background',   // #0B0907 outer
+] as const;
+
+const STOPS = [0, 30, 55, 72, 84, 93, 100] as const;
+
+function readTokenColors(): string[] {
+  if (typeof document === 'undefined') return TOKEN_VARS.map(() => '#000');
+  const s = getComputedStyle(document.documentElement);
+  return TOKEN_VARS.map((v) => s.getPropertyValue(v).trim() || '#000');
+}
+
+export function RadialBackground({
+  startingGap =80, 
+  breathing = true,
+  animationSpeed = 0.01,
+  breathingRange = 180,
+  topOffset = 0,
+}: {
+  startingGap?: number;
+  breathing?: boolean;
+  animationSpeed?: number;
+  breathingRange?: number;
+  topOffset?: number;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [colors, setColors] = useState<string[]>(() => readTokenColors());
+
+  // Re-read tokens when data-theme changes (dark ↔ light)
+  useEffect(() => {
+    setColors(readTokenColors());
+    const observer = new MutationObserver(() => setColors(readTokenColors()));
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let animationFrame: number;
+    let width = startingGap;
+    let direction = 1;
+
+    const animate = () => {
+      if (width >= startingGap + breathingRange) direction = -1;
+      if (width <= startingGap - breathingRange) direction = 1;
+      if (!breathing) direction = 0;
+      width += direction * animationSpeed;
+
+      const stops = STOPS.map((s, i) => `${colors[i]} ${s}%`).join(', ');
+      const gradient = `radial-gradient(${width}% ${width + topOffset}% at 50% 20%, ${stops})`;
+
+      if (containerRef.current) {
+        containerRef.current.style.background = gradient;
+      }
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [startingGap, breathing, animationSpeed, breathingRange, topOffset, colors]);
+
+  return (
+    <motion.div
+      animate={{ opacity: 1, scale: 1, transition: { duration: 2, ease: [0.25, 0.1, 0.25, 1] } }}
+      className="absolute inset-0 overflow-hidden"
+      initial={{ opacity: 0, scale: 1.5 }}
+    >
+      <div className="absolute inset-0" ref={containerRef} />
+    </motion.div>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/hero/RadialBackground.txt..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hero/RadialBackground.txt"
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
@@ -6470,11 +6553,11 @@ export function Hero({ data, settings }: HeroViewProps) {
           )}
 
           {/* Headline */}
-          <h1 className="font-display font-normal text-7xl  text-foreground leading-tight tracking-display mb-1" data-jp-field="title">
+          <h1 className="font-display font-bold text-7xl  text-foreground leading-tight tracking-tight mb-1" data-jp-field="title">
             {data.title}
           </h1>
           {data.titleHighlight && (
-            <h2 className="font-display font-normal italic text-5xl md:text-6xl text-primary-light leading-tight tracking-display mb-7" data-jp-field="titleHighlight">
+            <h2 className="font-display font-normal italic text-5xl md:text-6xl text-primary-light leading-tight tracking-tight mb-7" data-jp-field="titleHighlight">
               {data.titleHighlight}
             </h2>
           )}
@@ -6806,6 +6889,969 @@ import { LoginSchema, LoginSettingsSchema } from './schema';
 
 export type LoginData     = z.infer<typeof LoginSchema>;
 export type LoginSettings = z.infer<typeof LoginSettingsSchema>;
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/olon-architecture"
+echo "Creating src/components/olon-architecture/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-architecture/View.tsx"
+import type { OlonArchitectureData } from './types';
+
+const ICONS: Record<string, React.ReactNode> = {
+  mtrp: (
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="am" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient><linearGradient id="amc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EEF3FF"/><stop offset="1" stopColor="#84ABFF"/></linearGradient></defs>
+      <rect x="25" y="30" width="130" height="140" rx="10" fill="none" stroke="url(#am)" strokeWidth="7"/>
+      <line x1="25" y1="60" x2="155" y2="60" stroke="url(#am)" strokeWidth="5"/>
+      <path fill="none" stroke="url(#am)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5" d="M72,42 c-5,0 -8,2 -8,6v2c0,4 -3,5 -6,5 3,0 6,1 6,5v2c0,4 3,6 8,6"/>
+      <path fill="none" stroke="url(#am)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5" d="M108,42 c5,0 8,2 8,6v2c0,4 3,5 6,5 -3,0 -6,1 -6,5v2c0,4 -3,6 -8,6"/>
+      <circle fill="url(#am)" opacity="0.35" cx="46" cy="90" r="4.5"/>
+      <rect fill="url(#am)" opacity="0.35" x="59" y="86.5" width="68" height="7" rx="3.5"/>
+      <circle fill="url(#amc)" cx="46" cy="117" r="6.5"/>
+      <rect fill="url(#amc)" x="59" y="113" width="82" height="8" rx="4"/>
+      <circle fill="url(#am)" opacity="0.55" cx="46" cy="145" r="4.5"/>
+      <rect fill="url(#am)" opacity="0.55" x="59" y="141.5" width="50" height="7" rx="3.5"/>
+      <path fill="none" stroke="url(#amc)" strokeLinecap="round" strokeWidth="5" d="M192,117 h-35"/>
+      <path fill="none" stroke="url(#amc)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" d="M170,108 l17,9 -17,9"/>
+    </svg>
+  ),
+  tbp: (
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="at" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient><linearGradient id="atc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EEF3FF"/><stop offset="1" stopColor="#84ABFF"/></linearGradient></defs>
+      <rect fill="none" stroke="url(#at)" strokeWidth="5.5" strokeLinejoin="round" opacity="0.3" x="65" y="22" width="108" height="74" rx="9"/>
+      <rect fill="none" stroke="url(#at)" strokeWidth="5.5" strokeLinejoin="round" opacity="0.6" x="46" y="50" width="108" height="74" rx="9"/>
+      <rect fill="none" stroke="url(#at)" strokeWidth="6.5" strokeLinejoin="round" x="27" y="78" width="108" height="74" rx="9"/>
+      <rect fill="url(#at)" opacity="0.6" x="42" y="101" width="52" height="6" rx="3"/>
+      <rect fill="url(#atc)" x="42" y="116" width="36" height="6" rx="3"/>
+      <circle fill="url(#at)" opacity="0.3" cx="162" cy="33" r="4"/>
+      <circle fill="url(#at)" opacity="0.6" cx="143" cy="61" r="4"/>
+      <circle fill="url(#atc)" cx="124" cy="89" r="5"/>
+    </svg>
+  ),
+  jsp: (
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="aj" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient><linearGradient id="ajc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EEF3FF"/><stop offset="1" stopColor="#84ABFF"/></linearGradient></defs>
+      <rect fill="none" stroke="url(#aj)" strokeWidth="7" strokeLinejoin="round" x="14" y="22" width="172" height="128" rx="12"/>
+      <line x1="14" y1="52" x2="186" y2="52" stroke="url(#aj)" strokeWidth="5"/>
+      <circle fill="url(#aj)" opacity="0.4" cx="34" cy="37" r="5"/>
+      <circle fill="url(#aj)" opacity="0.6" cx="52" cy="37" r="5"/>
+      <circle fill="url(#ajc)" cx="70" cy="37" r="5"/>
+      <path fill="none" stroke="url(#ajc)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="6" d="M28,75 l12,11 -12,11"/>
+      <rect fill="url(#ajc)" x="48" y="80" width="22" height="7" rx="3.5"/>
+      <rect fill="url(#aj)" opacity="0.7" x="28" y="106" width="88" height="6" rx="3"/>
+      <rect fill="url(#aj)" opacity="0.5" x="28" y="121" width="62" height="6" rx="3"/>
+      <rect fill="url(#aj)" opacity="0.35" x="28" y="136" width="76" height="6" rx="3"/>
+    </svg>
+  ),
+  idac: (
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="ai" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient><linearGradient id="aic" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EEF3FF"/><stop offset="1" stopColor="#84ABFF"/></linearGradient></defs>
+      <rect fill="none" stroke="url(#ai)" strokeWidth="6.5" strokeLinejoin="round" x="8" y="36" width="72" height="128" rx="9"/>
+      <rect fill="url(#ai)" opacity="0.5" x="20" y="56" width="48" height="5.5" rx="2.75"/>
+      <rect fill="url(#aic)" x="20" y="75" width="48" height="8" rx="4"/>
+      <rect fill="url(#ai)" opacity="0.4" x="20" y="98" width="48" height="5.5" rx="2.75"/>
+      <path fill="none" stroke="url(#aic)" strokeLinecap="round" strokeWidth="5.5" d="M80,100 h40"/>
+      <circle fill="url(#aic)" cx="100" cy="100" r="5.5"/>
+      <path fill="none" stroke="url(#ai)" strokeLinecap="round" strokeWidth="4" opacity="0.4" d="M80,75 h40"/>
+      <path fill="none" stroke="url(#ai)" strokeLinecap="round" strokeWidth="4" opacity="0.4" d="M80,125 h40"/>
+      <rect fill="none" stroke="url(#ai)" strokeWidth="6.5" strokeLinejoin="round" x="120" y="36" width="72" height="128" rx="9"/>
+      <rect fill="url(#ai)" opacity="0.5" x="132" y="56" width="48" height="5.5" rx="2.75"/>
+      <rect fill="url(#aic)" x="132" y="75" width="48" height="8" rx="4"/>
+      <rect fill="url(#ai)" opacity="0.4" x="132" y="98" width="48" height="5.5" rx="2.75"/>
+    </svg>
+  ),
+  bsds: (
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="ab" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient><linearGradient id="abc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EEF3FF"/><stop offset="1" stopColor="#84ABFF"/></linearGradient></defs>
+      <rect fill="none" stroke="url(#ab)" strokeWidth="8" strokeLinejoin="round" x="16" y="152" width="168" height="32" rx="8"/>
+      <circle fill="url(#abc)" cx="100" cy="168" r="7"/>
+      <path fill="none" stroke="url(#ab)" strokeLinecap="round" strokeWidth="5" opacity="0.5" d="M54,138 v14"/>
+      <path fill="none" stroke="url(#ab)" strokeLinecap="round" strokeWidth="5" opacity="0.5" d="M146,138 v14"/>
+      <rect fill="none" stroke="url(#ab)" strokeWidth="6" strokeLinejoin="round" x="16" y="68" width="76" height="70" rx="9"/>
+      <rect fill="url(#ab)" opacity="0.55" x="28" y="84" width="42" height="6" rx="3"/>
+      <rect fill="url(#abc)" x="28" y="112" width="32" height="6" rx="3"/>
+      <rect fill="none" stroke="url(#ab)" strokeWidth="6" strokeLinejoin="round" x="108" y="44" width="76" height="94" rx="9"/>
+      <rect fill="url(#ab)" opacity="0.55" x="120" y="60" width="42" height="6" rx="3"/>
+      <rect fill="url(#abc)" x="120" y="88" width="32" height="6" rx="3"/>
+    </svg>
+  ),
+  pss: (
+    <svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="ap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient><linearGradient id="apc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EEF3FF"/><stop offset="1" stopColor="#84ABFF"/></linearGradient></defs>
+      <path fill="none" stroke="url(#apc)" strokeLinecap="round" strokeWidth="5.5" d="M100,32 L52,90"/>
+      <path fill="none" stroke="url(#ap)" strokeLinecap="round" strokeWidth="5" opacity="0.3" d="M100,32 L148,90"/>
+      <path fill="none" stroke="url(#ap)" strokeLinecap="round" strokeWidth="4.5" opacity="0.3" d="M52,90 L22,158"/>
+      <path fill="none" stroke="url(#apc)" strokeLinecap="round" strokeWidth="5.5" d="M52,90 L90,158"/>
+      <path fill="none" stroke="url(#ap)" strokeLinecap="round" strokeWidth="4" opacity="0.25" d="M148,90 L170,158"/>
+      <circle fill="url(#apc)" cx="100" cy="22" r="11"/>
+      <circle fill="url(#apc)" cx="52" cy="90" r="10"/>
+      <circle fill="url(#ap)" opacity="0.3" cx="148" cy="90" r="8"/>
+      <circle fill="url(#ap)" opacity="0.3" cx="22" cy="165" r="7"/>
+      <circle fill="url(#apc)" cx="90" cy="165" r="11"/>
+      <rect fill="none" stroke="url(#apc)" strokeWidth="4" strokeLinejoin="round" opacity="0.5" x="76" y="151" width="28" height="28" rx="5"/>
+    </svg>
+  ),
+};
+
+interface Props { data: OlonArchitectureData; }
+
+export function OlonArchitectureView({ data }: Props) {
+  return (
+    <section
+      style={{
+        '--local-bg':    'var(--background)',
+        '--local-fg':    'var(--foreground)',
+        '--local-muted': 'var(--muted-foreground)',
+        '--local-p400':  'var(--primary)',
+        '--local-card':  'var(--card)',
+        '--local-border':'var(--border)',
+      } as React.CSSProperties}
+      className="bg-[var(--local-bg)] text-[var(--local-fg)] py-24 border-t border-[var(--local-border)]"
+      data-jp-section-id={data.id}
+      data-jp-section-type="olon-architecture"
+    >
+      <div className="max-w-6xl mx-auto px-8">
+        <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)] mb-3"
+           data-jp-field="label">{data.label}</p>
+        <h2 className="text-4xl font-bold tracking-[-0.03em] text-white mb-3"
+            data-jp-field="headline">{data.headline}</h2>
+        <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-2xl mb-3"
+           data-jp-field="body">{data.body}</p>
+        {data.specHref && (
+          <p className="text-sm text-[var(--local-muted)] mb-12">
+            Full specification:{' '}
+            <a href={data.specHref} target="_blank" rel="noopener noreferrer"
+               className="text-[var(--local-p400)] hover:underline">
+              olonjsSpecs_V_1_5.md ↗
+            </a>
+          </p>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden"
+             data-jp-array="protocols">
+          {data.protocols.map((p) => (
+            <div key={p.id}
+                 className="bg-[var(--local-card)] p-7 flex flex-col gap-3 border-r border-b border-[var(--local-border)] hover:bg-[var(--elevated)] transition-colors"
+                 data-jp-item-id={p.id}>
+              <div>{ICONS[p.icon]}</div>
+              <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-[var(--local-p400)] font-mono"
+                 data-jp-field="version">{p.acronym} · {p.version}</p>
+              <p className="font-bold text-white text-base" data-jp-field="name">{p.name}</p>
+              <p className="text-sm text-[var(--local-muted)] leading-relaxed flex-1"
+                 data-jp-field="desc">{p.desc}</p>
+              <a href={p.specHref} target="_blank" rel="noopener noreferrer"
+                 className="text-xs text-[var(--local-p400)] hover:text-white transition-colors mt-auto"
+                 data-jp-field="specHref">Read spec ↗</a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-architecture/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-architecture/index.ts"
+export { OlonArchitectureView as View } from './View';
+export { OlonArchitectureSchema } from './schema';
+export type { OlonArchitectureData } from './types';
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-architecture/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-architecture/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
+
+export const ProtocolSchema = BaseArrayItem.extend({
+  version:  z.string(),
+  acronym:  z.string(),
+  name:     z.string(),
+  desc:     z.string(),
+  specHref: z.string(),
+  icon:     z.enum(['mtrp', 'tbp', 'jsp', 'idac', 'bsds', 'pss']),
+});
+
+export const OlonArchitectureSchema = BaseSectionData.extend({
+  label:     z.string().default('Architecture'),
+  headline:  z.string().default('Six governing protocols.'),
+  body:      z.string().default(''),
+  specHref:  z.string().default(''),
+  protocols: z.array(ProtocolSchema).min(1).max(6),
+});
+
+export type OlonArchitectureData = z.infer<typeof OlonArchitectureSchema>;
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-architecture/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-architecture/types.ts"
+export type { OlonArchitectureData } from './schema';
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/olon-example"
+echo "Creating src/components/olon-example/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-example/View.tsx"
+import type { OlonExampleData } from './types';
+
+interface Props { data: OlonExampleData; }
+
+export function OlonExampleView({ data }: Props) {
+  return (
+    <section
+      style={{
+        '--local-bg':    'var(--background)',
+        '--local-fg':    'var(--foreground)',
+        '--local-muted': 'var(--muted-foreground)',
+        '--local-p400':  'var(--primary)',
+        '--local-p300':  'var(--primary-light)',
+        '--local-card':  'var(--card)',
+        '--local-border':'var(--border)',
+      } as React.CSSProperties}
+      className="bg-[var(--local-bg)] text-[var(--local-fg)] py-24 border-t border-[var(--local-border)]"
+      data-jp-section-id={data.id}
+      data-jp-section-type="olon-example"
+    >
+      <div className="max-w-6xl mx-auto px-8">
+        <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)] mb-3"
+           data-jp-field="label">{data.label}</p>
+        <h2 className="text-4xl font-bold tracking-[-0.03em] text-white mb-3"
+            data-jp-field="headline">{data.headline}</h2>
+        <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-2xl mb-12"
+           data-jp-field="body">{data.body}</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {data.steps.map((step) => (
+            <div key={step.number}
+                 className="bg-[var(--local-card)] border border-[var(--local-border)] rounded-2xl overflow-hidden">
+              {/* Step header */}
+              <div className="px-6 py-4 border-b border-[var(--local-border)] flex items-center gap-3">
+                <span className="w-6 h-6 rounded-full bg-[var(--local-p400)] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                  {step.number}
+                </span>
+                <span className="font-semibold text-white text-sm">{step.title}</span>
+                <span className="ml-auto text-xs text-[var(--local-muted)]">{step.meta}</span>
+              </div>
+              {/* Code block */}
+              <pre className="p-6 font-mono text-xs leading-relaxed bg-[#080E14] text-[var(--local-fg)] overflow-x-auto whitespace-pre-wrap min-h-[200px]">
+                {step.code}
+              </pre>
+            </div>
+          ))}
+        </div>
+
+        {/* MCP manifest note */}
+        {data.note && (
+          <div className="mt-6 px-6 py-4 bg-[var(--local-card)] border border-[var(--local-border)] rounded-xl flex items-start gap-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                 className="text-[var(--local-p400)] mt-0.5 flex-shrink-0">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p className="text-sm text-[var(--local-muted)]" data-jp-field="note">
+              {data.note}{' '}
+              {data.noteHref && (
+                <code className="font-mono text-[var(--local-p300)] text-xs">{data.noteHref}</code>
+              )}
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-example/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-example/index.ts"
+export { OlonExampleView as View } from './View';
+export { OlonExampleSchema } from './schema';
+export type { OlonExampleData } from './types';
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-example/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-example/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData } from '@/lib/base-schemas';
+
+const StepSchema = z.object({
+  number: z.number(),
+  title:  z.string(),
+  meta:   z.string(),
+  code:   z.string(),
+});
+
+export const OlonExampleSchema = BaseSectionData.extend({
+  label:    z.string().default('Quick Example'),
+  headline: z.string().default('Two steps. One contract.'),
+  body:     z.string().default(''),
+  note:     z.string().default(''),
+  noteHref: z.string().default(''),
+  steps:    z.tuple([StepSchema, StepSchema]),
+});
+
+export type OlonExampleData = z.infer<typeof OlonExampleSchema>;
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-example/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-example/types.ts"
+export type { OlonExampleData } from './schema';
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/olon-getstarted"
+echo "Creating src/components/olon-getstarted/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-getstarted/View.tsx"
+import type { OlonGetStartedData } from './types';
+import { Button } from '@/components/ui/button';
+
+const BADGE_STYLES: Record<string, string> = {
+  oss:    'bg-blue-500/15 text-blue-400 border border-blue-500/30',
+  cli:    'bg-primary/10 text-primary border border-primary/20',
+  deploy: 'bg-muted text-muted-foreground border border-border',
+};
+
+interface Props { data: OlonGetStartedData; }
+
+export function OlonGetStartedView({ data }: Props) {
+  return (
+    <section
+      style={{
+        '--local-bg':    'var(--background)',
+        '--local-fg':    'var(--foreground)',
+        '--local-muted': 'var(--muted-foreground)',
+        '--local-p400':  'var(--primary)',
+        '--local-p300':  'var(--primary-light)',
+        '--local-card':  'var(--card)',
+        '--local-border':'var(--border)',
+      } as React.CSSProperties}
+      className="bg-[var(--local-bg)] text-[var(--local-fg)] py-24 border-t border-[var(--local-border)]"
+      data-jp-section-id={data.id}
+      data-jp-section-type="olon-getstarted"
+    >
+      <div className="max-w-6xl mx-auto px-8">
+        <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)] mb-3"
+           data-jp-field="label">{data.label}</p>
+        <h2 className="text-4xl font-bold tracking-[-0.03em] text-white mb-3"
+            data-jp-field="headline">{data.headline}</h2>
+        <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-2xl mb-12"
+           data-jp-field="body">{data.body}</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden"
+             data-jp-array="cards">
+          {data.cards.map((card) => (
+            <div key={card.id}
+                 className="bg-[var(--local-card)] p-8 flex flex-col gap-4 border-r last:border-r-0 border-[var(--local-border)] hover:bg-[var(--elevated)] transition-colors"
+                 data-jp-item-id={card.id}>
+              <span className={`text-[11px] font-bold tracking-[0.08em] uppercase px-2.5 py-0.5 rounded-full w-fit ${BADGE_STYLES[card.badgeStyle]}`}
+                    data-jp-field="badge">
+                {card.badge}
+              </span>
+              <p className="font-bold text-white text-base" data-jp-field="title">{card.title}</p>
+              <p className="text-sm text-[var(--local-muted)] leading-relaxed flex-1"
+                 data-jp-field="body">{card.body}</p>
+              {card.code && (
+                <code className="font-mono text-xs bg-[#080E14] border border-[var(--local-border)] rounded-lg px-4 py-3 text-[var(--local-p300)] block"
+                      data-jp-field="code">
+                  {card.code}
+                </code>
+              )}
+              {card.deployHref && card.deployLabel && (
+                <Button asChild variant="outline" size="sm" className="w-fit">
+                  <a href={card.deployHref} target="_blank" rel="noopener noreferrer">
+                    {card.deployLabel}
+                  </a>
+                </Button>
+              )}
+              <a href={card.linkHref} target="_blank" rel="noopener noreferrer"
+                 className="text-sm text-[var(--local-p400)] hover:text-[var(--local-p300)] transition-colors flex items-center gap-1 mt-auto"
+                 data-jp-field="linkLabel">
+                {card.linkLabel} ↗
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-getstarted/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-getstarted/index.ts"
+export { OlonGetStartedView as View } from './View';
+export { OlonGetStartedSchema } from './schema';
+export type { OlonGetStartedData } from './types';
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-getstarted/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-getstarted/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
+
+export const StartCardSchema = BaseArrayItem.extend({
+  badge:      z.string(),
+  badgeStyle: z.enum(['oss', 'cli', 'deploy']),
+  title:      z.string(),
+  body:       z.string(),
+  code:       z.string().optional(),
+  linkLabel:  z.string(),
+  linkHref:   z.string(),
+  deployLabel:z.string().optional(),
+  deployHref: z.string().optional(),
+});
+
+export const OlonGetStartedSchema = BaseSectionData.extend({
+  label:    z.string().default('Get Started'),
+  headline: z.string().default('Three paths in.'),
+  body:     z.string().default(''),
+  cards:    z.array(StartCardSchema).min(1).max(3),
+});
+
+export type OlonGetStartedData = z.infer<typeof OlonGetStartedSchema>;
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-getstarted/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-getstarted/types.ts"
+export type { OlonGetStartedData } from './schema';
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/olon-hero"
+echo "Creating src/components/olon-hero/DawnBackground.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-hero/DawnBackground.tsx"
+import { useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
+
+export function DawnBackground({
+  dawnDuration = 3.5,
+  breathingSpeed = 0.5,
+  breathingRange = 0.03,
+  intensity = 0.55,
+}: {
+  dawnDuration?: number;
+  breathingSpeed?: number;
+  breathingRange?: number;
+  intensity?: number;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef    = useRef<HTMLCanvasElement | null>(null);
+  const rafRef       = useRef<number>(0);
+  const startRef     = useRef<number | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    function resize() {
+      if (!canvas || !container) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = container.offsetWidth  * dpr;
+      canvas.height = container.offsetHeight * dpr;
+    }
+    resize();
+
+    const ro = new ResizeObserver(resize);
+    ro.observe(container);
+
+    function easeOut(t: number) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function draw(ts: number) {
+      if (!canvas || !ctx) return;
+      if (!startRef.current) startRef.current = ts;
+
+      const elapsed = (ts - startRef.current) / 1000;
+      const dawnP   = Math.min(elapsed / dawnDuration, 1);
+      const dawnE   = easeOut(dawnP);
+      const breathT = Math.max(0, elapsed - dawnDuration);
+      const breathe = dawnP >= 1
+        ? 1 + Math.sin(breathT * breathingSpeed) * breathingRange
+        : 1;
+
+      const W = canvas.width;
+      const H = canvas.height;
+      const masterIntensity = dawnE * intensity * breathe;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Left source — bottom left, primary blue
+      const lx = W * 0.18;
+      const ly = H * 0.92;
+      const lr = W * 0.75 * breathe;
+      const gL = ctx.createRadialGradient(lx, ly, 0, lx, ly, lr);
+      gL.addColorStop(0.00, `rgba(15,52,224,${0.70 * masterIntensity})`);
+      gL.addColorStop(0.20, `rgba(23,99,255,${0.60 * masterIntensity})`);
+      gL.addColorStop(0.45, `rgba(91,142,255,${0.35 * masterIntensity})`);
+      gL.addColorStop(0.70, `rgba(84,171,255,${0.15 * masterIntensity})`);
+      gL.addColorStop(1.00, 'rgba(12,17,22,0)');
+      ctx.fillStyle = gL;
+      ctx.fillRect(0, 0, W, H);
+
+      // Right source — mirror
+      const gR = ctx.createRadialGradient(W - lx, ly, 0, W - lx, ly, lr);
+      gR.addColorStop(0.00, `rgba(15,52,224,${0.70 * masterIntensity})`);
+      gR.addColorStop(0.20, `rgba(23,99,255,${0.60 * masterIntensity})`);
+      gR.addColorStop(0.45, `rgba(91,142,255,${0.35 * masterIntensity})`);
+      gR.addColorStop(0.70, `rgba(84,171,255,${0.15 * masterIntensity})`);
+      gR.addColorStop(1.00, 'rgba(12,17,22,0)');
+      ctx.fillStyle = gR;
+      ctx.fillRect(0, 0, W, H);
+
+      // Center V tip — deep navy, very subtle
+      const vr = W * 0.32 * breathe;
+      const gV = ctx.createRadialGradient(W * 0.5, H * 0.72, 0, W * 0.5, H * 0.72, vr);
+      gV.addColorStop(0.00, `rgba(9,64,184,${0.50 * masterIntensity})`);
+      gV.addColorStop(0.40, `rgba(15,52,224,${0.25 * masterIntensity})`);
+      gV.addColorStop(1.00, 'rgba(12,17,22,0)');
+      ctx.fillStyle = gV;
+      ctx.fillRect(0, 0, W, H);
+
+      // Top dark veil — keeps header very dark
+      const gTop = ctx.createLinearGradient(0, 0, 0, H * 0.6);
+      gTop.addColorStop(0,    'rgba(12,17,22,1)');
+      gTop.addColorStop(0.55, 'rgba(12,17,22,0.85)');
+      gTop.addColorStop(1,    'rgba(12,17,22,0)');
+      ctx.fillStyle = gTop;
+      ctx.fillRect(0, 0, W, H);
+
+      rafRef.current = requestAnimationFrame(draw);
+    }
+
+    rafRef.current = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      ro.disconnect();
+    };
+  }, [dawnDuration, breathingSpeed, breathingRange, intensity]);
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className="absolute inset-0 overflow-hidden"
+      animate={{ opacity: 1, transition: { duration: 0.1 } }}
+      initial={{ opacity: 0 }}
+    >
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+      />
+    </motion.div>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-hero/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-hero/View.tsx"
+import type { OlonHeroData } from './types';
+import { Button } from '@/components/ui/button';
+import { DawnBackground } from './DawnBackground';
+
+interface Props {
+  data: OlonHeroData;
+}
+
+export function OlonHeroView({ data }: Props) {
+  return (
+    <section
+      style={{
+        '--local-bg':      'var(--background)',
+        '--local-fg':      'var(--foreground)',
+        '--local-muted':   'var(--muted-foreground)',
+        '--local-primary': 'var(--primary)',
+        '--local-p300':    'var(--primary-light)',
+      } as React.CSSProperties}
+      className="relative min-h-screen bg-[var(--local-bg)] text-[var(--local-fg)] pt-36 pb-24 overflow-hidden"
+      data-jp-section-id={data.id}
+      data-jp-section-type="olon-hero"
+    >
+      {/* Dawn background — absolute, behind content */}
+      <DawnBackground />
+
+      {/* Content — relative, above background */}
+      <div className="relative z-10 max-w-6xl mx-auto px-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        {/* Left: copy */}
+        <div className="flex flex-col gap-6">
+          <p
+            className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)]"
+            data-jp-field="eyebrow"
+          >
+            {data.eyebrow}
+          </p>
+
+          <div>
+            <h1
+              className="text-5xl md:text-6xl font-bold tracking-[-0.03em] leading-[1.05] text-white"
+              data-jp-field="headline"
+            >
+              {data.headline}
+            </h1>
+            <p
+              className="text-4xl md:text-5xl font-semibold tracking-[-0.03em] leading-[1.1] text-[var(--local-p300)] italic mt-1"
+              data-jp-field="subline"
+            >
+              {data.subline}
+            </p>
+          </div>
+
+          <p
+            className="text-base text-[var(--local-muted)] leading-relaxed max-w-lg"
+            data-jp-field="body"
+          >
+            {data.body}
+          </p>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            <Button asChild size="lg" className="font-semibold">
+              <a href={data.cta.primary.href}>{data.cta.primary.label} →</a>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="font-semibold">
+              <a href={data.cta.secondary.href}>{data.cta.secondary.label}</a>
+            </Button>
+            <a
+              href={data.cta.ghost.href}
+              className="text-sm text-[var(--local-muted)] hover:text-[var(--local-fg)] transition-colors flex items-center gap-1.5"
+            >
+              {data.cta.ghost.label}
+            </a>
+          </div>
+        </div>
+
+        {/* Right: SVG illustration */}
+        <div className="hidden md:flex items-center justify-center">
+          <svg
+            viewBox="0 0 400 400"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full max-w-md"
+          >
+            <defs>
+              <linearGradient id="hero-main" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stopColor="#84ABFF"/>
+                <stop offset="60%"  stopColor="#1763FF"/>
+                <stop offset="100%" stopColor="#0F52E0"/>
+              </linearGradient>
+              <linearGradient id="hero-accent" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor="#EEF3FF"/>
+                <stop offset="100%" stopColor="#84ABFF"/>
+              </linearGradient>
+              <linearGradient id="hero-glow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor="#1763FF" stopOpacity="0.3"/>
+                <stop offset="100%" stopColor="#1763FF" stopOpacity="0"/>
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="8" result="blur"/>
+                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+              </filter>
+            </defs>
+            <circle cx="200" cy="200" r="160" fill="url(#hero-glow)" opacity="0.4"/>
+            <rect x="90" y="90" width="220" height="220" rx="28" fill="none" stroke="url(#hero-main)" strokeWidth="14"/>
+            {/* Left pins */}
+            <line x1="16"  y1="148" x2="90"  y2="148" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="16"  y1="200" x2="90"  y2="200" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="16"  y1="252" x2="90"  y2="252" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            {/* Right pins */}
+            <line x1="310" y1="148" x2="384" y2="148" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="310" y1="200" x2="384" y2="200" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="310" y1="252" x2="384" y2="252" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            {/* Top pins */}
+            <line x1="148" y1="16"  x2="148" y2="90"  stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="200" y1="16"  x2="200" y2="90"  stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="252" y1="16"  x2="252" y2="90"  stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            {/* Bottom pins */}
+            <line x1="148" y1="310" x2="148" y2="384" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="200" y1="310" x2="200" y2="384" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="252" y1="310" x2="252" y2="384" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            {/* Corner nodes */}
+            <circle cx="148" cy="148" r="13" fill="url(#hero-main)"/>
+            <circle cx="252" cy="148" r="13" fill="url(#hero-main)"/>
+            <circle cx="148" cy="252" r="13" fill="url(#hero-main)"/>
+            <circle cx="252" cy="252" r="13" fill="url(#hero-main)"/>
+            {/* Connection lines */}
+            <line x1="148" y1="148" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            <line x1="252" y1="148" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            <line x1="148" y1="252" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            <line x1="252" y1="252" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            {/* Center node */}
+            <circle cx="200" cy="200" r="18" fill="url(#hero-accent)" filter="url(#glow)"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-hero/View_.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-hero/View_.tsx"
+import type { OlonHeroData } from './types';
+import { Button } from '@/components/ui/button';
+
+interface Props {
+  data: OlonHeroData;
+}
+
+export function OlonHeroView({ data }: Props) {
+  return (
+    <section
+      style={{
+        '--local-bg':      'var(--background)',
+        '--local-fg':      'var(--foreground)',
+        '--local-muted':   'var(--muted-foreground)',
+        '--local-primary': 'var(--primary)',
+        '--local-p300':    'var(--primary-light)',
+      } as React.CSSProperties}
+      className="min-h-screen bg-[var(--local-bg)] text-[var(--local-fg)] pt-36 pb-24"
+      data-jp-section-id={data.id}
+      data-jp-section-type="olon-hero"
+    >
+      <div className="max-w-6xl mx-auto px-8 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        {/* Left: copy */}
+        <div className="flex flex-col gap-6">
+          <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)]"
+             data-jp-field="eyebrow">
+            {data.eyebrow}
+          </p>
+
+          <div>
+            <h1 className="text-5xl md:text-6xl font-bold tracking-[-0.03em] leading-[1.05] text-white"
+                data-jp-field="headline">
+              {data.headline}
+            </h1>
+            <p className="text-4xl md:text-5xl font-semibold tracking-[-0.03em] leading-[1.1] text-[var(--local-p300)] italic mt-1"
+               data-jp-field="subline">
+              {data.subline}
+            </p>
+          </div>
+
+          <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-lg"
+             data-jp-field="body">
+            {data.body}
+          </p>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            <Button asChild size="lg" className="font-semibold">
+              <a href={data.cta.primary.href}>{data.cta.primary.label} →</a>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="font-semibold">
+              <a href={data.cta.secondary.href}>{data.cta.secondary.label}</a>
+            </Button>
+            <a href={data.cta.ghost.href}
+               className="text-sm text-[var(--local-muted)] hover:text-[var(--local-fg)] transition-colors flex items-center gap-1.5">
+              {data.cta.ghost.label}
+            </a>
+          </div>
+        </div>
+
+        {/* Right: SVG illustration */}
+        <div className="hidden md:flex items-center justify-center">
+          <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-md">
+            <defs>
+              <linearGradient id="hero-main" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#84ABFF"/>
+                <stop offset="60%" stopColor="#1763FF"/>
+                <stop offset="100%" stopColor="#0F52E0"/>
+              </linearGradient>
+              <linearGradient id="hero-accent" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#EEF3FF"/>
+                <stop offset="100%" stopColor="#84ABFF"/>
+              </linearGradient>
+              <linearGradient id="hero-glow" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#1763FF" stopOpacity="0.3"/>
+                <stop offset="100%" stopColor="#1763FF" stopOpacity="0"/>
+              </linearGradient>
+              <filter id="glow"><feGaussianBlur stdDeviation="8" result="blur"/><feComposite in="SourceGraphic" in2="blur" operator="over"/></filter>
+            </defs>
+            <circle cx="200" cy="200" r="160" fill="url(#hero-glow)" opacity="0.4"/>
+            <rect x="90" y="90" width="220" height="220" rx="28" fill="none" stroke="url(#hero-main)" strokeWidth="14"/>
+            <line x1="16" y1="148" x2="90" y2="148" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="16" y1="200" x2="90" y2="200" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="16" y1="252" x2="90" y2="252" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="310" y1="148" x2="384" y2="148" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="310" y1="200" x2="384" y2="200" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="310" y1="252" x2="384" y2="252" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="148" y1="16" x2="148" y2="90" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="200" y1="16" x2="200" y2="90" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="252" y1="16" x2="252" y2="90" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="148" y1="310" x2="148" y2="384" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="200" y1="310" x2="200" y2="384" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <line x1="252" y1="310" x2="252" y2="384" stroke="url(#hero-main)" strokeWidth="10" strokeLinecap="round"/>
+            <circle cx="148" cy="148" r="13" fill="url(#hero-main)"/>
+            <circle cx="252" cy="148" r="13" fill="url(#hero-main)"/>
+            <circle cx="148" cy="252" r="13" fill="url(#hero-main)"/>
+            <circle cx="252" cy="252" r="13" fill="url(#hero-main)"/>
+            <line x1="148" y1="148" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            <line x1="252" y1="148" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            <line x1="148" y1="252" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            <line x1="252" y1="252" x2="200" y2="200" stroke="#84ABFF" strokeWidth="2.5" opacity="0.35"/>
+            <circle cx="200" cy="200" r="18" fill="url(#hero-accent)" filter="url(#glow)"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-hero/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-hero/index.ts"
+export { OlonHeroView as View } from './View';
+export { OlonHeroSchema } from './schema';
+export type { OlonHeroData } from './types';
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-hero/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-hero/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData } from '@/lib/base-schemas';
+
+export const OlonHeroSchema = BaseSectionData.extend({
+  eyebrow:    z.string().default('CONTRACT LAYER · V1.5 · OPEN CORE'),
+  headline:   z.string().default('Contract Layer'),
+  subline:    z.string().default('for the agentic web.'),
+  body:       z.string().default(''),
+  cta: z.object({
+    primary:   z.object({ label: z.string(), href: z.string() }),
+    secondary: z.object({ label: z.string(), href: z.string() }),
+    ghost:     z.object({ label: z.string(), href: z.string() }),
+  }),
+});
+
+export type OlonHeroData = z.infer<typeof OlonHeroSchema>;
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-hero/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-hero/types.ts"
+export type { OlonHeroData } from './schema';
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/olon-why"
+echo "Creating src/components/olon-why/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-why/View.tsx"
+import type { OlonWhyData } from './types';
+
+const ICONS = {
+  contract: (
+    <svg width="36" height="36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="w1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient>
+      </defs>
+      <rect x="20" y="20" width="160" height="160" rx="16" fill="none" stroke="url(#w1)" strokeWidth="10"/>
+      <line x1="20" y1="70" x2="180" y2="70" stroke="url(#w1)" strokeWidth="7"/>
+      <rect x="40" y="100" width="60" height="8" rx="4" fill="url(#w1)" opacity="0.4"/>
+      <rect x="40" y="118" width="90" height="8" rx="4" fill="url(#w1)" opacity="0.7"/>
+      <rect x="40" y="136" width="72" height="8" rx="4" fill="url(#w1)" opacity="0.5"/>
+    </svg>
+  ),
+  holon: (
+    <svg width="36" height="36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="w2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient>
+        <linearGradient id="w2a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#EEF3FF"/><stop offset="1" stopColor="#84ABFF"/></linearGradient>
+      </defs>
+      <circle cx="100" cy="100" r="75" fill="none" stroke="url(#w2)" strokeWidth="10"/>
+      <circle cx="100" cy="100" r="28" fill="url(#w2a)"/>
+    </svg>
+  ),
+  generated: (
+    <svg width="36" height="36" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="w3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#84ABFF"/><stop offset="1" stopColor="#0F52E0"/></linearGradient>
+      </defs>
+      <circle cx="100" cy="40" r="14" fill="url(#w3)"/>
+      <circle cx="50" cy="110" r="12" fill="url(#w3)" opacity="0.6"/>
+      <circle cx="150" cy="110" r="12" fill="url(#w3)" opacity="0.6"/>
+      <circle cx="80" cy="175" r="10" fill="url(#w3)" opacity="0.35"/>
+      <circle cx="130" cy="175" r="14" fill="url(#w3)"/>
+      <line x1="100" y1="54" x2="54" y2="98" stroke="url(#w3)" strokeWidth="5" strokeLinecap="round"/>
+      <line x1="100" y1="54" x2="146" y2="98" stroke="url(#w3)" strokeWidth="5" strokeLinecap="round" opacity="0.4"/>
+      <line x1="54" y1="122" x2="82" y2="165" stroke="url(#w3)" strokeWidth="4" strokeLinecap="round" opacity="0.35"/>
+      <line x1="146" y1="122" x2="128" y2="165" stroke="url(#w3)" strokeWidth="5" strokeLinecap="round"/>
+    </svg>
+  ),
+};
+
+interface Props { data: OlonWhyData; }
+
+export function OlonWhyView({ data }: Props) {
+  return (
+    <section
+      style={{
+        '--local-bg':    'var(--background)',
+        '--local-fg':    'var(--foreground)',
+        '--local-muted': 'var(--muted-foreground)',
+        '--local-p300':  'var(--primary-light)',
+        '--local-card':  'var(--card)',
+        '--local-border':'var(--border)',
+      } as React.CSSProperties}
+      className="bg-[var(--local-bg)] text-[var(--local-fg)] py-24 border-t border-[var(--local-border)]"
+      data-jp-section-id={data.id}
+      data-jp-section-type="olon-why"
+    >
+      <div className="max-w-6xl mx-auto px-8">
+        <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)] mb-3"
+           data-jp-field="label">{data.label}</p>
+        <h2 className="text-4xl font-bold tracking-[-0.03em] text-white leading-tight"
+            data-jp-field="headline">{data.headline}</h2>
+        <p className="text-3xl font-semibold tracking-[-0.03em] text-[var(--local-p300)] leading-tight mb-4"
+           data-jp-field="subline">{data.subline}</p>
+        <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-2xl mb-12"
+           data-jp-field="body">{data.body}</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden"
+             data-jp-array="pillars">
+          {data.pillars.map((pillar) => (
+            <div key={pillar.id}
+                 className="bg-[var(--local-card)] p-8 flex flex-col gap-4 border-r last:border-r-0 border-[var(--local-border)]"
+                 data-jp-item-id={pillar.id}>
+              <div>{ICONS[pillar.icon]}</div>
+              <div className="font-bold text-white" data-jp-field="title">{pillar.title}</div>
+              <div className="text-sm text-[var(--local-muted)] leading-relaxed" data-jp-field="body">{pillar.body}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-why/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-why/index.ts"
+export { OlonWhyView as View } from './View';
+export { OlonWhySchema } from './schema';
+export type { OlonWhyData } from './types';
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-why/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-why/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
+
+export const PillarSchema = BaseArrayItem.extend({
+  title: z.string(),
+  body:  z.string(),
+  icon:  z.enum(['contract', 'holon', 'generated']),
+});
+
+export const OlonWhySchema = BaseSectionData.extend({
+  label:    z.string().default('Why OlonJS'),
+  headline: z.string().default('A Meaningful Web'),
+  subline:  z.string().default('Whole in itself, part of something greater.'),
+  body:     z.string().default(''),
+  pillars:  z.array(PillarSchema).min(1).max(3),
+});
+
+export type OlonWhyData = z.infer<typeof OlonWhySchema>;
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/olon-why/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/olon-why/types.ts"
+export type { OlonWhyData } from './schema';
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/page-hero"
@@ -10053,8 +11099,37 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu.json"
 {
   "main": [
     { 
-      "label": "Platform",
-      "href": "/platform",
+      "label": "Why",
+      "href": "#Why"
+      
+    },
+    {
+      "label": "Architecture",
+      "href": "#Architecture"
+    },
+    {
+      "label": "Example",
+      "href": "#Example"
+    },
+    {
+      "label": "Get started",
+      "href": "#Getstarted"
+    },
+	{
+      "label": "GitHub",
+      "href": "https://github.com/olonjs/core"
+    }
+  ]
+}
+END_OF_FILE_CONTENT
+# SKIP: src/data/config/menu.json:Zone.Identifier is binary and cannot be embedded as text.
+echo "Creating src/data/config/menu_example_for_schema.json..."
+cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu_example_for_schema.json"
+{
+  "main": [
+    { 
+      "label": "Why",
+      "href": "/why",
       "children": [
         {
           "label": "Overview",
@@ -10093,7 +11168,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu.json"
   ]
 }
 END_OF_FILE_CONTENT
-# SKIP: src/data/config/menu.json:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/data/config/site.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
 {
@@ -10116,36 +11190,47 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "type": "header",
     "data": {
       "logoText": "Olon",
-      "badge": "",
-      "links": {
-        "$ref": "../config/menu.json#/main"
-      },
-      "ctaLabel": "Get started →",
-      "ctaHref": "#contact",
-      "signinHref": "#login"
+      "badge": "JS",
+      "links": [
+        {
+          "label": "Why",
+          "href": "#Why"
+        },
+        {
+          "label": "Architecture",
+          "href": "#Architecture"
+        },
+        {
+          "label": "Example",
+          "href": "#Example"
+        },
+        {
+          "label": "Get started",
+          "href": "#Getstarted"
+        },
+        {
+          "label": "GitHub",
+          "href": "https://github.com/olonjs/core"
+        }
+      ],
+      "ctaLabel": "",
+      "ctaHref": "",
+      "signinHref": ""
     }
   },
   "footer": {
     "id": "global-footer",
     "type": "footer",
     "data": {
-      "brandText": "Olon",
-      "copyright": "© 2025 OlonJS · v1.4 · Holon",
+      "brandText": "OlonJS",
+      "copyright": "© 2026 OlonJS · v1.5 · Guido Serio",
       "links": [
         {
           "label": "GitHub",
-          "href": "#"
-        },
-        {
-          "label": "Privacy",
-          "href": "#"
-        },
-        {
-          "label": "Terms",
-          "href": "#"
+          "href": "https://github.com/olonjs/core"
         }
       ],
-      "designSystemHref": "/design-system"
+      "designSystemHref": ""
     },
     "settings": {
       "showLogo": true
@@ -10160,168 +11245,162 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/theme.json"
   "name": "Olon",
   "tokens": {
     "colors": {
-      "background": "#0B0907",
-      "card": "#130F0D",
-      "elevated": "#1E1814",
-      "overlay": "#241D17",
-      "popover": "#1A1410",
-      "popover-foreground": "#F2EDE6",
-      "foreground": "#F2EDE6",
-      "card-foreground": "#F2EDE6",
-      "muted-foreground": "#9A8D80",
-      "placeholder": "#5C5248",
-      "primary": "#5B3F9A",
-      "primary-foreground": "#EDE8F8",
-      "primary-light": "#B8A4E0",
-      "primary-dark": "#3D2770",
-      "primary-50": "#EDE8F8",
-      "primary-100": "#CEC1F0",
-      "primary-200": "#B8A4E0",
-      "primary-300": "#A48ED5",
-      "primary-400": "#8B6FC6",
-      "primary-500": "#7254B0",
-      "primary-600": "#5B3F9A",
-      "primary-700": "#4C3482",
-      "primary-800": "#3D2770",
-      "primary-900": "#271852",
-      "accent": "#E2D5B0",
-      "accent-foreground": "#0B0907",
-      "secondary": "#1E1814",
-      "secondary-foreground": "#F2EDE6",
-      "muted": "#1E1814",
-      "border": "#2E271F",
-      "border-strong": "#4A3D30",
-      "input": "#2E271F",
-      "ring": "#5B3F9A",
-      "destructive": "#7F1D1D",
-      "destructive-foreground": "#FCA5A5",
-      "destructive-border": "#991B1B",
-      "destructive-ring": "#EF4444",
-      "success": "#14532D",
-      "success-foreground": "#86EFAC",
-      "success-border": "#166534",
-      "success-indicator": "#22C55E",
-      "warning": "#78350F",
-      "warning-foreground": "#FCD34D",
-      "warning-border": "#92400E",
-      "info": "#1E3A5F",
-      "info-foreground": "#93C5FD",
-      "info-border": "#1E40AF"
+      "background": "hsl(215 28% 7%)",
+      "card": "hsl(218 44% 9%)",
+      "elevated": "#141B24",
+      "overlay": "#1C2433",
+      "popover": "hsl(218 44% 9%)",
+      "popover-foreground": "hsl(214 33% 84%)",
+      "foreground": "hsl(214 33% 84%)",
+      "card-foreground": "hsl(214 33% 84%)",
+      "muted-foreground": "hsl(215 23% 57%)",
+      "placeholder": "#4A5C78",
+      "primary": "hsl(222 100% 54%)",
+      "primary-foreground": "hsl(0 0% 100%)",
+      "primary-light": "#84ABFF",
+      "primary-dark": "#0F52E0",
+      "primary-50": "#EEF3FF",
+      "primary-100": "#D6E4FF",
+      "primary-200": "#ADC8FF",
+      "primary-300": "#84ABFF",
+      "primary-400": "#5B8EFF",
+      "primary-500": "#1763FF",
+      "primary-600": "#0F52E0",
+      "primary-700": "#0940B8",
+      "primary-800": "#063090",
+      "primary-900": "#031E68",
+      "accent": "hsl(216 28% 15%)",
+      "accent-foreground": "hsl(214 33% 84%)",
+      "secondary": "hsl(217 30% 11%)",
+      "secondary-foreground": "hsl(214 33% 84%)",
+      "muted": "hsl(217 30% 11%)",
+      "border": "hsl(216 27% 21%)",
+      "border-strong": "#2F3D55",
+      "input": "hsl(216 27% 21%)",
+      "ring": "hsl(222 100% 54%)",
+      "destructive": "hsl(0 40% 46%)",
+      "destructive-foreground": "hsl(210 58% 93%)",
+      "destructive-border": "#7F2626",
+      "destructive-ring": "#E06060",
+      "success": "hsl(152 83% 26%)",
+      "success-foreground": "hsl(210 58% 93%)",
+      "success-border": "#1DB87A",
+      "success-indicator": "#1DB87A",
+      "warning": "hsl(46 100% 21%)",
+      "warning-foreground": "hsl(210 58% 93%)",
+      "warning-border": "#C49A00",
+      "info": "hsl(214 100% 40%)",
+      "info-foreground": "hsl(210 58% 93%)",
+      "info-border": "#4D9FE0"
     },
     "modes": {
       "light": {
         "colors": {
-          "background": "#F2EDE6",
-          "card": "#FFFFFF",
-          "elevated": "#F5F2EE",
-          "overlay": "#EDE9E3",
-          "popover": "#FFFFFF",
-          "popover-foreground": "#1A1410",
-          "foreground": "#1A1410",
-          "card-foreground": "#1A1410",
-          "muted-foreground": "#6B6058",
-          "placeholder": "#A89E96",
-          "primary": "#5B3F9A",
-          "primary-foreground": "#FAFAF8",
-          "primary-light": "#7254B0",
-          "primary-dark": "#3D2770",
-          "primary-50": "#EDE8F8",
-          "primary-100": "#CEC1F0",
-          "primary-200": "#B8A4E0",
-          "primary-300": "#A48ED5",
-          "primary-400": "#8B6FC6",
-          "primary-500": "#7254B0",
-          "primary-600": "#5B3F9A",
-          "primary-700": "#4C3482",
-          "primary-800": "#3D2770",
-          "primary-900": "#271852",
-          "accent": "#2E271F",
-          "accent-foreground": "#FFFFFF",
-          "secondary": "#F5F2EE",
-          "secondary-foreground": "#1A1410",
-          "muted": "#F5F2EE",
-          "border": "#DDD8D2",
-          "border-strong": "#C4BEB8",
-          "input": "#DDD8D2",
-          "ring": "#5B3F9A",
-          "destructive": "#FEF2F2",
-          "destructive-foreground": "#991B1B",
+          "background": "hsl(0 0% 96%)",
+          "card": "hsl(0 0% 100%)",
+          "elevated": "#F4F3EF",
+          "overlay": "#E5E3DC",
+          "popover": "hsl(0 0% 100%)",
+          "popover-foreground": "hsl(0 0% 3%)",
+          "foreground": "hsl(0 0% 3%)",
+          "card-foreground": "hsl(0 0% 3%)",
+          "muted-foreground": "hsl(0 0% 42%)",
+          "placeholder": "#B4B2AD",
+          "primary": "hsl(222 100% 54%)",
+          "primary-foreground": "hsl(0 0% 100%)",
+          "primary-light": "#5B8EFF",
+          "primary-dark": "#0F52E0",
+          "primary-50": "#EEF3FF",
+          "primary-100": "#D6E4FF",
+          "primary-200": "#ADC8FF",
+          "primary-300": "#84ABFF",
+          "primary-400": "#5B8EFF",
+          "primary-500": "#1763FF",
+          "primary-600": "#0F52E0",
+          "primary-700": "#0940B8",
+          "primary-800": "#063090",
+          "primary-900": "#031E68",
+          "accent": "hsl(222 100% 92%)",
+          "accent-foreground": "hsl(222 100% 54%)",
+          "secondary": "hsl(0 0% 92%)",
+          "secondary-foreground": "hsl(0 0% 3%)",
+          "muted": "hsl(0 0% 92%)",
+          "border": "hsl(0 0% 84%)",
+          "border-strong": "#B4B2AD",
+          "input": "hsl(0 0% 84%)",
+          "ring": "hsl(222 100% 54%)",
+          "destructive": "hsl(0 72% 51%)",
+          "destructive-foreground": "hsl(0 0% 100%)",
           "destructive-border": "#FECACA",
           "destructive-ring": "#EF4444",
-          "success": "#F0FDF4",
-          "success-foreground": "#166534",
-          "success-border": "#BBF7D0",
-          "success-indicator": "#16A34A",
-          "warning": "#FFFBEB",
-          "warning-foreground": "#92400E",
-          "warning-border": "#FDE68A",
-          "info": "#EFF6FF",
-          "info-foreground": "#1E40AF",
-          "info-border": "#BFDBFE"
+          "success": "hsl(160 84% 39%)",
+          "success-foreground": "hsl(0 0% 100%)",
+          "success-border": "#D4F0E2",
+          "success-indicator": "#0A7C4E",
+          "warning": "hsl(38 92% 50%)",
+          "warning-foreground": "hsl(0 0% 3%)",
+          "warning-border": "#F5EAD4",
+          "info": "hsl(222 100% 54%)",
+          "info-foreground": "hsl(0 0% 100%)",
+          "info-border": "#D4E5F5"
         }
       }
     },
     "typography": {
       "fontFamily": {
-        "primary": "'Geist', 'Geist Fallback', system-ui, sans-serif",
-        "mono": "'Geist Mono', 'Geist Mono Fallback', monospace",
-        "display": "'Merriweather Variable', Georgia, serif"
+        "primary": "\"Instrument Sans\", Helvetica, Arial, sans-serif",
+        "mono": "\"JetBrains Mono\", \"Fira Code\", monospace",
+        "display": "\"Instrument Sans\", Helvetica, Arial, sans-serif"
       },
       "wordmark": {
-        "fontFamily": "'Merriweather Variable', sans-serif",
-        "weight": "500",
-        "width": "112"
+        "fontFamily": "\"Instrument Sans\", Helvetica, Arial, sans-serif",
+        "weight": "700"
       },
       "scale": {
-        "xs": "11px",
-        "sm": "13px",
+        "xs": "0.75rem",
+        "sm": "0.875rem",
         "base": "1rem",
-        "md": "1.125rem",
-        "lg": "1.25rem",
-        "xl": "1.5rem",
-        "2xl": "1.625rem",
-        "3xl": "1.75rem",
-        "4xl": "2rem",
-        "5xl": "2.5rem",
+        "lg": "1.125rem",
+        "xl": "1.25rem",
+        "2xl": "1.5rem",
+        "3xl": "1.875rem",
+        "4xl": "2.25rem",
+        "5xl": "3rem",
         "6xl": "3rem",
         "7xl": "4.5rem"
       },
       "tracking": {
-        "tight": "-0.03em",
-        "display": "-0.035em",
+        "tight": "-0.04em",
         "normal": "0em",
         "wide": "0.04em",
-        "label": "0.12em"
+        "widest": "0.14em"
       },
       "leading": {
-        "none": "1",
         "tight": "1.2",
-        "snug": "1.35",
-        "normal": "1.65",
-        "relaxed": "1.75"
+        "normal": "1.5",
+        "relaxed": "1.7"
       }
     },
     "borderRadius": {
-      "xl": "16px",
-      "lg": "12px",
-      "md": "8px",
-      "sm": "4px",
+      "xl": "1rem",
+      "lg": "0.75rem",
+      "md": "0.5rem",
+      "sm": "0.25rem",
       "full": "9999px"
     },
     "spacing": {
-      "container-max": "1152px",
-      "section-y": "96px",
-      "header-h": "56px",
-      "sidebar-w": "240px"
+      "container-max": "72rem",
+      "section-y": "4rem",
+      "header-h": "4rem"
     },
     "zIndex": {
       "base": "0",
       "elevated": "10",
-      "dropdown": "100",
-      "sticky": "200",
-      "overlay": "300",
-      "modal": "400",
-      "toast": "500"
+      "dropdown": "20",
+      "sticky": "40",
+      "overlay": "50",
+      "modal": "60",
+      "toast": "100"
     }
   }
 }
@@ -10350,7 +11429,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/design-system.json"
   "global-header": false
 }
 END_OF_FILE_CONTENT
-# SKIP: src/data/pages/design-system.json:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/data/pages/docs.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/pages/docs.json"
 {
@@ -10379,6 +11457,215 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
   "id": "home-page",
   "slug": "home",
   "meta": {
+    "title": "OlonJS — Contract Layer for the Agentic Web",
+    "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable."
+  },
+  "sections": [
+    {
+      "id": "hero-main",
+      "type": "olon-hero",
+      "data": {
+        "id": "hero-main",
+        "eyebrow": "CONTRACT LAYER · V1.5 · OPEN CORE",
+        "headline": "Contract Layer",
+        "subline": "for the agentic web.",
+        "body": "AI agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
+        "cta": {
+          "primary": {
+            "label": "Get started",
+            "href": "#Getstarted"
+          },
+          "secondary": {
+            "label": "GitHub",
+            "href": "https://github.com/olonjs/core"
+          },
+          "ghost": {
+            "label": "Explore platform",
+            "href": "#architecture"
+          }
+        }
+      }
+    },
+    {
+      "id": "why-olon",
+      "type": "olon-why",
+      "data": {
+        "id": "why-olon",
+        "label": "Why OlonJS",
+        "headline": "A Meaningful Web",
+        "subline": "Whole in itself, part of something greater.",
+        "body": "Most web frameworks separate concerns across layers — data, UI, validation, metadata — with no shared contract between them. OlonJS inverts this: the JSON data structure is the contract. Every layer — rendering, editing, validation, machine access — is a deterministic projection of the same typed source. The result is a site that is structurally coherent by construction, not by convention. Every site built with OlonJS is a holon: complete in itself, intelligible to the network around it. The meaningful web doesn't happen all at once. It grows one site at a time.",
+        "pillars": [
+          {
+            "id": "pillar-contract",
+            "icon": "contract",
+            "title": "The data is the contract",
+            "body": "One typed JSON source. Every layer — UI, editor, agent, SEO — is a projection. No translation, no drift."
+          },
+          {
+            "id": "pillar-holon",
+            "icon": "holon",
+            "title": "Every site is a holon",
+            "body": "Autonomous, complete, structurally intelligible. Each site is whole in itself and part of a network that understands it."
+          },
+          {
+            "id": "pillar-generated",
+            "icon": "generated",
+            "title": "Built to be generated",
+            "body": "Every constraint is also an instruction. The spec is precise enough for AI agents to scaffold a fully compliant tenant from scratch."
+          }
+        ],
+        "anchorId": "Why"
+      }
+    },
+    {
+      "id": "architecture-protocols",
+      "type": "olon-architecture",
+      "data": {
+        "id": "architecture-protocols",
+        "label": "Architecture",
+        "headline": "Six governing protocols.",
+        "body": "OlonJS is specified as a versioned set of architectural protocols. Each protocol is independently versioned and mandatory for compliant tenants.",
+        "specHref": "https://github.com/olonjs/core/blob/main/specs/olonjsSpecs_V_1_5.md",
+        "protocols": [
+          {
+            "id": "proto-mtrp",
+            "icon": "mtrp",
+            "acronym": "MTRP",
+            "version": "v1.2",
+            "name": "Modular Type Registry",
+            "desc": "Core exports an empty SectionDataRegistry. Tenants extend it via module augmentation. Full TypeScript inference across all section types at compile-time, zero Core changes.",
+            "specHref": "https://github.com/olonjs/core/blob/main/specs/olonjsSpecs_V_1_5.md#1--modular-type-registry-pattern-mtrp-v12"
+          },
+          {
+            "id": "proto-tbp",
+            "icon": "tbp",
+            "acronym": "TBP",
+            "version": "v1.0",
+            "name": "Tenant Block Protocol",
+            "desc": "Each section type is a self-contained capsule: View.tsx, schema.ts, types.ts, index.ts. Renderable, validatable, and ingestible by the engine without additional configuration.",
+            "specHref": "https://github.com/olonjs/core/blob/main/specs/olonjsSpecs_V_1_5.md#3--tenant-block-protocol-tbp-v10"
+          },
+          {
+            "id": "proto-jsp",
+            "icon": "jsp",
+            "acronym": "JSP",
+            "version": "v1.8",
+            "name": "JsonPages Site Protocol",
+            "desc": "Deterministic file system ontology and CLI projection engine. config/ separates global governance from per-page content. Reproducible across every environment.",
+            "specHref": "https://github.com/olonjs/core/blob/main/specs/olonjsSpecs_V_1_5.md#2--jsonpages-site-protocol-jsp-v18"
+          },
+          {
+            "id": "proto-idac",
+            "icon": "idac",
+            "acronym": "IDAC",
+            "version": "v1.0",
+            "name": "ICE Data Contract",
+            "desc": "Mandatory data-jp-* DOM attributes bind every section to its data. Any consumer that can traverse the DOM can identify and operate any content node — human or agent.",
+            "specHref": "https://github.com/olonjs/core/blob/main/specs/olonjsSpecs_V_1_5.md"
+          },
+          {
+            "id": "proto-bsds",
+            "icon": "bsds",
+            "acronym": "BSDS",
+            "version": "v1.0",
+            "name": "Base Schema Fragments",
+            "desc": "BaseSectionData and BaseArrayItem enforce anchor IDs and stable React keys across all capsules. The foundation that doesn't move so your content never drifts.",
+            "specHref": "https://github.com/olonjs/core/blob/main/specs/olonjsSpecs_V_1_5.md"
+          },
+          {
+            "id": "proto-pss",
+            "icon": "pss",
+            "acronym": "PSS",
+            "version": "v1.4",
+            "name": "Path-Based Selection",
+            "desc": "Every node has an address. Content selection uses strict root-to-leaf path semantics — unambiguous, stable, operable by any consumer that knows the contract.",
+            "specHref": "https://github.com/olonjs/core/blob/main/specs/olonjsSpecs_V_1_5.md"
+          }
+        ],
+        "anchorId": "Architecture"
+      }
+    },
+    {
+      "id": "example-steps",
+      "type": "olon-example",
+      "data": {
+        "id": "example-steps",
+        "label": "Quick Example",
+        "headline": "Two steps. One contract.",
+        "body": "Scaffold a fully compliant tenant in under three minutes. Then read any page via the OlonJS protocol — from a browser, a script, or an AI agent.",
+        "note": "Every OlonJS tenant exposes a machine-readable manifest at",
+        "noteHref": "http://localhost:5173/mcp-manifest.json",
+        "steps": [
+          {
+            "number": 1,
+            "title": "Scaffold a tenant",
+            "meta": "~3 min",
+            "code": "# Install the CLI\nnpm install -g @olonjs/cli\n\n# Scaffold a new tenant\nnpx @olonjs/cli new tenant\n\n✓ Projecting infrastructure...\n✓ Projecting source (src_tenant_alpha.sh)\n✓ Resolving dependencies\n✓ Tenant scaffolded\n\nsrc/\n  components/hero/\n    View.tsx\n    schema.ts\n    types.ts\n    index.ts\n  data/config/\n    site.json\n    theme.json\n    menu.json\n  lib/\n    schemas.ts\n    base-schemas.ts"
+          },
+          {
+            "number": 2,
+            "title": "Read via OlonJS protocol",
+            "meta": "Any consumer",
+            "code": "// Read any page via the contract\n// Works from browser, script, or AI agent\n\nconst page = await\n  navigator.modelContextProtocol\n    .readResource(\n      'olon://pages/home'\n    );\n\n// Returns the full typed contract\n// { slug, meta, sections: Section[] }\n// No DOM scraping. No layout knowledge.\n// Just the contract.\n\n// {\n//   \"slug\": \"home\",\n//   \"sections\": [\n//     { \"type\": \"hero\", \"data\": {...} },\n//     { \"type\": \"features\", \"data\": {...} }\n//   ]\n// }"
+          }
+        ],
+        "anchorId": "Example"
+      }
+    },
+    {
+      "id": "getstarted-cards",
+      "type": "olon-getstarted",
+      "data": {
+        "id": "getstarted-cards",
+        "label": "Get Started",
+        "headline": "Three paths in.",
+        "body": "Start with the Core package, scaffold a full tenant with the CLI, or deploy a working example in one click.",
+        "cards": [
+          {
+            "id": "card-core",
+            "badge": "Open Core",
+            "badgeStyle": "oss",
+            "title": "Install Core",
+            "body": "The Core package is free and open — forever. The contract, the protocols, the CLI. No lock-in on the foundation.",
+            "code": "npm install @olonjs/core",
+            "linkLabel": "View on GitHub",
+            "linkHref": "https://github.com/olonjs/core"
+          },
+          {
+            "id": "card-cli",
+            "badge": "CLI",
+            "badgeStyle": "cli",
+            "title": "Scaffold a tenant",
+            "body": "The CLI scaffolds a fully compliant tenant from a canonical script. Same result on every machine, every run.",
+            "code": "npx @olonjs/cli new tenant",
+            "linkLabel": "View on npm",
+            "linkHref": "https://www.npmjs.com/package/@olonjs/cli"
+          },
+          {
+            "id": "card-deploy",
+            "badge": "Deploy",
+            "badgeStyle": "deploy",
+            "title": "Deploy a template",
+            "body": "Clone a working OlonJS tenant and deploy it with one click. Explore the full capsule structure in a real project.",
+            "deployLabel": "Deploy template →",
+            "deployHref": "https://github.com/olonjs/core",
+            "linkLabel": "View on npm",
+            "linkHref": "https://www.npmjs.com/package/@olonjs/core"
+          }
+        ],
+        "anchorId": "Getstarted"
+      }
+    }
+  ]
+}
+END_OF_FILE_CONTENT
+echo "Creating src/data/pages/home_.json..."
+cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home_.json"
+{
+  "id": "home-page",
+  "slug": "home",
+  "meta": {
     "title": "OlonJS — The Contract Layer for the Agentic Web",
     "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
   },
@@ -10388,9 +11675,9 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
       "type": "hero",
       "data": {
         "eyebrow": "Contract layer · v1.4 · Open Core",
-        "title": "Start Building",
+        "title": "Contract Layer",
         "titleHighlight": "for the agentic web.",
-        "description": "AI agents are becoming operational actors in commerce, marketing, and support. But websites are still built for humans first: HTML-heavy, CMS-fragmented, and inconsistent across properties. That makes agent integration slow, brittle, and expensive. Olon introduces a deterministic machine contract for websites OlonJS. This makes content reliably readable and operable by agents while preserving normal human UI.",
+        "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable. Designed for reproducible tenant generation and machine-readable output.",
         "ctas": [
           {
             "id": "cta-started",
@@ -10408,8 +11695,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
         "docsLabel": "Explore platform",
         "docsHref": "/platform/overview",
         "heroImage": {
-          "url": "https://bat5elmxofxdroan.public.blob.vercel-storage.com/tenant-assets/511f18d7-d8ac-4292-ad8a-b0efa99401a3/1774286598548-adac7c36-9001-451d-9b16-c3787ac27f57-signup-hero-olon-graded_1_.png",
-          "alt": ""
+          "url": "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZy1tYWluIiB4Mj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoMTEwLjc5NSwxMTAuNzk1LC0xMTAuNzk1LDExMC43OTUsNDQuNjAzLDQ0LjYwMykiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM1QjhFRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjUiIHN0b3AtY29sb3I9IiMwRjUyRTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMDYzMDkwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJnLWFjY2VudCIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNBREM4RkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNUI4RUZGIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8IS0tIENoaXAgYm9yZGVyIC0tPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2Utd2lkdGg9IjgiCiAgICBkPSJtNTkuMzggNDQuNmg4MS4yNGM4LjE2IDAgMTQuNzggNi42MiAxNC43OCAxNC43OHY4MS4yNGMwIDguMTYtNi42MiAxNC43OC0xNC43OCAxNC43OGgtODEuMjRjLTguMTYgMC0xNC43OC02LjYyLTE0Ljc4LTE0Ljc4di04MS4yNGMwLTguMTYgNi42Mi0xNC43OCAxNC43OC0xNC43OHoiLz4KICA8IS0tIExlZnQgcGlucyAtLT4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im03LjY3IDcyLjNoMzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im03LjY3IDEwMGgzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTcuNjcgMTI3LjdoMzYuOTMiLz4KICA8IS0tIFJpZ2h0IHBpbnMgLS0+CiAgPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2ctbWFpbikiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJtMTU1LjQgNzIuM2gzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTE1NS40IDEwMGgzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTE1NS40IDEyNy43aDM2LjkzIi8+CiAgPCEtLSBUb3AgcGlucyAtLT4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im03Mi4zIDcuNjd2MzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im0xMDAgNy42N3YzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTEyNy43IDcuNjd2MzYuOTMiLz4KICA8IS0tIEJvdHRvbSBwaW5zIC0tPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTcyLjMgMTU1LjR2MzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im0xMDAgMTU1LjR2MzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im0xMjcuNyAxNTUuNHYzNi45MyIvPgogIDwhLS0gQ29ybmVyIG5vZGVzIC0tPgogIDxjaXJjbGUgZmlsbD0idXJsKCNnLW1haW4pIiBjeD0iNzIuMyIgY3k9IjcyLjMiIHI9IjcuMzkiLz4KICA8Y2lyY2xlIGZpbGw9InVybCgjZy1tYWluKSIgY3g9IjEyNy43IiBjeT0iNzIuMyIgcj0iNy4zOSIvPgogIDxjaXJjbGUgZmlsbD0idXJsKCNnLW1haW4pIiBjeD0iNzIuMyIgY3k9IjEyNy43IiByPSI3LjM5Ii8+CiAgPGNpcmNsZSBmaWxsPSJ1cmwoI2ctbWFpbikiIGN4PSIxMjcuNyIgY3k9IjEyNy43IiByPSI3LjM5Ii8+CiAgPCEtLSBDZW50ZXIgbm9kZSDigJQgYWNjZW50IC0tPgogIDxjaXJjbGUgZmlsbD0idXJsKCNnLWFjY2VudCkiIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjkuMjMiLz4KICA8IS0tIENvbm5lY3Rpb24gbGluZXMgLS0+CiAgPHBhdGggb3BhY2l0eT0iMC4zIiBmaWxsPSJub25lIiBzdHJva2U9IiM1QjhFRkYiIHN0cm9rZS13aWR0aD0iMiIgZD0ibTcyLjMgNzIuM2wyNy43IDI3LjciLz4KICA8cGF0aCBvcGFjaXR5PSIwLjMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzVCOEVGRiIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJtMTI3LjcgNzIuM2wtMjcuNyAyNy43Ii8+CiAgPHBhdGggb3BhY2l0eT0iMC4zIiBmaWxsPSJub25lIiBzdHJva2U9IiM1QjhFRkYiIHN0cm9rZS13aWR0aD0iMiIgZD0ibTcyLjMgMTI3LjdsMjcuNy0yNy43Ii8+CiAgPHBhdGggb3BhY2l0eT0iMC4zIiBmaWxsPSJub25lIiBzdHJva2U9IiM1QjhFRkYiIHN0cm9rZS13aWR0aD0iMiIgZD0ibTEyNy43IDEyNy43bC0yNy43LTI3LjciLz4KPC9zdmc+Cg==",
+          "alt": "icon-ai-specs.svg"
         }
       },
       "settings": {
@@ -10421,9 +11708,9 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
       "type": "feature-grid",
       "data": {
         "label": "Why OlonJS",
-        "sectionTitle": "A whole in itself,",
-        "sectionTitleItalic": "part of something greater.",
-        "sectionLead": "Built on the concept of the holon — every component autonomous yet part of the larger contract. Governance and developer experience, unified.",
+        "sectionTitle": "A Meaningful Web",
+        "sectionTitleItalic": "Whole in itself, part of something greater.",
+        "sectionLead": "Most web frameworks separate concerns across layers — data, UI, validation, metadata — with no shared contract between them. OlonJS inverts this: the JSON data structure is the contract. Every layer — rendering, editing, validation, machine access — is a deterministic projection of the same typed source. The result is a site that is structurally coherent by construction, not by convention.",
         "cards": [
           {
             "id": "card-endpoints",
@@ -10431,8 +11718,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
               "url": "/icons/features/icon-json-files.svg",
               "alt": "JSON files icon"
             },
-            "title": "Canonical JSON endpoints",
-            "description": "Every page available at /{slug}.json — deterministic, typed, agent-readable. No custom integration per tenant."
+            "title": "Modular Type Registry",
+            "description": "Core exports an empty SectionDataRegistry. Tenants extend it via module augmentation — no Core changes required. Full TypeScript inference across all section types at compile-time."
           },
           {
             "id": "card-schema",
@@ -10440,8 +11727,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
               "url": "/icons/features/icon-zod-schemas.svg",
               "alt": "Zod schemas icon"
             },
-            "title": "Schema-driven contracts",
-            "description": "Typed components validated against your schema. Shared conventions eliminate prompt ambiguity across teams."
+            "title": "Tenant Block Protocol",
+            "description": "Each section type lives in a self-contained capsule: View.tsx, schema.ts, types.ts, index.ts. The capsule is the unit of extension — renderable, validatable, and ingestible by the engine without additional configuration."
           },
           {
             "id": "card-ai",
@@ -10449,8 +11736,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
               "url": "/icons/features/icon-ai-specs.svg",
               "alt": "AI specs icon"
             },
-            "title": "AI-native velocity",
-            "description": "Structure is deterministic, so AI can scaffold and evolve tenants faster. Ship new experiences in hours, not weeks."
+            "title": "Deterministic CLI",
+            "description": "@olonjs/cli scaffolds new tenants from a canonical script. Infrastructure, source structure, and dependencies are projected deterministically. Output is reproducible across environments"
           },
           {
             "id": "card-multitenant",
@@ -10458,8 +11745,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
               "url": "/icons/features/icon-own-data.svg",
               "alt": "Own data icon"
             },
-            "title": "Multi-tenant at scale",
-            "description": "One convention across many tenants enables reusable automations. No per-tenant custom integration work."
+            "title": "ICE Data Contract",
+            "description": "Mandatory data-jp-* DOM attributes bind rendered sections to their data contract. The binding is structural, not UI-dependent — any consumer that can traverse the DOM can identify and address any content node."
           },
           {
             "id": "card-governance",
@@ -10467,8 +11754,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
               "url": "/icons/features/icon-governance.svg",
               "alt": "Governance icon"
             },
-            "title": "Enterprise governance",
-            "description": "Audit trails, compliance controls, and private cloud deployment via NX monorepo. SOC2-ready by design."
+            "title": "Base Schema Fragments",
+            "description": "BaseSectionData and BaseArrayItem are the required base types for all section data schemas and array items. They enforce anchor IDs and stable React keys across all capsules."
           },
           {
             "id": "card-deploy",
@@ -10476,8 +11763,8 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
               "url": "/icons/features/icon-clean-commits.svg",
               "alt": "Clean commits icon"
             },
-            "title": "Deployment flexibility",
-            "description": "OSS core you can trust. Vercel-native cloud for speed. Private cloud for governance-heavy orgs."
+            "title": "Path-Based Selection",
+            "description": "Content selection uses strict root-to-leaf path semantics. Each segment identifies a node unambiguously. The flat itemField/itemId protocol is removed in v1.3+."
           }
         ],
         "proofStatement": "Working end-to-end with production routing parity.",
@@ -10557,7 +11844,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
 }
 END_OF_FILE_CONTENT
 mkdir -p "src/data/pages/platform"
-# SKIP: src/data/pages/platform.json:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/data/pages/platform/overview.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/pages/platform/overview.json"
 {
@@ -12049,6 +13335,13 @@ import { CloudAiNativeGridView } from '@/components/cloud-ai-native-grid';
 import { PageHero }             from '@/components/page-hero';
 import { Tiptap }           from '@/components/tiptap';
 
+
+import { View as OlonHeroView }         from '@/components/olon-hero';
+import { View as OlonWhyView }          from '@/components/olon-why';
+import { View as OlonArchitectureView } from '@/components/olon-architecture';
+import { View as OlonExampleView }      from '@/components/olon-example';
+import { View as OlonGetStartedView }   from '@/components/olon-getstarted';
+
 export const ComponentRegistry: {
   [K in SectionType]: React.FC<SectionComponentPropsMap[K]>;
 } = {
@@ -12062,6 +13355,13 @@ export const ComponentRegistry: {
   'cloud-ai-native-grid':  CloudAiNativeGridView as React.FC<SectionComponentPropsMap['cloud-ai-native-grid']>,
   'page-hero':             PageHero             as React.FC<SectionComponentPropsMap['page-hero']>,
   'tiptap':                Tiptap               as React.FC<SectionComponentPropsMap['tiptap']>,
+
+
+  'olon-hero':         OlonHeroView,
+  'olon-why':          OlonWhyView,
+  'olon-architecture': OlonArchitectureView,
+  'olon-example':      OlonExampleView,
+  'olon-getstarted':   OlonGetStartedView,
 };
 
 END_OF_FILE_CONTENT
@@ -12182,6 +13482,7 @@ export const ImageSelectionSchema = z
  * Capsules extend these for consistent anchorId, array items, and settings.
  */
 export const BaseSectionData = z.object({
+  id: z.string().optional(),
   anchorId: z.string().optional().describe('ui:text'),
 });
 
@@ -12463,6 +13764,12 @@ import { CloudAiNativeGridSchema }    from '@/components/cloud-ai-native-grid';
 import { PageHeroSchema }             from '@/components/page-hero';
 import { TiptapSchema }           from '@/components/tiptap';
 
+import { OlonHeroSchema }         from '@/components/olon-hero';
+import { OlonWhySchema }          from '@/components/olon-why';
+import { OlonArchitectureSchema } from '@/components/olon-architecture';
+import { OlonExampleSchema }      from '@/components/olon-example';
+import { OlonGetStartedSchema }   from '@/components/olon-getstarted';
+
 export const SECTION_SCHEMAS = {
   'header':                HeaderSchema,
   'footer':                FooterSchema,
@@ -12473,7 +13780,13 @@ export const SECTION_SCHEMAS = {
   'design-system':         DesignSystemSchema,
   'cloud-ai-native-grid':  CloudAiNativeGridSchema,
   'page-hero':             PageHeroSchema,
-  'tiptap':            TiptapSchema,
+  'tiptap':           	   TiptapSchema,
+  
+  'olon-hero':         OlonHeroSchema,
+  'olon-why':          OlonWhySchema,
+  'olon-architecture': OlonArchitectureSchema,
+  'olon-example':      OlonExampleSchema,
+  'olon-getstarted':   OlonGetStartedSchema,
 } as const;
 
 export type SectionType = keyof typeof SECTION_SCHEMAS;
@@ -12620,6 +13933,13 @@ import type { CloudAiNativeGridData,   CloudAiNativeGridSettings   } from '@/com
 import type { PageHeroData,            PageHeroSettings            } from '@/components/page-hero';
 import type { TiptapData,              TiptapSettings              } from '@/components/tiptap';
 
+
+import type { OlonHeroData }         from '@/components/olon-hero';
+import type { OlonWhyData }          from '@/components/olon-why';
+import type { OlonArchitectureData } from '@/components/olon-architecture';
+import type { OlonExampleData }      from '@/components/olon-example';
+import type { OlonGetStartedData }   from '@/components/olon-getstarted';
+
 export type SectionComponentPropsMap = {
   'header':                { data: HeaderData;              settings?: HeaderSettings;              menu: MenuItem[] };
   'footer':                { data: FooterData;              settings?: FooterSettings               };
@@ -12631,6 +13951,13 @@ export type SectionComponentPropsMap = {
   'cloud-ai-native-grid':  { data: CloudAiNativeGridData;   settings?: CloudAiNativeGridSettings    };
   'page-hero':             { data: PageHeroData;            settings?: PageHeroSettings             };
   'tiptap':                { data: TiptapData;               settings?: TiptapSettings                };
+  
+  
+  'olon-hero':         { data: OlonHeroData };
+  'olon-why':          { data: OlonWhyData };
+  'olon-architecture': { data: OlonArchitectureData };
+  'olon-example':      { data: OlonExampleData };
+  'olon-getstarted':   { data: OlonGetStartedData };
 };
 
 declare module '@olonjs/core' {
@@ -12645,6 +13972,11 @@ declare module '@olonjs/core' {
     'cloud-ai-native-grid':  CloudAiNativeGridData;
     'page-hero':             PageHeroData;
     'tiptap':                TiptapData;
+	 'olon-hero':         OlonHeroData;
+    'olon-why':          OlonWhyData;
+    'olon-architecture': OlonArchitectureData;
+    'olon-example':      OlonExampleData;
+    'olon-getstarted':   OlonGetStartedData;
   }
   export interface SectionSettingsRegistry {
     'header':                HeaderSettings;

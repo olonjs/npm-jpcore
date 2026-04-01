@@ -16,6 +16,7 @@ export const ImageSelectionSchema = z
  * Capsules extend these for consistent anchorId, array items, and settings.
  */
 export const BaseSectionData = z.object({
+  id: z.string().optional(),
   anchorId: z.string().optional().describe('ui:text'),
 });
 

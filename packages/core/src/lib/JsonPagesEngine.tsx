@@ -22,7 +22,6 @@ import {
   buildWebMcpToolName,
   createWebMcpToolInputSchema,
   ensureWebMcpRuntime,
-  parseWebMcpToolName,
   registerWebMcpTool,
   resolveWebMcpMutationData,
   type WebMcpMutationArgs,
@@ -502,25 +501,15 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
     const currentDraft = draftRef.current;
     if (!currentDraft) return;
 
-    const sectionTypes = Array.from(
-      new Set([
-        ...(globalDraftRef.current.header ? [globalDraftRef.current.header.type] : []),
-        ...(globalDraftRef.current.footer ? [globalDraftRef.current.footer.type] : []),
-        ...currentDraft.sections.map((section) => section.type),
-      ])
-    );
-
-    const unregisterFns = sectionTypes.map((sectionType) =>
-      registerWebMcpTool({
-        name: buildWebMcpToolName(sectionType),
-        description: `Update a ${sectionType} section in OlonJS Studio and persist immediately to file.`,
-        inputSchema: createWebMcpToolInputSchema(sectionType),
-        execute: (args) => handleWebMcpToolCall(buildWebMcpToolName(sectionType), args),
-      })
-    );
+    const unregister = registerWebMcpTool({
+      name: buildWebMcpToolName(),
+      description: `Update any section in OlonJS Studio and persist immediately to file. Use "sectionType" in input args to ensure correct schema validation.`,
+      inputSchema: createWebMcpToolInputSchema(),
+      execute: (args) => handleWebMcpToolCall(buildWebMcpToolName(), args),
+    });
 
     return () => {
-      for (const unregister of unregisterFns) unregister();
+      unregister();
     };
   }, [webMcp?.enabled, slug, draft, globalDraft, handleWebMcpToolCall]);
 
@@ -639,7 +628,7 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   );
 
   const executeWebMcpMutation = useCallback(
-    async (sectionType: string, rawArgs: unknown) => {
+    async (rawArgs: unknown) => {
       if (!saveToFile) {
         throw new Error('WebMCP requires saveToFile persistence in Studio mode.');
       }
@@ -662,14 +651,10 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
         throw new Error('Studio draft is not ready yet.');
       }
 
-      const schema = schemas[sectionType];
-      if (!schema || typeof schema.parse !== 'function') {
-        throw new Error(`Missing schema for section type "${sectionType}".`);
-      }
-
       const scope = args.scope === 'global' ? 'global' : 'local';
       let nextDraft = currentDraft;
       let nextGlobalDraft = currentGlobalDraft;
+      let sectionTypeToUse = args.sectionType;
 
       if (scope === 'global') {
         const targetSection =
@@ -682,8 +667,16 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
         if (!targetSection) {
           throw new Error(`Global section "${args.sectionId}" was not found.`);
         }
-        if (targetSection.type !== sectionType) {
-          throw new Error(`Section "${args.sectionId}" is type "${targetSection.type}", not "${sectionType}".`);
+        
+        if (!sectionTypeToUse) {
+           sectionTypeToUse = targetSection.type;
+        } else if (targetSection.type !== sectionTypeToUse) {
+          throw new Error(`Section "${args.sectionId}" is type "${targetSection.type}", not "${sectionTypeToUse}".`);
+        }
+
+        const schema = schemas[sectionTypeToUse];
+        if (!schema || typeof schema.parse !== 'function') {
+          throw new Error(`Missing schema for section type "${sectionTypeToUse}".`);
         }
 
         const currentData = isRecord(targetSection.data) ? targetSection.data : {};
@@ -701,8 +694,16 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
         if (!targetSection) {
           throw new Error(`Local section "${args.sectionId}" was not found in page "${slug}".`);
         }
-        if (targetSection.type !== sectionType) {
-          throw new Error(`Section "${args.sectionId}" is type "${targetSection.type}", not "${sectionType}".`);
+        
+        if (!sectionTypeToUse) {
+           sectionTypeToUse = targetSection.type;
+        } else if (targetSection.type !== sectionTypeToUse) {
+          throw new Error(`Section "${args.sectionId}" is type "${targetSection.type}", not "${sectionTypeToUse}".`);
+        }
+
+        const schema = schemas[sectionTypeToUse];
+        if (!schema || typeof schema.parse !== 'function') {
+          throw new Error(`Missing schema for section type "${sectionTypeToUse}".`);
         }
 
         const currentData = isRecord(targetSection.data) ? targetSection.data : {};
@@ -719,7 +720,7 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
         setDraft(nextDraft);
       }
 
-      setSelected({ id: args.sectionId, type: sectionType, scope });
+      setSelected({ id: args.sectionId, type: sectionTypeToUse, scope });
       setExpandedItemPath(Array.isArray(args.itemPath) ? args.itemPath : null);
       setHasChanges(true);
 
@@ -733,7 +734,7 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
               ok: true,
               slug,
               sectionId: args.sectionId,
-              sectionType,
+              sectionType: sectionTypeToUse,
               scope,
             }),
           },
@@ -745,11 +746,10 @@ const StudioRoute: React.FC<StudioRouteProps> = ({
   );
 
   async function handleWebMcpToolCall(toolName: string, rawArgs: unknown) {
-    const sectionType = parseWebMcpToolName(toolName);
-    if (!sectionType) {
-      throw new Error(`Unknown WebMCP tool "${toolName}".`);
+    if (toolName !== 'update-section') {
+      throw new Error(`Unknown WebMCP tool "${toolName}". Expected "update-section".`);
     }
-    return executeWebMcpMutation(sectionType, rawArgs);
+    return executeWebMcpMutation(rawArgs);
   }
 
   const handleSaveToFile = async () => {

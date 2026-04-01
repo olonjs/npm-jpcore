@@ -107,6 +107,7 @@ Detailed technical documentation is available in the `docs/` directory:
 - **[Architecture](./docs/ARCHITECTURE.md):** Monorepo layout, package responsibilities, and DNA regeneration flow.
 - **[CLI Contract](./docs/CLI.md):** Command surface, template resolution, and generation pipeline.
 - **[Templates Governance](./docs/TEMPLATES.md):** Rules for managing DNA source of truth and conformance checks.
+- **[WebMCP (Browser API)](./docs/webmcp.md):** The Agent-Native browser API for Zero-UI mutations and programmatic exploration.
 
 ### Onboarding & Governance
 - **[Client Onboarding](./docs_governance_en.md):** Guide for graphics and data development.

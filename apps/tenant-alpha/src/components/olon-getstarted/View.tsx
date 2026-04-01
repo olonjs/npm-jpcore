@@ -1,5 +1,4 @@
 import type { OlonGetStartedData } from './types';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 const BADGE_STYLES: Record<string, string> = {
