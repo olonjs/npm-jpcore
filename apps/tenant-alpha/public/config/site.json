@@ -18,36 +18,47 @@
     "type": "header",
     "data": {
       "logoText": "Olon",
-      "badge": "",
-      "links": {
-        "$ref": "../config/menu.json#/main"
-      },
-      "ctaLabel": "Get started →",
-      "ctaHref": "#contact",
-      "signinHref": "#login"
+      "badge": "JS",
+      "links": [
+        {
+          "label": "Why",
+          "href": "#Why"
+        },
+        {
+          "label": "Architecture",
+          "href": "#Architecture"
+        },
+        {
+          "label": "Example",
+          "href": "#Example"
+        },
+        {
+          "label": "Get started",
+          "href": "#Getstarted"
+        },
+        {
+          "label": "GitHub",
+          "href": "https://github.com/olonjs/core"
+        }
+      ],
+      "ctaLabel": "",
+      "ctaHref": "",
+      "signinHref": ""
     }
   },
   "footer": {
     "id": "global-footer",
     "type": "footer",
     "data": {
-      "brandText": "Olon",
-      "copyright": "© 2025 OlonJS · v1.4 · Holon",
+      "brandText": "OlonJS",
+      "copyright": "© 2026 OlonJS · v1.5 · Guido Serio",
       "links": [
         {
           "label": "GitHub",
-          "href": "#"
-        },
-        {
-          "label": "Privacy",
-          "href": "#"
-        },
-        {
-          "label": "Terms",
-          "href": "#"
+          "href": "https://github.com/olonjs/core"
         }
       ],
-      "designSystemHref": "/design-system"
+      "designSystemHref": ""
     },
     "settings": {
       "showLogo": true

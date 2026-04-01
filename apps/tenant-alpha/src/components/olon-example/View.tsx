@@ -21,7 +21,7 @@ export function OlonExampleView({ data }: Props) {
       <div className="max-w-6xl mx-auto px-8">
         <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)] mb-3"
            data-jp-field="label">{data.label}</p>
-        <h2 className="text-4xl font-bold tracking-[-0.03em] text-white mb-3"
+        <h2 className="text-4xl font-bold tracking-[-0.03em] text-foreground mb-3"
             data-jp-field="headline">{data.headline}</h2>
         <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-2xl mb-12"
            data-jp-field="body">{data.body}</p>
@@ -32,14 +32,14 @@ export function OlonExampleView({ data }: Props) {
                  className="bg-[var(--local-card)] border border-[var(--local-border)] rounded-2xl overflow-hidden">
               {/* Step header */}
               <div className="px-6 py-4 border-b border-[var(--local-border)] flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-[var(--local-p400)] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                <span className="w-6 h-6 rounded-full bg-[var(--local-p400)] text-foreground text-xs font-bold flex items-center justify-center flex-shrink-0">
                   {step.number}
                 </span>
-                <span className="font-semibold text-white text-sm">{step.title}</span>
+                <span className="font-semibold text-foreground text-sm">{step.title}</span>
                 <span className="ml-auto text-xs text-[var(--local-muted)]">{step.meta}</span>
               </div>
               {/* Code block */}
-              <pre className="p-6 font-mono text-xs leading-relaxed bg-[#080E14] text-[var(--local-fg)] overflow-x-auto whitespace-pre-wrap min-h-[200px]">
+              <pre className="p-6 font-mono text-xs leading-relaxed bg-[#080E14] text-gray-300 overflow-x-auto whitespace-pre-wrap min-h-[200px]">
                 {step.code}
               </pre>
             </div>

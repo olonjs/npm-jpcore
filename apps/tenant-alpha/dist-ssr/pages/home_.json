@@ -1,0 +1,180 @@
+{
+  "id": "home-page",
+  "slug": "home",
+  "meta": {
+    "title": "OlonJS — The Contract Layer for the Agentic Web",
+    "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance."
+  },
+  "sections": [
+    {
+      "id": "hero-main",
+      "type": "hero",
+      "data": {
+        "eyebrow": "Contract layer · v1.4 · Open Core",
+        "title": "Contract Layer",
+        "titleHighlight": "for the agentic web.",
+        "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable. Designed for reproducible tenant generation and machine-readable output.",
+        "ctas": [
+          {
+            "id": "cta-started",
+            "label": "Get started",
+            "href": "#contact",
+            "variant": "accent"
+          },
+          {
+            "id": "cta-github",
+            "label": "GitHub",
+            "href": "#",
+            "variant": "secondary"
+          }
+        ],
+        "docsLabel": "Explore platform",
+        "docsHref": "/platform/overview",
+        "heroImage": {
+          "url": "data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZy1tYWluIiB4Mj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoMTEwLjc5NSwxMTAuNzk1LC0xMTAuNzk1LDExMC43OTUsNDQuNjAzLDQ0LjYwMykiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM1QjhFRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIwLjUiIHN0b3AtY29sb3I9IiMwRjUyRTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMDYzMDkwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJnLWFjY2VudCIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNBREM4RkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNUI4RUZGIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8IS0tIENoaXAgYm9yZGVyIC0tPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2Utd2lkdGg9IjgiCiAgICBkPSJtNTkuMzggNDQuNmg4MS4yNGM4LjE2IDAgMTQuNzggNi42MiAxNC43OCAxNC43OHY4MS4yNGMwIDguMTYtNi42MiAxNC43OC0xNC43OCAxNC43OGgtODEuMjRjLTguMTYgMC0xNC43OC02LjYyLTE0Ljc4LTE0Ljc4di04MS4yNGMwLTguMTYgNi42Mi0xNC43OCAxNC43OC0xNC43OHoiLz4KICA8IS0tIExlZnQgcGlucyAtLT4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im03LjY3IDcyLjNoMzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im03LjY3IDEwMGgzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTcuNjcgMTI3LjdoMzYuOTMiLz4KICA8IS0tIFJpZ2h0IHBpbnMgLS0+CiAgPHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2ctbWFpbikiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJtMTU1LjQgNzIuM2gzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTE1NS40IDEwMGgzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTE1NS40IDEyNy43aDM2LjkzIi8+CiAgPCEtLSBUb3AgcGlucyAtLT4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im03Mi4zIDcuNjd2MzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im0xMDAgNy42N3YzNi45MyIvPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTEyNy43IDcuNjd2MzYuOTMiLz4KICA8IS0tIEJvdHRvbSBwaW5zIC0tPgogIDxwYXRoIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnLW1haW4pIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTcyLjMgMTU1LjR2MzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im0xMDAgMTU1LjR2MzYuOTMiLz4KICA8cGF0aCBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZy1tYWluKSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2Utd2lkdGg9IjYiIGQ9Im0xMjcuNyAxNTUuNHYzNi45MyIvPgogIDwhLS0gQ29ybmVyIG5vZGVzIC0tPgogIDxjaXJjbGUgZmlsbD0idXJsKCNnLW1haW4pIiBjeD0iNzIuMyIgY3k9IjcyLjMiIHI9IjcuMzkiLz4KICA8Y2lyY2xlIGZpbGw9InVybCgjZy1tYWluKSIgY3g9IjEyNy43IiBjeT0iNzIuMyIgcj0iNy4zOSIvPgogIDxjaXJjbGUgZmlsbD0idXJsKCNnLW1haW4pIiBjeD0iNzIuMyIgY3k9IjEyNy43IiByPSI3LjM5Ii8+CiAgPGNpcmNsZSBmaWxsPSJ1cmwoI2ctbWFpbikiIGN4PSIxMjcuNyIgY3k9IjEyNy43IiByPSI3LjM5Ii8+CiAgPCEtLSBDZW50ZXIgbm9kZSDigJQgYWNjZW50IC0tPgogIDxjaXJjbGUgZmlsbD0idXJsKCNnLWFjY2VudCkiIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjkuMjMiLz4KICA8IS0tIENvbm5lY3Rpb24gbGluZXMgLS0+CiAgPHBhdGggb3BhY2l0eT0iMC4zIiBmaWxsPSJub25lIiBzdHJva2U9IiM1QjhFRkYiIHN0cm9rZS13aWR0aD0iMiIgZD0ibTcyLjMgNzIuM2wyNy43IDI3LjciLz4KICA8cGF0aCBvcGFjaXR5PSIwLjMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzVCOEVGRiIgc3Ryb2tlLXdpZHRoPSIyIiBkPSJtMTI3LjcgNzIuM2wtMjcuNyAyNy43Ii8+CiAgPHBhdGggb3BhY2l0eT0iMC4zIiBmaWxsPSJub25lIiBzdHJva2U9IiM1QjhFRkYiIHN0cm9rZS13aWR0aD0iMiIgZD0ibTcyLjMgMTI3LjdsMjcuNy0yNy43Ii8+CiAgPHBhdGggb3BhY2l0eT0iMC4zIiBmaWxsPSJub25lIiBzdHJva2U9IiM1QjhFRkYiIHN0cm9rZS13aWR0aD0iMiIgZD0ibTEyNy43IDEyNy43bC0yNy43LTI3LjciLz4KPC9zdmc+Cg==",
+          "alt": "icon-ai-specs.svg"
+        }
+      },
+      "settings": {
+        "showCode": false
+      }
+    },
+    {
+      "id": "features-section",
+      "type": "feature-grid",
+      "data": {
+        "label": "Why OlonJS",
+        "sectionTitle": "A Meaningful Web",
+        "sectionTitleItalic": "Whole in itself, part of something greater.",
+        "sectionLead": "Most web frameworks separate concerns across layers — data, UI, validation, metadata — with no shared contract between them. OlonJS inverts this: the JSON data structure is the contract. Every layer — rendering, editing, validation, machine access — is a deterministic projection of the same typed source. The result is a site that is structurally coherent by construction, not by convention.",
+        "cards": [
+          {
+            "id": "card-endpoints",
+            "icon": {
+              "url": "/icons/features/icon-json-files.svg",
+              "alt": "JSON files icon"
+            },
+            "title": "Modular Type Registry",
+            "description": "Core exports an empty SectionDataRegistry. Tenants extend it via module augmentation — no Core changes required. Full TypeScript inference across all section types at compile-time."
+          },
+          {
+            "id": "card-schema",
+            "icon": {
+              "url": "/icons/features/icon-zod-schemas.svg",
+              "alt": "Zod schemas icon"
+            },
+            "title": "Tenant Block Protocol",
+            "description": "Each section type lives in a self-contained capsule: View.tsx, schema.ts, types.ts, index.ts. The capsule is the unit of extension — renderable, validatable, and ingestible by the engine without additional configuration."
+          },
+          {
+            "id": "card-ai",
+            "icon": {
+              "url": "/icons/features/icon-ai-specs.svg",
+              "alt": "AI specs icon"
+            },
+            "title": "Deterministic CLI",
+            "description": "@olonjs/cli scaffolds new tenants from a canonical script. Infrastructure, source structure, and dependencies are projected deterministically. Output is reproducible across environments"
+          },
+          {
+            "id": "card-multitenant",
+            "icon": {
+              "url": "/icons/features/icon-own-data.svg",
+              "alt": "Own data icon"
+            },
+            "title": "ICE Data Contract",
+            "description": "Mandatory data-jp-* DOM attributes bind rendered sections to their data contract. The binding is structural, not UI-dependent — any consumer that can traverse the DOM can identify and address any content node."
+          },
+          {
+            "id": "card-governance",
+            "icon": {
+              "url": "/icons/features/icon-governance.svg",
+              "alt": "Governance icon"
+            },
+            "title": "Base Schema Fragments",
+            "description": "BaseSectionData and BaseArrayItem are the required base types for all section data schemas and array items. They enforce anchor IDs and stable React keys across all capsules."
+          },
+          {
+            "id": "card-deploy",
+            "icon": {
+              "url": "/icons/features/icon-clean-commits.svg",
+              "alt": "Clean commits icon"
+            },
+            "title": "Path-Based Selection",
+            "description": "Content selection uses strict root-to-leaf path semantics. Each segment identifies a node unambiguously. The flat itemField/itemId protocol is removed in v1.3+."
+          }
+        ],
+        "proofStatement": "Working end-to-end with production routing parity.",
+        "proofSub": "Early customer usage across real tenant deployments · Clear hardening path to enterprise-grade governance.",
+        "tiers": [
+          {
+            "id": "tier-oss",
+            "label": "OSS"
+          },
+          {
+            "id": "tier-cloud",
+            "label": "Cloud"
+          },
+          {
+            "id": "tier-enterprise",
+            "label": "Enterprise"
+          }
+        ]
+      },
+      "settings": {
+        "columns": 3
+      }
+    },
+    {
+      "id": "contact-section",
+      "type": "contact",
+      "data": {
+        "label": "Contact",
+        "title": "Ready to define",
+        "titleHighlight": "your contract?",
+        "description": "Whether you're running a single tenant or deploying enterprise-grade governance across dozens of properties — let's talk.",
+        "tiers": [
+          {
+            "id": "tier-oss",
+            "label": "OSS",
+            "desc": "Open source core — free forever",
+            "sub": "Adoption, trust, ecosystem growth"
+          },
+          {
+            "id": "tier-cloud",
+            "label": "Cloud",
+            "desc": "Vercel-native self-serve workflow",
+            "sub": "Fast for modern dev teams"
+          },
+          {
+            "id": "tier-enterprise",
+            "label": "Enterprise",
+            "desc": "Private cloud + NX monorepo",
+            "sub": "Security, compliance, controlled deployment"
+          }
+        ],
+        "formTitle": "Get in touch",
+        "successTitle": "Message received",
+        "successBody": "We'll respond within one business day.",
+        "disclaimer": "No spam. Unsubscribe at any time."
+      },
+      "settings": {
+        "showTiers": true
+      }
+    },
+    {
+      "id": "login-section",
+      "type": "login",
+      "data": {
+        "title": "Start your journey",
+        "subtitle": "Enter your credentials to continue",
+        "forgotHref": "#",
+        "signupHref": "#contact",
+        "termsHref": "#",
+        "privacyHref": "#"
+      },
+      "settings": {
+        "showOauth": true
+      }
+    }
+  ]
+}

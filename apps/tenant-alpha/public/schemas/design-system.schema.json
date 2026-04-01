@@ -72,6 +72,9 @@
     "design-system": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "anchorId": {
           "type": "string",
           "description": "ui:text"
@@ -221,6 +224,9 @@
           "data": {
             "type": "object",
             "properties": {
+              "id": {
+                "type": "string"
+              },
               "anchorId": {
                 "type": "string",
                 "description": "ui:text"

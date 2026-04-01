@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, Zap } from 'lucide-react';
 import { OlonMark } from '@/components/OlonWordmark';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -81,7 +81,7 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
     >
       <div className="max-w-6xl mx-auto px-6 h-18 flex items-center gap-8">
 
-        {/* Logo */}
+        {/* Logo da homepage  */}
         <a href="/" className="flex items-center gap-2 shrink-0" aria-label="OlonJS home">
           <OlonMark size={26} className="mb-0.5" />
           <div className="flex items-center gap-1"><span
@@ -191,7 +191,7 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
             );
           })}
         </nav>
-
+       
         {/* Actions */}
         <div className="hidden md:flex items-center gap-1 ml-auto shrink-0">
           <ThemeToggle />
@@ -219,6 +219,15 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
           {mobileOpen ? <X size={16} /> : <Menu size={16} />}
         </button>
       </div>
+
+        {/* Banner Sotto il Menu */}
+        <div className="border-t border-border/60 py-1 px-4 text-center text-[10px] uppercase font-semibold tracking-wider text-muted-foreground flex justify-center items-center gap-1.5 bg-background/50">
+          <Zap className="w-2.5 h-2.5 text-primary-light" />
+          <span>Built with</span>
+          <a href="https://github.com/olonjs/npm-jpcore" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary-light transition-colors font-bold">
+            OlonJS
+          </a>
+        </div>
 
       {/* Mobile drawer */}
       <div className={cn(

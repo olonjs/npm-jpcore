@@ -111,22 +111,23 @@ export default defineConfig({
             }
 
             const schemaMatch = pathname.match(/^\/schemas\/(.+)\.schema\.json$/i);
-            if (!schemaMatch || req.method !== 'GET') return false;
+            if (schemaMatch && req.method === 'GET') {
+              const slug = normalizeManifestSlug(schemaMatch[1]);
+              const pageConfig = buildState.pages[slug];
+              if (!pageConfig) {
+                sendJson(res, 404, { error: 'Schema contract not found' });
+                return true;
+              }
 
-            const slug = normalizeManifestSlug(schemaMatch[1]);
-            const pageConfig = buildState.pages[slug];
-            if (!pageConfig) {
-              sendJson(res, 404, { error: 'Schema contract not found' });
+              sendJson(res, 200, buildPageContract({
+                slug,
+                pageConfig,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
               return true;
             }
-
-            sendJson(res, 200, buildPageContract({
-              slug,
-              pageConfig,
-              schemas: buildState.schemas,
-              siteConfig: buildState.siteConfig,
-            }));
-            return true;
+            return false;
           };
 
           if (
@@ -139,7 +140,11 @@ export default defineConfig({
           ) {
             void handleManifestRequest()
               .then((handled) => {
-                if (!handled) next();
+                if (!handled) {
+                  // Se handleManifestRequest fallisce a trovare qualcosa ma l'URL era giusto, 
+                  // forziamo un 404 JSON per evitare che Vite serva l'index.html
+                  sendJson(res, 404, { error: 'Manifest or schema not found' });
+                }
               })
               .catch((error) => {
                 sendJson(res, 500, { error: error?.message || 'Manifest generation failed' });

@@ -28,7 +28,7 @@ export function OlonHeroView({ data }: Props) {
           </p>
 
           <div>
-            <h1 className="text-5xl md:text-6xl font-bold tracking-[-0.03em] leading-[1.05] text-white"
+            <h1 className="text-5xl md:text-6xl font-bold tracking-[-0.03em] leading-[1.05] text-foreground"
                 data-jp-field="headline">
               {data.headline}
             </h1>

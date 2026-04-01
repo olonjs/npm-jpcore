@@ -1,16 +1,16 @@
 <svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="512" height="512">
   <defs>
     <linearGradient id="g-fold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#B8A4E0"/>
-      <stop offset="1" stop-color="#3D2770"/>
+      <stop offset="0" stop-color="#84ABFF"/>
+      <stop offset="1" stop-color="#0F52E0"/>
     </linearGradient>
     <linearGradient id="g-doc" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#B8A4E0"/>
-      <stop offset="1" stop-color="#5B3F9A"/>
+      <stop offset="0" stop-color="#84ABFF"/>
+      <stop offset="1" stop-color="#1763FF"/>
     </linearGradient>
     <linearGradient id="g-bracket" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#E2D5B0"/>
-      <stop offset="1" stop-color="#B8A4E0"/>
+      <stop offset="0" stop-color="#EEF3FF"/>
+      <stop offset="1" stop-color="#84ABFF"/>
     </linearGradient>
   </defs>
   <!-- Fold corner -->

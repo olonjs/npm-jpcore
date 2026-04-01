@@ -796,7 +796,7 @@ const StudioTiptapEditor: React.FC<{ data: TiptapData }> = ({ data }) => {
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={applyLink}
-                className="shrink-0 rounded-[var(--local-radius-sm)] px-2 py-0.5 text-xs bg-[var(--local-primary)] hover:brightness-110 text-white transition-colors"
+                className="shrink-0 rounded-[var(--local-radius-sm)] px-2 py-0.5 text-xs bg-[var(--local-primary)] hover:brightness-110 text-foreground transition-colors"
               >
                 Set
               </button>

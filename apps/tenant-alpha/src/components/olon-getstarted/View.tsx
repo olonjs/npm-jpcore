@@ -28,7 +28,7 @@ export function OlonGetStartedView({ data }: Props) {
       <div className="max-w-6xl mx-auto px-8">
         <p className="text-xs font-semibold tracking-[0.12em] uppercase text-[var(--local-muted)] mb-3"
            data-jp-field="label">{data.label}</p>
-        <h2 className="text-4xl font-bold tracking-[-0.03em] text-white mb-3"
+        <h2 className="text-4xl font-bold tracking-[-0.03em] text-foreground mb-3"
             data-jp-field="headline">{data.headline}</h2>
         <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-2xl mb-12"
            data-jp-field="body">{data.body}</p>
@@ -43,7 +43,7 @@ export function OlonGetStartedView({ data }: Props) {
                     data-jp-field="badge">
                 {card.badge}
               </span>
-              <p className="font-bold text-white text-base" data-jp-field="title">{card.title}</p>
+              <p className="font-bold text-foreground text-base" data-jp-field="title">{card.title}</p>
               <p className="text-sm text-[var(--local-muted)] leading-relaxed flex-1"
                  data-jp-field="body">{card.body}</p>
               {card.code && (

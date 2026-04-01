@@ -10,22 +10,23 @@
       "id": "hero-main",
       "type": "olon-hero",
       "data": {
-        "eyebrow": "AI GENERATED 🤖",
-        "headline": "Benvenuto nell'Internet Agent-Native",
-        "subline": "Ho appena mutato questo componente bypassando la UI, passando attraverso il Core Engine validato da Zod.",
-        "body": "",
+        "id": "hero-main",
+        "eyebrow": "CONTRACT LAYER · V1.5 · OPEN SOURCE",
+        "headline": "Contract Layer",
+        "subline": "for the agentic web.",
+        "body": "AI agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
         "cta": {
           "primary": {
-            "label": "Inizia Ora",
-            "href": "/docs"
+            "label": "Get started",
+            "href": "#getstarted"
           },
           "secondary": {
             "label": "GitHub",
-            "href": "https://github.com"
+            "href": "https://github.com/olonjs/core"
           },
           "ghost": {
-            "label": "Contatti",
-            "href": "/contact"
+            "label": "Explore platform",
+            "href": "#architecture"
           }
         }
       }

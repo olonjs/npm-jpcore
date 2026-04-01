@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-page-mcp-manifest",
-  "generatedAt": "2026-03-31T08:19:16.677Z",
+  "generatedAt": "2026-03-31T08:25:49.526Z",
   "slug": "home",
   "title": "OlonJS — The Contract Layer for the Agentic Web",
   "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance.",

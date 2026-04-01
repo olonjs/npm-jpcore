@@ -2,18 +2,18 @@
   <defs>
     <!-- Diagonal: primary-200 → primary-800 (structure + seal ring) -->
     <linearGradient id="g-main" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#B8A4E0"/>
-      <stop offset="1" stop-color="#3D2770"/>
+      <stop offset="0" stop-color="#84ABFF"/>
+      <stop offset="1" stop-color="#0F52E0"/>
     </linearGradient>
     <!-- Vertical: primary-200 → primary-600 (ledger body + log entries) -->
     <linearGradient id="g-body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#B8A4E0"/>
-      <stop offset="1" stop-color="#5B3F9A"/>
+      <stop offset="0" stop-color="#84ABFF"/>
+      <stop offset="1" stop-color="#1763FF"/>
     </linearGradient>
     <!-- Accent: gold → primary-200 (compliance checkmark — the semantic highlight) -->
     <linearGradient id="g-accent" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#E2D5B0"/>
-      <stop offset="1" stop-color="#B8A4E0"/>
+      <stop offset="0" stop-color="#EEF3FF"/>
+      <stop offset="1" stop-color="#84ABFF"/>
     </linearGradient>
   </defs>
 

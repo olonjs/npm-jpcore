@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-mcp-manifest-index",
-  "generatedAt": "2026-03-31T08:25:49.531Z",
+  "generatedAt": "2026-04-01T14:26:40.214Z",
   "pages": [
     {
       "slug": "design-system",
@@ -28,17 +28,34 @@
     },
     {
       "slug": "home",
-      "title": "OlonJS — The Contract Layer for the Agentic Web",
-      "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance.",
+      "title": "OlonJS — Contract Layer for the Agentic Web",
+      "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.",
       "manifestHref": "/mcp-manifests/home.json",
       "contractHref": "/schemas/home.schema.json",
       "sectionTypes": [
         "header",
         "footer",
-        "hero",
-        "feature-grid",
-        "contact",
-        "login"
+        "olon-hero",
+        "olon-why",
+        "olon-architecture",
+        "olon-example",
+        "olon-getstarted"
+      ]
+    },
+    {
+      "slug": "home_",
+      "title": "OlonJS — Contract Layer for the Agentic Web",
+      "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.",
+      "manifestHref": "/mcp-manifests/home_.json",
+      "contractHref": "/schemas/home_.schema.json",
+      "sectionTypes": [
+        "header",
+        "footer",
+        "olon-hero",
+        "olon-why",
+        "olon-architecture",
+        "olon-example",
+        "olon-getstarted"
       ]
     },
     {
