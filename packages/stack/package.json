@@ -1,6 +1,6 @@
 {
   "name": "@olonjs/stack",
-  "version": "1.0.105",
+  "version": "1.0.106",
   "description": "OlonJS tenant stack manifest - single source of truth for dependency versions",
   "private": false,
   "type": "module",
