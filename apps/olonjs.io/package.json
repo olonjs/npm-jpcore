@@ -1,11 +1,11 @@
 {
   "name": "olonjs-landing",
-  "version": "1.0.0",
+  "version": "1.0.104",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
-	 "verify:webmcp": "node scripts/webmcp-feature-check.mjs",
+    "verify:webmcp": "node scripts/webmcp-feature-check.mjs",
     "dev:clean": "vite --force",
     "prebuild": "node scripts/sync-pages-to-public.mjs",
     "build": "tsc && vite build",
