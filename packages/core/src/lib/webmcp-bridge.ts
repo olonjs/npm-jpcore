@@ -174,12 +174,27 @@ export function resolveWebMcpMutationData(
  * Maps logical olon:// URIs to physical JSON endpoints, respecting subfolder hosting.
  */
 async function resolveResource(uri: string): Promise<unknown> {
+  const baseUrl = window.location.pathname
+    .replace(/\/admin(\/.*)?$/, '')
+    .replace(/\/$/, '');
+
+  if (uri === 'olon://pages' || uri === 'olon://pages/') {
+    const response = await fetch(`${baseUrl}/mcp-manifest.json`);
+    if (!response.ok) {
+      throw new Error(`Resource not found: ${uri} (at ${baseUrl}/mcp-manifest.json)`);
+    }
+    const manifestIndex = await response.json();
+    return {
+      pages: (manifestIndex.pages || []).map((p: any) => ({
+        slug: p.slug,
+        title: p.title,
+        contract: p.contractHref,
+      })),
+    };
+  }
+
   if (uri.startsWith('olon://pages/')) {
     const slug = uri.replace('olon://pages/', '');
-    // Calcola la base path dinamica (es. /core) rimuovendo /admin e slug finali
-    const baseUrl = window.location.pathname
-      .replace(/\/admin(\/.*)?$/, '')
-      .replace(/\/$/, '');
     
     const response = await fetch(`${baseUrl}/pages/${slug}.json`);
     if (!response.ok) {

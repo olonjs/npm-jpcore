@@ -315,6 +315,12 @@ export function buildPageManifest({ slug, pageConfig, schemas, siteConfig }) {
           mimeType: 'application/json',
           description: `Structured content for the ${slug} page.`,
         },
+        {
+          uri: 'olon://pages',
+          name: 'Site Map',
+          mimeType: 'application/json',
+          description: 'Structured content for the map of this site',
+        },
       ],
     },
     sectionTypes: contract.sectionTypes,
@@ -346,4 +352,37 @@ export function buildSiteManifest({ pages, schemas, siteConfig }) {
       };
     }),
   };
+}
+
+export function buildLlmsTxt({ pages, schemas, siteConfig }) {
+  const site = siteConfig && typeof siteConfig === 'object' ? siteConfig : {};
+  const siteTitle = site.identity?.title || 'OlonJS Site';
+  
+  const manifestIndex = buildSiteManifest({ pages, schemas, siteConfig });
+  
+  let md = `# ${siteTitle}\n\n`;
+  
+  if (manifestIndex.pages.some(p => p.slug === 'home')) {
+    const homePage = manifestIndex.pages.find(p => p.slug === 'home');
+    if (homePage.description) {
+      md += `${homePage.description}\n\n`;
+    }
+  }
+
+  md += `> **AI Agents:** This site is built with OlonJS. It exposes a native Model Context Protocol (MCP) manifest for direct structural interaction. \n`;
+  md += `> To read the site map or access structured content, use the URI \`olon://pages\` or \`olon://pages/[slug]\`.\n`;
+  md += `> Endpoint: \`/mcp-manifest.json\`\n\n`;
+  
+  md += `## Pages\n\n`;
+  
+  for (const page of manifestIndex.pages) {
+    const urlPath = page.slug === 'home' ? '/' : `/${page.slug}`;
+    md += `- **[${page.title}](${urlPath})** (\`${page.slug}\`)\n`;
+    if (page.description) {
+      md += `  ${page.description}\n`;
+    }
+    md += `  *Contract:* \`${page.contractHref}\` | *Manifest:* \`${page.manifestHref}\`\n\n`;
+  }
+  
+  return md.trim();
 }

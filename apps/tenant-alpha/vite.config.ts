@@ -79,9 +79,19 @@ export default defineConfig({
           const isPageJsonRequest = isTenantPageJsonRequest(req, pathname);
 
           const handleManifestRequest = async () => {
-            const { buildPageContract, buildPageManifest, buildSiteManifest } = await loadWebMcpBuilders();
+            const { buildPageContract, buildPageManifest, buildSiteManifest, buildLlmsTxt } = await loadWebMcpBuilders();
             const ssrEntry = await server.ssrLoadModule('/src/entry-ssg.tsx');
             const buildState = ssrEntry.getWebMcpBuildState();
+
+            if (req.method === 'GET' && pathname === '/llms.txt') {
+              res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+              res.end(buildLlmsTxt({
+                pages: buildState.pages,
+                schemas: buildState.schemas,
+                siteConfig: buildState.siteConfig,
+              }));
+              return true;
+            }
 
             if (req.method === 'GET' && pathname === '/mcp-manifest.json') {
               sendJson(res, 200, buildSiteManifest({
@@ -134,6 +144,7 @@ export default defineConfig({
             req.method === 'GET' &&
             (
               pathname === '/mcp-manifest.json'
+              || pathname === '/llms.txt'
               || /^\/mcp-manifests\/.+\.json$/i.test(pathname)
               || /^\/schemas\/.+\.schema\.json$/i.test(pathname)
             )

@@ -1,0 +1,14 @@
+---
+description: Strict execution rule for MCP usage when explicitly requested.
+globs: *
+---
+
+# Strict MCP Execution Rule
+
+1. **Explicit Commands ONLY:** When the user explicitly commands to "use MCP", "mount MCP", "call MCP", or similar phrases to edit content, **YOU MUST USE THE MCP SERVER (`CallMcpTool`)**.
+2. **NO Fallbacks:** Under NO circumstances should you fallback to direct file edits (like `StrReplace` or `Write` on `.json` files) when the user has instructed you to use the MCP.
+3. **Execution Steps:**
+   - Verify the available MCP tools (e.g., checking `mcps/user-OlonJS/tools/`).
+   - Call the tool using `CallMcpTool` with the exact required arguments (like `slug`, `sectionId`, `sectionType`, `fieldKey`, etc.).
+   - If the tool fails, report the error to the user and DO NOT attempt a manual file edit unless explicitly told to do so.
+4. **General Edits:** If the user does *not* explicitly mention MCP, you may use standard file editing tools as appropriate for the task.
