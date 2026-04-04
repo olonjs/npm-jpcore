@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-page-mcp-manifest",
-  "generatedAt": "2026-03-31T08:25:49.526Z",
+  "generatedAt": "2026-04-01T14:26:40.205Z",
   "slug": "home",
-  "title": "OlonJS — The Contract Layer for the Agentic Web",
-  "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance.",
+  "title": "OlonJS — Contract Layer for the Agentic Web",
+  "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.",
   "contractHref": "/schemas/home.schema.json",
   "transport": {
     "kind": "window-message",
@@ -16,7 +16,7 @@
     "resources": [
       {
         "uri": "olon://pages/home",
-        "name": "OlonJS — The Contract Layer for the Agentic Web Data",
+        "name": "OlonJS — Contract Layer for the Agentic Web Data",
         "mimeType": "application/json",
         "description": "Structured content for the home page."
       }
@@ -25,10 +25,11 @@
   "sectionTypes": [
     "header",
     "footer",
-    "hero",
-    "feature-grid",
-    "contact",
-    "login"
+    "olon-hero",
+    "olon-why",
+    "olon-architecture",
+    "olon-example",
+    "olon-getstarted"
   ],
   "sectionInstances": [
     {
@@ -45,27 +46,33 @@
     },
     {
       "id": "hero-main",
-      "type": "hero",
+      "type": "olon-hero",
       "scope": "local",
-      "label": "Start Building"
+      "label": "olon-hero"
     },
     {
-      "id": "features-section",
-      "type": "feature-grid",
+      "id": "why-olon",
+      "type": "olon-why",
       "scope": "local",
-      "label": "A whole in itself,"
+      "label": "Why OlonJS"
     },
     {
-      "id": "contact-section",
-      "type": "contact",
+      "id": "architecture-protocols",
+      "type": "olon-architecture",
       "scope": "local",
-      "label": "Ready to define"
+      "label": "Architecture"
     },
     {
-      "id": "login-section",
-      "type": "login",
+      "id": "example-steps",
+      "type": "olon-example",
       "scope": "local",
-      "label": "Start your journey"
+      "label": "Quick Example"
+    },
+    {
+      "id": "getstarted-cards",
+      "type": "olon-getstarted",
+      "scope": "local",
+      "label": "Get Started"
     }
   ],
   "tools": [
@@ -80,24 +87,29 @@
       "description": "Update a footer section in OlonJS Studio and persist immediately to file."
     },
     {
-      "name": "update-hero",
-      "sectionType": "hero",
-      "description": "Update a hero section in OlonJS Studio and persist immediately to file."
+      "name": "update-olon-hero",
+      "sectionType": "olon-hero",
+      "description": "Update a olon-hero section in OlonJS Studio and persist immediately to file."
     },
     {
-      "name": "update-feature-grid",
-      "sectionType": "feature-grid",
-      "description": "Update a feature-grid section in OlonJS Studio and persist immediately to file."
+      "name": "update-olon-why",
+      "sectionType": "olon-why",
+      "description": "Update a olon-why section in OlonJS Studio and persist immediately to file."
     },
     {
-      "name": "update-contact",
-      "sectionType": "contact",
-      "description": "Update a contact section in OlonJS Studio and persist immediately to file."
+      "name": "update-olon-architecture",
+      "sectionType": "olon-architecture",
+      "description": "Update a olon-architecture section in OlonJS Studio and persist immediately to file."
     },
     {
-      "name": "update-login",
-      "sectionType": "login",
-      "description": "Update a login section in OlonJS Studio and persist immediately to file."
+      "name": "update-olon-example",
+      "sectionType": "olon-example",
+      "description": "Update a olon-example section in OlonJS Studio and persist immediately to file."
+    },
+    {
+      "name": "update-olon-getstarted",
+      "sectionType": "olon-getstarted",
+      "description": "Update a olon-getstarted section in OlonJS Studio and persist immediately to file."
     }
   ]
 }

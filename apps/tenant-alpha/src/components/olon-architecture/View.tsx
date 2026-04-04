@@ -130,13 +130,13 @@ export function OlonArchitectureView({ data }: Props) {
           </p>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden"
-             data-jp-array="protocols">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden">
           {data.protocols.map((p) => (
             <div key={p.id}
                  className="bg-[var(--local-card)] p-7 flex flex-col gap-3 border-r border-b border-[var(--local-border)] hover:bg-[var(--elevated)] transition-colors"
-                 data-jp-item-id={p.id}>
-              <div>{ICONS[p.icon]}</div>
+                 data-jp-item-id={p.id}
+                 data-jp-item-field="protocols">
+              <div data-jp-field="icon">{ICONS[p.icon]}</div>
               <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-[var(--local-p400)] font-mono"
                  data-jp-field="version">{p.acronym} · {p.version}</p>
               <p className="font-bold text-foreground text-base" data-jp-field="name">{p.name}</p>

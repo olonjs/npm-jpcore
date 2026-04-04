@@ -51,6 +51,18 @@
           "type": "string",
           "description": "ui:text"
         },
+        "signinHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "ctaHref": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "ctaLabel": {
+          "type": "string",
+          "description": "ui:text"
+        },
         "links": {
           "type": "array",
           "items": {
@@ -194,6 +206,18 @@
                 "description": "ui:text"
               },
               "badge": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "signinHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "ctaHref": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "ctaLabel": {
                 "type": "string",
                 "description": "ui:text"
               },

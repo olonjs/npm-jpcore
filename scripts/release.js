@@ -188,6 +188,9 @@ function getCommandPlan() {
     { step: "3/6", desc: "@olonjs/core", cmd: "npm run build -w @olonjs/core", cwd: "root", skip: false },
     { step: "3/6", desc: "@olonjs/core", cmd: "npm version patch --no-git-tag-version -w @olonjs/core", cwd: "root", skip: false },
     { step: "3/6", desc: "@olonjs/core (publish)", cmd: "npm publish --access public -w @olonjs/core", cwd: "root", skip: dryRun },
+    { step: "3b/6", desc: "@olonjs/mcp", cmd: "npm run build -w @olonjs/mcp", cwd: "root", skip: false },
+    { step: "3b/6", desc: "@olonjs/mcp", cmd: "npm version patch --no-git-tag-version -w @olonjs/mcp", cwd: "root", skip: false },
+    { step: "3b/6", desc: "@olonjs/mcp (publish)", cmd: "npm publish --access public -w @olonjs/mcp", cwd: "root", skip: dryRun },
     { step: "4/6", desc: "tenant-alpha", cmd: "Update package.json @olonjs/core -> ^<new-version>", cwd: "apps/tenant-alpha", skip: false },
     { step: "4/6", desc: "tenant-alpha", cmd: "npm install -w tenant-alpha", cwd: "root", skip: false },
     { step: "4/6", desc: "tenant-alpha", cmd: "npm run build -w tenant-alpha", cwd: "root", skip: false },
@@ -205,6 +208,7 @@ function getCommandPlan() {
     { step: "6/6", desc: "@jsonpages/core compat (publish)", cmd: "npm publish --access public -w @jsonpages/core", cwd: "root", skip: dryRun },
     { step: "6/6", desc: "@jsonpages/cli compat", cmd: "npm version patch --no-git-tag-version -w @jsonpages/cli", cwd: "root", skip: false },
     { step: "6/6", desc: "@jsonpages/cli compat (publish)", cmd: "npm publish --access public -w @jsonpages/cli", cwd: "root", skip: dryRun },
+    
   ];
 }
 
@@ -250,6 +254,20 @@ function stepCore() {
     run("npm publish --access public -w @olonjs/core");
   } else {
     log("[dry-run] Skipping npm publish for core");
+  }
+  return newVersion;
+}
+
+function stepMcp() {
+  log("Step 3b/6: @olonjs/mcp — build, version patch & publish (from root -w)");
+  const dir = path.join(ROOT, "packages", "mcp");
+  run("npm run build -w @olonjs/mcp");
+  run("npm version patch --no-git-tag-version -w @olonjs/mcp");
+  const newVersion = getVersion(dir);
+  if (!dryRun) {
+    run("npm publish --access public -w @olonjs/mcp");
+  } else {
+    log("[dry-run] Skipping npm publish for mcp");
   }
   return newVersion;
 }
@@ -327,6 +345,7 @@ function main() {
     stepBuildAll();
     const stackVersion = stepStack();
     const coreVersion = stepCore();
+    const mcpVersion = stepMcp();
     stepTenant("tenant-alpha", coreVersion);
     stepTenant("tenant-agritourism", coreVersion);
     const cliVersion = stepCli();

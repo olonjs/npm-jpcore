@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-page-mcp-manifest",
-  "generatedAt": "2026-04-01T14:26:40.212Z",
+  "generatedAt": "2026-04-04T17:22:27.973Z",
   "slug": "post",
   "title": "Post",
   "description": "Smoke test page for header + tiptap + footer flow.",
@@ -19,6 +19,12 @@
         "name": "Post Data",
         "mimeType": "application/json",
         "description": "Structured content for the post page."
+      },
+      {
+        "uri": "olon://pages",
+        "name": "Site Map",
+        "mimeType": "application/json",
+        "description": "Structured content for the map of this site"
       }
     ]
   },

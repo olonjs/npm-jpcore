@@ -68,13 +68,13 @@ export function OlonWhyView({ data }: Props) {
         <p className="text-base text-[var(--local-muted)] leading-relaxed max-w-2xl mb-12"
            data-jp-field="body">{data.body}</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden"
-             data-jp-array="pillars">
+        <div className="grid grid-cols-1 md:grid-cols-3 border border-[var(--local-border)] rounded-2xl overflow-hidden">
           {data.pillars.map((pillar) => (
             <div key={pillar.id}
                  className="bg-[var(--local-card)] p-8 flex flex-col gap-4 border-r last:border-r-0 border-[var(--local-border)]"
-                 data-jp-item-id={pillar.id}>
-              <div>{ICONS[pillar.icon]}</div>
+                 data-jp-item-id={pillar.id}
+                 data-jp-item-field="pillars">
+              <div data-jp-field="icon">{ICONS[pillar.icon]}</div>
               <div className="font-bold text-foreground" data-jp-field="title">{pillar.title}</div>
               <div className="text-sm text-[var(--local-muted)] leading-relaxed" data-jp-field="body">{pillar.body}</div>
             </div>

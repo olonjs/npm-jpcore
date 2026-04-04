@@ -1,7 +1,7 @@
 import type { OlonHeroData } from './types';
 import { Button } from '@/components/ui/button';
 import { Github, Terminal } from 'lucide-react';
-
+import { resolveAssetUrl, useConfig } from '@olonjs/core';
 
 interface Props {
   data: OlonHeroData;
@@ -9,7 +9,14 @@ interface Props {
 
 const heroPlugImage = '/assets/images/plug-graded-square.jpg';
 
+function hasRenderableCta(cta: { label?: string; href?: string } | undefined): cta is { label: string; href: string } {
+  return Boolean(cta?.label?.trim() && cta?.href?.trim());
+}
+
 export function OlonHeroView({ data }: Props) {
+  const { tenantId = 'default' } = useConfig();
+  const imageUrl = data.image?.url ? resolveAssetUrl(data.image.url, tenantId) : heroPlugImage;
+
   return (
     <section
       style={{
@@ -70,40 +77,53 @@ export function OlonHeroView({ data }: Props) {
           </p>
 
           <div className="flex flex-wrap gap-3 items-center">
-            <Button asChild size="lg" className="font-semibold">
-              <a href={data.cta.primary.href}>
-                {data.cta.primary.label} →
-              </a>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="font-semibold gap-2">
-              <a href={data.cta.secondary.href}>
-                <Github className="w-4 h-4" />
-                {data.cta.secondary.label}
-              </a>
-            </Button>
-            <a
-              href={data.cta.ghost.href}
-              className="text-sm text-[var(--local-muted)] hover:text-[var(--local-fg)] transition-colors flex items-center gap-1.5"
-            >
-              {data.cta.ghost.label}
-              <Terminal className="w-4 h-4" />
-            </a>
+            {hasRenderableCta(data.primaryCta) && (
+              <div data-jp-field="primaryCta">
+                <Button asChild size="lg" className="font-semibold">
+                  <a href={data.primaryCta.href}>
+                    {data.primaryCta.label} →
+                  </a>
+                </Button>
+              </div>
+            )}
+            {hasRenderableCta(data.secondaryCta) && (
+              <div data-jp-field="secondaryCta">
+                <Button asChild variant="outline" size="lg" className="font-semibold gap-2">
+                  <a href={data.secondaryCta.href}>
+                    <Github className="w-4 h-4" />
+                    {data.secondaryCta.label}
+                  </a>
+                </Button>
+              </div>
+            )}
+            {hasRenderableCta(data.ghostCta) && (
+              <div data-jp-field="ghostCta">
+                <a
+                  href={data.ghostCta.href}
+                  className="text-sm text-[var(--local-muted)] hover:text-[var(--local-fg)] transition-colors flex items-center gap-1.5"
+                >
+                  {data.ghostCta.label}
+                  <Terminal className="w-4 h-4" />
+                </a>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right: branded product photo */}
-        <div className="hidden md:flex items-center justify-center">
-          <div className="relative w-full max-w-lg">
-            <div className="absolute inset-[-8%] bg-[radial-gradient(circle_at_50%_50%,rgba(52,109,255,0.22),rgba(12,17,22,0)_70%)] blur-2xl" />
-            <div className="relative aspect-[1/1.03] overflow-hidden rounded-none border border-white/14 bg-[#0d1219] shadow-[0_22px_56px_rgba(4,8,20,0.42)]">
+        <div className="hidden md:flex items-center justify-center pointer-events-none">
+          <div className="relative w-full max-w-lg pointer-events-auto">
+            <div className="absolute inset-[-8%] bg-[radial-gradient(circle_at_50%_50%,rgba(52,109,255,0.22),rgba(12,17,22,0)_70%)] blur-2xl pointer-events-none" />
+            <div className="relative aspect-[1/1.03] overflow-hidden rounded-none border border-white/14 bg-[#0d1219] shadow-[0_22px_56px_rgba(4,8,20,0.42)] pointer-events-auto">
               <img
-                src={heroPlugImage}
-                alt="Olon interface port engraved into a dark stone surface"
+                src={imageUrl}
+                alt={data.image?.alt ?? "Olon interface port engraved into a dark stone surface"}
                 className="absolute inset-0 h-full w-full object-cover"
                 style={{ objectPosition: '50% 50%' }}
+                data-jp-field="image"
               />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,11,21,0.02)_0%,rgba(7,11,21,0.14)_24%,rgba(7,11,21,0.44)_100%)]" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_44%,rgba(122,163,255,0.18),rgba(29,78,216,0.08)_24%,rgba(12,17,22,0)_54%)] mix-blend-screen" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,11,21,0.02)_0%,rgba(7,11,21,0.14)_24%,rgba(7,11,21,0.44)_100%)] pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_44%,rgba(122,163,255,0.18),rgba(29,78,216,0.08)_24%,rgba(12,17,22,0)_54%)] mix-blend-screen pointer-events-none" />
             </div>
           </div>
         </div>

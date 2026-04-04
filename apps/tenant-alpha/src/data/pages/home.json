@@ -15,19 +15,21 @@
         "headline": "Contract Layer",
         "subline": "for the agentic web.",
         "body": "AI agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
-        "cta": {
-          "primary": {
-            "label": "Get started",
-            "href": "#getstarted"
-          },
-          "secondary": {
-            "label": "GitHub",
-            "href": "https://github.com/olonjs/core"
-          },
-          "ghost": {
-            "label": "Explore platform",
-            "href": "#architecture"
-          }
+        "primaryCta": {
+          "label": "Get started",
+          "href": "#getstarted"
+        },
+        "secondaryCta": {
+          "label": "GitHub",
+          "href": "https://github.com/olonjs/core"
+        },
+        "ghostCta": {
+          "label": "Explore platform",
+          "href": "#architecture"
+        },
+        "image": {
+          "url": "/assets/images/plug-graded-square.jpg",
+          "alt": "Olon interface port engraved into a dark stone surface"
         }
       }
     },

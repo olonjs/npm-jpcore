@@ -6,6 +6,7 @@ import path from 'path';
 import { execa } from 'execa';
 import ora from 'ora';
 import { fileURLToPath } from 'url';
+import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -227,5 +228,74 @@ async function injectInfraFiles(targetDir, name) {
   };
   await fs.writeJson(path.join(targetDir, 'components.json'), shadcnConfig, { spaces: 2 });
 }
+
+program
+  .command('init-mcp')
+  .description('Automatically configure Cursor MCP settings for OlonJS')
+  .action(async () => {
+    console.log(chalk.blue.bold('\nInitializing OlonJS MCP for Cursor...\n'));
+    
+    const isWin = process.platform === 'win32';
+    const commandName = isWin ? 'npx.cmd' : 'npx';
+    
+    const mcpConfig = {
+      command: commandName,
+      args: ['-y', '@olonjs/mcp@latest', 'http://localhost:5174']
+    };
+
+    const homeDir = os.homedir();
+    const pathsToCheck = [
+      path.join(homeDir, '.cursor', 'mcp.json'),
+    ];
+
+    if (isWin) {
+      pathsToCheck.push(path.join(homeDir, 'AppData', 'Roaming', 'Cursor', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'));
+    } else if (process.platform === 'darwin') {
+      pathsToCheck.push(path.join(homeDir, 'Library', 'Application Support', 'Cursor', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'));
+    } else {
+      pathsToCheck.push(path.join(homeDir, '.config', 'Cursor', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'));
+    }
+
+    let updatedCount = 0;
+
+    for (const configPath of pathsToCheck) {
+      try {
+        let configData = { mcpServers: {} };
+        
+        if (fs.existsSync(configPath)) {
+          const content = await fs.readFile(configPath, 'utf-8');
+          try {
+            configData = JSON.parse(content);
+          } catch (e) {
+            console.log(chalk.yellow(`Warning: Could not parse ${configPath}. Creating new object.`));
+          }
+        } else {
+          // If the file doesn't exist, we ensure the directory exists first
+          await fs.ensureDir(path.dirname(configPath));
+        }
+
+        if (!configData.mcpServers) {
+          configData.mcpServers = {};
+        }
+
+        configData.mcpServers['OlonJS'] = mcpConfig;
+
+        await fs.writeFile(configPath, JSON.stringify(configData, null, 2));
+        console.log(chalk.green(`✓ Updated MCP configuration at: ${configPath}`));
+        updatedCount++;
+      } catch (err) {
+        console.log(chalk.gray(`Skipped ${configPath} (not found or accessible)`));
+      }
+    }
+
+    if (updatedCount === 0) {
+      console.log(chalk.red('\nCould not find any Cursor MCP configuration files to update.'));
+      console.log('You can manually add the following JSON to your MCP settings:');
+      console.log(JSON.stringify({ "OlonJS": mcpConfig }, null, 2));
+    } else {
+      console.log(chalk.green.bold('\nOlonJS MCP configured successfully!'));
+      console.log(chalk.cyan('Please restart Cursor (or run "Developer: Reload Window") to apply the changes.'));
+    }
+  });
 
 program.parse();

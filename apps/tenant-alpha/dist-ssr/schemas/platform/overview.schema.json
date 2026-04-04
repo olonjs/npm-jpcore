@@ -39,6 +39,14 @@
           "type": "string",
           "description": "ui:text"
         },
+        "logoHighlight": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "logoIconText": {
+          "type": "string",
+          "description": "ui:text"
+        },
         "badge": {
           "type": "string",
           "description": "ui:text"
@@ -56,31 +64,15 @@
                 "type": "string",
                 "description": "ui:text"
               },
-              "variant": {
-                "type": "string",
-                "description": "ui:text"
+              "isCta": {
+                "type": "boolean",
+                "description": "ui:checkbox",
+                "default": false
               },
-              "children": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "label": {
-                      "type": "string",
-                      "description": "ui:text"
-                    },
-                    "href": {
-                      "type": "string",
-                      "description": "ui:text"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "label",
-                    "href"
-                  ]
-                },
-                "description": "ui:list"
+              "external": {
+                "type": "boolean",
+                "description": "ui:checkbox",
+                "default": false
               }
             },
             "additionalProperties": false,
@@ -90,18 +82,6 @@
             ]
           },
           "description": "ui:list"
-        },
-        "ctaLabel": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "ctaHref": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "signinHref": {
-          "type": "string",
-          "description": "ui:text"
         }
       },
       "additionalProperties": false,
@@ -157,6 +137,9 @@
     "page-hero": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "anchorId": {
           "type": "string",
           "description": "ui:text"
@@ -241,6 +224,14 @@
                 "type": "string",
                 "description": "ui:text"
               },
+              "logoHighlight": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "logoIconText": {
+                "type": "string",
+                "description": "ui:text"
+              },
               "badge": {
                 "type": "string",
                 "description": "ui:text"
@@ -258,31 +249,15 @@
                       "type": "string",
                       "description": "ui:text"
                     },
-                    "variant": {
-                      "type": "string",
-                      "description": "ui:text"
+                    "isCta": {
+                      "type": "boolean",
+                      "description": "ui:checkbox",
+                      "default": false
                     },
-                    "children": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "label": {
-                            "type": "string",
-                            "description": "ui:text"
-                          },
-                          "href": {
-                            "type": "string",
-                            "description": "ui:text"
-                          }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                          "label",
-                          "href"
-                        ]
-                      },
-                      "description": "ui:list"
+                    "external": {
+                      "type": "boolean",
+                      "description": "ui:checkbox",
+                      "default": false
                     }
                   },
                   "additionalProperties": false,
@@ -292,18 +267,6 @@
                   ]
                 },
                 "description": "ui:list"
-              },
-              "ctaLabel": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "ctaHref": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "signinHref": {
-                "type": "string",
-                "description": "ui:text"
               }
             },
             "additionalProperties": false,
@@ -489,6 +452,9 @@
           "data": {
             "type": "object",
             "properties": {
+              "id": {
+                "type": "string"
+              },
               "anchorId": {
                 "type": "string",
                 "description": "ui:text"

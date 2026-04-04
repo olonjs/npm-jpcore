@@ -22,6 +22,7 @@ const {
   buildPageManifest,
   buildPageManifestHref,
   buildSiteManifest,
+  buildLlmsTxt,
 } = await import(contractsUrl);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,7 +31,7 @@ const pagesDir = path.resolve(root, 'src/data/pages');
 const publicDir = path.resolve(root, 'public');
 const distDir = path.resolve(root, 'dist');
 
-async function writeJsonTargets(relativePath, value) {
+async function writeTargets(relativePath, content) {
   const targets = [
     path.resolve(publicDir, relativePath),
     path.resolve(distDir, relativePath),
@@ -38,8 +39,12 @@ async function writeJsonTargets(relativePath, value) {
 
   for (const targetPath of targets) {
     await fs.mkdir(path.dirname(targetPath), { recursive: true });
-    await fs.writeFile(targetPath, `${JSON.stringify(value, null, 2)}\n`, 'utf-8');
+    await fs.writeFile(targetPath, content, 'utf-8');
   }
+}
+
+async function writeJsonTargets(relativePath, value) {
+  await writeTargets(relativePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
 function escapeHtmlAttribute(value) {
@@ -159,6 +164,13 @@ const mcpManifest = buildSiteManifest({
   siteConfig: webMcpBuildState.siteConfig,
 });
 await writeJsonTargets('mcp-manifest.json', mcpManifest);
+
+const llmsTxtContent = buildLlmsTxt({
+  pages: webMcpBuildState.pages,
+  schemas: webMcpBuildState.schemas,
+  siteConfig: webMcpBuildState.siteConfig,
+});
+await writeTargets('llms.txt', `${llmsTxtContent}\n`);
 
 for (const { slug, out, depth } of targets) {
   console.log(`\n[bake] Rendering /${slug === 'home' ? '' : slug}...`);

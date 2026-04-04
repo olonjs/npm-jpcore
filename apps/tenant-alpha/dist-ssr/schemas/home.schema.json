@@ -2,17 +2,18 @@
   "version": "1.0.0",
   "kind": "olonjs-page-contract",
   "slug": "home",
-  "title": "OlonJS — The Contract Layer for the Agentic Web",
-  "description": "OlonJS standardizes machine-readable web content across tenants. Predictable page endpoints for agents, typed schema contracts, repeatable governance.",
+  "title": "OlonJS — Contract Layer for the Agentic Web",
+  "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.",
   "manifestHref": "/mcp-manifests/home.json",
-  "systemPrompt": "You are operating the \"OlonJS — The Contract Layer for the Agentic Web\" page in OlonJS Studio. Use only the declared tools and keep mutations valid against the section schema.",
+  "systemPrompt": "You are operating the \"OlonJS — Contract Layer for the Agentic Web\" page in OlonJS Studio. Use only the declared tools and keep mutations valid against the section schema.",
   "sectionTypes": [
     "header",
     "footer",
-    "hero",
-    "feature-grid",
-    "contact",
-    "login"
+    "olon-hero",
+    "olon-why",
+    "olon-architecture",
+    "olon-example",
+    "olon-getstarted"
   ],
   "sectionInstances": [
     {
@@ -29,27 +30,33 @@
     },
     {
       "id": "hero-main",
-      "type": "hero",
+      "type": "olon-hero",
       "scope": "local",
-      "label": "Start Building"
+      "label": "olon-hero"
     },
     {
-      "id": "features-section",
-      "type": "feature-grid",
+      "id": "why-olon",
+      "type": "olon-why",
       "scope": "local",
-      "label": "A whole in itself,"
+      "label": "Why OlonJS"
     },
     {
-      "id": "contact-section",
-      "type": "contact",
+      "id": "architecture-protocols",
+      "type": "olon-architecture",
       "scope": "local",
-      "label": "Ready to define"
+      "label": "Architecture"
     },
     {
-      "id": "login-section",
-      "type": "login",
+      "id": "example-steps",
+      "type": "olon-example",
       "scope": "local",
-      "label": "Start your journey"
+      "label": "Quick Example"
+    },
+    {
+      "id": "getstarted-cards",
+      "type": "olon-getstarted",
+      "scope": "local",
+      "label": "Get Started"
     }
   ],
   "sectionSchemas": {
@@ -57,6 +64,14 @@
       "type": "object",
       "properties": {
         "logoText": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "logoHighlight": {
+          "type": "string",
+          "description": "ui:text"
+        },
+        "logoIconText": {
           "type": "string",
           "description": "ui:text"
         },
@@ -77,31 +92,15 @@
                 "type": "string",
                 "description": "ui:text"
               },
-              "variant": {
-                "type": "string",
-                "description": "ui:text"
+              "isCta": {
+                "type": "boolean",
+                "description": "ui:checkbox",
+                "default": false
               },
-              "children": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "label": {
-                      "type": "string",
-                      "description": "ui:text"
-                    },
-                    "href": {
-                      "type": "string",
-                      "description": "ui:text"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "label",
-                    "href"
-                  ]
-                },
-                "description": "ui:list"
+              "external": {
+                "type": "boolean",
+                "description": "ui:checkbox",
+                "default": false
               }
             },
             "additionalProperties": false,
@@ -111,18 +110,6 @@
             ]
           },
           "description": "ui:list"
-        },
-        "ctaLabel": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "ctaHref": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "signinHref": {
-          "type": "string",
-          "description": "ui:text"
         }
       },
       "additionalProperties": false,
@@ -175,30 +162,124 @@
         "copyright"
       ]
     },
-    "hero": {
+    "olon-hero": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "anchorId": {
           "type": "string",
           "description": "ui:text"
         },
         "eyebrow": {
           "type": "string",
-          "description": "ui:text"
+          "default": "CONTRACT LAYER · V1.5 · OPEN CORE"
         },
-        "title": {
+        "headline": {
+          "type": "string",
+          "default": "Contract Layer"
+        },
+        "subline": {
+          "type": "string",
+          "default": "for the agentic web."
+        },
+        "body": {
+          "type": "string",
+          "default": ""
+        },
+        "cta": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "href": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "label",
+                "href"
+              ]
+            },
+            "secondary": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "href": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "label",
+                "href"
+              ]
+            },
+            "ghost": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "href": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "label",
+                "href"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "primary",
+            "secondary",
+            "ghost"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cta"
+      ]
+    },
+    "olon-why": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "anchorId": {
           "type": "string",
           "description": "ui:text"
         },
-        "titleHighlight": {
+        "label": {
           "type": "string",
-          "description": "ui:text"
+          "default": "Why OlonJS"
         },
-        "description": {
+        "headline": {
           "type": "string",
-          "description": "ui:textarea"
+          "default": "A Meaningful Web"
         },
-        "ctas": {
+        "subline": {
+          "type": "string",
+          "default": "Whole in itself, part of something greater."
+        },
+        "body": {
+          "type": "string",
+          "default": ""
+        },
+        "pillars": {
           "type": "array",
           "items": {
             "type": "object",
@@ -206,89 +287,171 @@
               "id": {
                 "type": "string"
               },
-              "label": {
-                "type": "string",
-                "description": "ui:text"
+              "title": {
+                "type": "string"
               },
-              "href": {
-                "type": "string",
-                "description": "ui:text"
+              "body": {
+                "type": "string"
               },
-              "variant": {
+              "icon": {
                 "type": "string",
                 "enum": [
-                  "primary",
-                  "secondary",
-                  "accent"
-                ],
-                "description": "ui:select",
-                "default": "primary"
+                  "contract",
+                  "holon",
+                  "generated"
+                ]
               }
             },
             "additionalProperties": false,
             "required": [
-              "label",
-              "href"
+              "title",
+              "body",
+              "icon"
             ]
-          },
-          "description": "ui:list"
-        },
-        "docsLabel": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "docsHref": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "codeLabel": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "heroImage": {
-          "type": "object",
-          "properties": {
-            "url": {
-              "type": "string"
-            },
-            "alt": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "url"
-          ],
-          "description": "ui:image-picker"
+          }
         }
       },
       "additionalProperties": false,
       "required": [
-        "title"
+        "pillars"
       ]
     },
-    "feature-grid": {
+    "olon-architecture": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "anchorId": {
           "type": "string",
           "description": "ui:text"
         },
         "label": {
           "type": "string",
-          "description": "ui:text"
+          "default": "Architecture"
         },
-        "sectionTitle": {
+        "headline": {
+          "type": "string",
+          "default": "Six governing protocols."
+        },
+        "body": {
+          "type": "string",
+          "default": ""
+        },
+        "specHref": {
+          "type": "string",
+          "default": ""
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "acronym": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "desc": {
+                "type": "string"
+              },
+              "specHref": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string",
+                "enum": [
+                  "mtrp",
+                  "tbp",
+                  "jsp",
+                  "idac",
+                  "bsds",
+                  "pss"
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "version",
+              "acronym",
+              "name",
+              "desc",
+              "specHref",
+              "icon"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "protocols"
+      ]
+    },
+    "olon-example": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "anchorId": {
           "type": "string",
           "description": "ui:text"
         },
-        "sectionTitleItalic": {
+        "label": {
+          "type": "string",
+          "default": "Quick Example"
+        },
+        "headline": {
+          "type": "string",
+          "default": "Two steps. One contract."
+        },
+        "body": {
+          "type": "string",
+          "default": ""
+        },
+        "note": {
+          "type": "string",
+          "default": ""
+        },
+        "noteHref": {
+          "type": "string",
+          "default": ""
+        },
+        "steps": {}
+      },
+      "additionalProperties": false,
+      "required": [
+        "steps"
+      ]
+    },
+    "olon-getstarted": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "anchorId": {
           "type": "string",
           "description": "ui:text"
         },
-        "sectionLead": {
+        "label": {
           "type": "string",
-          "description": "ui:textarea"
+          "default": "Get Started"
+        },
+        "headline": {
+          "type": "string",
+          "default": "Three paths in."
+        },
+        "body": {
+          "type": "string",
+          "default": ""
         },
         "cards": {
           "type": "array",
@@ -298,183 +461,54 @@
               "id": {
                 "type": "string"
               },
-              "icon": {
-                "type": "object",
-                "properties": {
-                  "url": {
-                    "type": "string"
-                  },
-                  "alt": {
-                    "type": "string"
-                  }
-                },
-                "additionalProperties": false,
-                "required": [
-                  "url"
-                ],
-                "description": "ui:image-picker"
+              "badge": {
+                "type": "string"
+              },
+              "badgeStyle": {
+                "type": "string",
+                "enum": [
+                  "oss",
+                  "cli",
+                  "deploy"
+                ]
               },
               "title": {
-                "type": "string",
-                "description": "ui:text"
+                "type": "string"
               },
-              "description": {
-                "type": "string",
-                "description": "ui:textarea"
+              "body": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "linkLabel": {
+                "type": "string"
+              },
+              "linkHref": {
+                "type": "string"
+              },
+              "deployLabel": {
+                "type": "string"
+              },
+              "deployHref": {
+                "type": "string"
               }
             },
             "additionalProperties": false,
             "required": [
+              "badge",
+              "badgeStyle",
               "title",
-              "description"
+              "body",
+              "linkLabel",
+              "linkHref"
             ]
-          },
-          "description": "ui:list"
-        },
-        "proofStatement": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "proofSub": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "tiers": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string",
-                "description": "ui:text"
-              }
-            },
-            "additionalProperties": false,
-            "required": [
-              "label"
-            ]
-          },
-          "description": "ui:list"
+          }
         }
       },
       "additionalProperties": false,
       "required": [
-        "sectionTitle",
         "cards"
-      ]
-    },
-    "contact": {
-      "type": "object",
-      "properties": {
-        "anchorId": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "label": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "title": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "titleHighlight": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "description": {
-          "type": "string",
-          "description": "ui:textarea"
-        },
-        "tiers": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "desc": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "sub": {
-                "type": "string",
-                "description": "ui:text"
-              }
-            },
-            "additionalProperties": false,
-            "required": [
-              "label",
-              "desc"
-            ]
-          },
-          "description": "ui:list"
-        },
-        "formTitle": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "successTitle": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "successBody": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "disclaimer": {
-          "type": "string",
-          "description": "ui:text"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "title"
-      ]
-    },
-    "login": {
-      "type": "object",
-      "properties": {
-        "anchorId": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "title": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "subtitle": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "forgotHref": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "signupHref": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "termsHref": {
-          "type": "string",
-          "description": "ui:text"
-        },
-        "privacyHref": {
-          "type": "string",
-          "description": "ui:text"
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "title"
       ]
     }
   },
@@ -510,6 +544,14 @@
                 "type": "string",
                 "description": "ui:text"
               },
+              "logoHighlight": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "logoIconText": {
+                "type": "string",
+                "description": "ui:text"
+              },
               "badge": {
                 "type": "string",
                 "description": "ui:text"
@@ -527,31 +569,15 @@
                       "type": "string",
                       "description": "ui:text"
                     },
-                    "variant": {
-                      "type": "string",
-                      "description": "ui:text"
+                    "isCta": {
+                      "type": "boolean",
+                      "description": "ui:checkbox",
+                      "default": false
                     },
-                    "children": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "label": {
-                            "type": "string",
-                            "description": "ui:text"
-                          },
-                          "href": {
-                            "type": "string",
-                            "description": "ui:text"
-                          }
-                        },
-                        "additionalProperties": false,
-                        "required": [
-                          "label",
-                          "href"
-                        ]
-                      },
-                      "description": "ui:list"
+                    "external": {
+                      "type": "boolean",
+                      "description": "ui:checkbox",
+                      "default": false
                     }
                   },
                   "additionalProperties": false,
@@ -561,18 +587,6 @@
                   ]
                 },
                 "description": "ui:list"
-              },
-              "ctaLabel": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "ctaHref": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "signinHref": {
-                "type": "string",
-                "description": "ui:text"
               }
             },
             "additionalProperties": false,
@@ -732,9 +746,9 @@
       }
     },
     {
-      "name": "update-hero",
-      "sectionType": "hero",
-      "description": "Update a hero section in OlonJS Studio and persist immediately to file.",
+      "name": "update-olon-hero",
+      "sectionType": "olon-hero",
+      "description": "Update a olon-hero section in OlonJS Studio and persist immediately to file.",
       "inputSchema": {
         "type": "object",
         "additionalProperties": false,
@@ -758,93 +772,92 @@
           "data": {
             "type": "object",
             "properties": {
+              "id": {
+                "type": "string"
+              },
               "anchorId": {
                 "type": "string",
                 "description": "ui:text"
               },
               "eyebrow": {
                 "type": "string",
-                "description": "ui:text"
+                "default": "CONTRACT LAYER · V1.5 · OPEN CORE"
               },
-              "title": {
+              "headline": {
                 "type": "string",
-                "description": "ui:text"
+                "default": "Contract Layer"
               },
-              "titleHighlight": {
+              "subline": {
                 "type": "string",
-                "description": "ui:text"
+                "default": "for the agentic web."
               },
-              "description": {
+              "body": {
                 "type": "string",
-                "description": "ui:textarea"
+                "default": ""
               },
-              "ctas": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "label": {
-                      "type": "string",
-                      "description": "ui:text"
-                    },
-                    "href": {
-                      "type": "string",
-                      "description": "ui:text"
-                    },
-                    "variant": {
-                      "type": "string",
-                      "enum": [
-                        "primary",
-                        "secondary",
-                        "accent"
-                      ],
-                      "description": "ui:select",
-                      "default": "primary"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "label",
-                    "href"
-                  ]
-                },
-                "description": "ui:list"
-              },
-              "docsLabel": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "docsHref": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "codeLabel": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "heroImage": {
+              "cta": {
                 "type": "object",
                 "properties": {
-                  "url": {
-                    "type": "string"
+                  "primary": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "href": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "label",
+                      "href"
+                    ]
                   },
-                  "alt": {
-                    "type": "string"
+                  "secondary": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "href": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "label",
+                      "href"
+                    ]
+                  },
+                  "ghost": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "href": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "required": [
+                      "label",
+                      "href"
+                    ]
                   }
                 },
                 "additionalProperties": false,
                 "required": [
-                  "url"
-                ],
-                "description": "ui:image-picker"
+                  "primary",
+                  "secondary",
+                  "ghost"
+                ]
               }
             },
             "additionalProperties": false,
             "required": [
-              "title"
+              "cta"
             ]
           },
           "itemPath": {
@@ -889,9 +902,9 @@
       }
     },
     {
-      "name": "update-feature-grid",
-      "sectionType": "feature-grid",
-      "description": "Update a feature-grid section in OlonJS Studio and persist immediately to file.",
+      "name": "update-olon-why",
+      "sectionType": "olon-why",
+      "description": "Update a olon-why section in OlonJS Studio and persist immediately to file.",
       "inputSchema": {
         "type": "object",
         "additionalProperties": false,
@@ -915,25 +928,397 @@
           "data": {
             "type": "object",
             "properties": {
+              "id": {
+                "type": "string"
+              },
               "anchorId": {
                 "type": "string",
                 "description": "ui:text"
               },
               "label": {
                 "type": "string",
-                "description": "ui:text"
+                "default": "Why OlonJS"
               },
-              "sectionTitle": {
+              "headline": {
+                "type": "string",
+                "default": "A Meaningful Web"
+              },
+              "subline": {
+                "type": "string",
+                "default": "Whole in itself, part of something greater."
+              },
+              "body": {
+                "type": "string",
+                "default": ""
+              },
+              "pillars": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "body": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "enum": [
+                        "contract",
+                        "holon",
+                        "generated"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "title",
+                    "body",
+                    "icon"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "pillars"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-olon-architecture",
+      "sectionType": "olon-architecture",
+      "description": "Update a olon-architecture section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "anchorId": {
                 "type": "string",
                 "description": "ui:text"
               },
-              "sectionTitleItalic": {
+              "label": {
+                "type": "string",
+                "default": "Architecture"
+              },
+              "headline": {
+                "type": "string",
+                "default": "Six governing protocols."
+              },
+              "body": {
+                "type": "string",
+                "default": ""
+              },
+              "specHref": {
+                "type": "string",
+                "default": ""
+              },
+              "protocols": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "acronym": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "desc": {
+                      "type": "string"
+                    },
+                    "specHref": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "enum": [
+                        "mtrp",
+                        "tbp",
+                        "jsp",
+                        "idac",
+                        "bsds",
+                        "pss"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "version",
+                    "acronym",
+                    "name",
+                    "desc",
+                    "specHref",
+                    "icon"
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "protocols"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-olon-example",
+      "sectionType": "olon-example",
+      "description": "Update a olon-example section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "anchorId": {
                 "type": "string",
                 "description": "ui:text"
               },
-              "sectionLead": {
+              "label": {
                 "type": "string",
-                "description": "ui:textarea"
+                "default": "Quick Example"
+              },
+              "headline": {
+                "type": "string",
+                "default": "Two steps. One contract."
+              },
+              "body": {
+                "type": "string",
+                "default": ""
+              },
+              "note": {
+                "type": "string",
+                "default": ""
+              },
+              "noteHref": {
+                "type": "string",
+                "default": ""
+              },
+              "steps": {}
+            },
+            "additionalProperties": false,
+            "required": [
+              "steps"
+            ]
+          },
+          "itemPath": {
+            "type": "array",
+            "description": "Optional root-to-leaf selection path for targeted field mutation.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "fieldKey": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "fieldKey"
+              ]
+            }
+          },
+          "value": {
+            "description": "Value written to the final field targeted by itemPath."
+          }
+        },
+        "required": [
+          "sectionId"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "itemPath",
+              "value"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "update-olon-getstarted",
+      "sectionType": "olon-getstarted",
+      "description": "Update a olon-getstarted section in OlonJS Studio and persist immediately to file.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "description": "Canonical page slug currently open in Studio."
+          },
+          "sectionId": {
+            "type": "string",
+            "description": "Concrete section instance id inside the current draft."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "local",
+              "global"
+            ],
+            "default": "local"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "anchorId": {
+                "type": "string",
+                "description": "ui:text"
+              },
+              "label": {
+                "type": "string",
+                "default": "Get Started"
+              },
+              "headline": {
+                "type": "string",
+                "default": "Three paths in."
+              },
+              "body": {
+                "type": "string",
+                "default": ""
               },
               "cards": {
                 "type": "array",
@@ -943,313 +1328,54 @@
                     "id": {
                       "type": "string"
                     },
-                    "icon": {
-                      "type": "object",
-                      "properties": {
-                        "url": {
-                          "type": "string"
-                        },
-                        "alt": {
-                          "type": "string"
-                        }
-                      },
-                      "additionalProperties": false,
-                      "required": [
-                        "url"
-                      ],
-                      "description": "ui:image-picker"
+                    "badge": {
+                      "type": "string"
+                    },
+                    "badgeStyle": {
+                      "type": "string",
+                      "enum": [
+                        "oss",
+                        "cli",
+                        "deploy"
+                      ]
                     },
                     "title": {
-                      "type": "string",
-                      "description": "ui:text"
+                      "type": "string"
                     },
-                    "description": {
-                      "type": "string",
-                      "description": "ui:textarea"
+                    "body": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "linkLabel": {
+                      "type": "string"
+                    },
+                    "linkHref": {
+                      "type": "string"
+                    },
+                    "deployLabel": {
+                      "type": "string"
+                    },
+                    "deployHref": {
+                      "type": "string"
                     }
                   },
                   "additionalProperties": false,
                   "required": [
+                    "badge",
+                    "badgeStyle",
                     "title",
-                    "description"
+                    "body",
+                    "linkLabel",
+                    "linkHref"
                   ]
-                },
-                "description": "ui:list"
-              },
-              "proofStatement": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "proofSub": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "tiers": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "label": {
-                      "type": "string",
-                      "description": "ui:text"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "label"
-                  ]
-                },
-                "description": "ui:list"
+                }
               }
             },
             "additionalProperties": false,
             "required": [
-              "sectionTitle",
               "cards"
-            ]
-          },
-          "itemPath": {
-            "type": "array",
-            "description": "Optional root-to-leaf selection path for targeted field mutation.",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "fieldKey": {
-                  "type": "string"
-                },
-                "itemId": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "fieldKey"
-              ]
-            }
-          },
-          "value": {
-            "description": "Value written to the final field targeted by itemPath."
-          }
-        },
-        "required": [
-          "sectionId"
-        ],
-        "oneOf": [
-          {
-            "required": [
-              "data"
-            ]
-          },
-          {
-            "required": [
-              "itemPath",
-              "value"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "name": "update-contact",
-      "sectionType": "contact",
-      "description": "Update a contact section in OlonJS Studio and persist immediately to file.",
-      "inputSchema": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "slug": {
-            "type": "string",
-            "description": "Canonical page slug currently open in Studio."
-          },
-          "sectionId": {
-            "type": "string",
-            "description": "Concrete section instance id inside the current draft."
-          },
-          "scope": {
-            "type": "string",
-            "enum": [
-              "local",
-              "global"
-            ],
-            "default": "local"
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "anchorId": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "label": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "title": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "titleHighlight": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "description": {
-                "type": "string",
-                "description": "ui:textarea"
-              },
-              "tiers": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "label": {
-                      "type": "string",
-                      "description": "ui:text"
-                    },
-                    "desc": {
-                      "type": "string",
-                      "description": "ui:text"
-                    },
-                    "sub": {
-                      "type": "string",
-                      "description": "ui:text"
-                    }
-                  },
-                  "additionalProperties": false,
-                  "required": [
-                    "label",
-                    "desc"
-                  ]
-                },
-                "description": "ui:list"
-              },
-              "formTitle": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "successTitle": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "successBody": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "disclaimer": {
-                "type": "string",
-                "description": "ui:text"
-              }
-            },
-            "additionalProperties": false,
-            "required": [
-              "title"
-            ]
-          },
-          "itemPath": {
-            "type": "array",
-            "description": "Optional root-to-leaf selection path for targeted field mutation.",
-            "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "fieldKey": {
-                  "type": "string"
-                },
-                "itemId": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "fieldKey"
-              ]
-            }
-          },
-          "value": {
-            "description": "Value written to the final field targeted by itemPath."
-          }
-        },
-        "required": [
-          "sectionId"
-        ],
-        "oneOf": [
-          {
-            "required": [
-              "data"
-            ]
-          },
-          {
-            "required": [
-              "itemPath",
-              "value"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "name": "update-login",
-      "sectionType": "login",
-      "description": "Update a login section in OlonJS Studio and persist immediately to file.",
-      "inputSchema": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "slug": {
-            "type": "string",
-            "description": "Canonical page slug currently open in Studio."
-          },
-          "sectionId": {
-            "type": "string",
-            "description": "Concrete section instance id inside the current draft."
-          },
-          "scope": {
-            "type": "string",
-            "enum": [
-              "local",
-              "global"
-            ],
-            "default": "local"
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "anchorId": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "title": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "subtitle": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "forgotHref": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "signupHref": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "termsHref": {
-                "type": "string",
-                "description": "ui:text"
-              },
-              "privacyHref": {
-                "type": "string",
-                "description": "ui:text"
-              }
-            },
-            "additionalProperties": false,
-            "required": [
-              "title"
             ]
           },
           "itemPath": {
