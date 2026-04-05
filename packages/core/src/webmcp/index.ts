@@ -9,6 +9,7 @@ export {
   buildWebMcpToolName,
   createWebMcpToolInputSchema,
   ensureWebMcpRuntime,
+  parseWebMcpMutationArgs,
   registerWebMcpTool,
   resolveWebMcpMutationData,
   type WebMcpMutationArgs,
@@ -20,7 +21,7 @@ export {
   buildPageManifest,
   buildPageManifestHref,
   buildSiteManifest,
-} from '../lib/webmcp-contracts';
+} from '../contract/webmcp-contracts';
 export type {
   BuildPageContractInput,
   BuildSiteManifestInput,
@@ -29,4 +30,4 @@ export type {
   OlonJsSiteManifestIndex,
   WebMcpSectionInstance,
   WebMcpToolContract,
-} from '../lib/webmcp-contracts';
+} from '../contract/webmcp-contracts';

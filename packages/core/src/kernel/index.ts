@@ -5,11 +5,11 @@
  * converge imports around the future split without breaking the current
  * @olonjs/core entrypoint.
  */
-export * from '../lib/kernel';
-export * from '../lib/types-engine';
+export * from '../contract/kernel';
+export * from '../contract/types-engine';
 export * from '../lib/shared-types';
 export {
   resolveHeaderMenuItems,
   resolveRuntimeConfig,
   resolveSectionMenuItems,
-} from '../lib/config-resolver';
+} from '../contract/config-resolver';

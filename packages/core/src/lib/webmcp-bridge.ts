@@ -57,6 +57,56 @@ export function buildWebMcpToolName(): string {
   return `update-section`;
 }
 
+export function parseWebMcpMutationArgs(rawArgs: unknown): WebMcpMutationArgs {
+  if (!isRecord(rawArgs) || typeof rawArgs.sectionId !== 'string') {
+    throw new Error('WebMCP mutation requires a sectionId.');
+  }
+
+  const parsedArgs: WebMcpMutationArgs = {
+    sectionId: rawArgs.sectionId,
+  };
+
+  if (typeof rawArgs.slug === 'string') {
+    parsedArgs.slug = rawArgs.slug;
+  }
+
+  if (typeof rawArgs.sectionType === 'string') {
+    parsedArgs.sectionType = rawArgs.sectionType;
+  }
+
+  if (rawArgs.scope === 'global' || rawArgs.scope === 'local') {
+    parsedArgs.scope = rawArgs.scope;
+  }
+
+  if (isRecord(rawArgs.data)) {
+    parsedArgs.data = rawArgs.data;
+  }
+
+  if (Array.isArray(rawArgs.itemPath)) {
+    parsedArgs.itemPath = rawArgs.itemPath
+      .filter((segment): segment is SelectionPath[number] => {
+        if (!isRecord(segment) || typeof segment.fieldKey !== 'string') {
+          return false;
+        }
+        return segment.itemId == null || typeof segment.itemId === 'string';
+      })
+      .map((segment) => ({
+        fieldKey: segment.fieldKey,
+        ...(typeof segment.itemId === 'string' ? { itemId: segment.itemId } : {}),
+      }));
+  }
+
+  if (typeof rawArgs.fieldKey === 'string') {
+    parsedArgs.fieldKey = rawArgs.fieldKey;
+  }
+
+  if ('value' in rawArgs) {
+    parsedArgs.value = rawArgs.value;
+  }
+
+  return parsedArgs;
+}
+
 export function createWebMcpToolInputSchema(): Record<string, unknown> {
   return {
     type: 'object',

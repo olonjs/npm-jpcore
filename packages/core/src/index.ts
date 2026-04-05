@@ -3,6 +3,7 @@
  */
 
 // Conceptual surfaces for the future split.
+export * as contract from './contract';
 export * as kernel from './kernel';
 export * as runtime from './runtime';
 export * as webmcp from './webmcp';

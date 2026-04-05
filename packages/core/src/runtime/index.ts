@@ -12,3 +12,4 @@ export { ConfigProvider, useConfig, type ConfigContextValue } from '../lib/Confi
 export { ThemeLoader } from '../lib/ThemeLoader';
 export { DefaultNotFound } from '../lib/DefaultNotFound';
 export { STUDIO_EVENTS } from '../lib/events';
+export * from './engine';
