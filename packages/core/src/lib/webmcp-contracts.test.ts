@@ -58,16 +58,15 @@ describe('webmcp-contracts', () => {
       ])
     );
     expect(contract.tools).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'update-header' }),
+      [
         expect.objectContaining({
-          name: 'update-hero',
+          name: 'update-section',
           inputSchema: expect.objectContaining({
             type: 'object',
             required: ['sectionId'],
           }),
         }),
-      ])
+      ]
     );
   });
 
@@ -94,10 +93,9 @@ describe('webmcp-contracts', () => {
     expect(manifest.slug).toBe('design-system');
     expect(manifest.contractHref).toBe('/schemas/design-system.schema.json');
     expect(manifest.tools).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'update-header' }),
-        expect.objectContaining({ name: 'update-feature-grid' }),
-      ])
+      [
+        expect.objectContaining({ name: 'update-section' }),
+      ]
     );
     expect(manifest.transport).toMatchObject({
       kind: 'window-message',
@@ -147,5 +145,10 @@ describe('webmcp-contracts', () => {
         }),
       ])
     );
+    expect(
+      manifest.pages.every((page) =>
+        Array.isArray(page.sectionTypes)
+      )
+    ).toBe(true);
   });
 });

@@ -159,7 +159,7 @@ function zodToJsonSchema(schema) {
   }
 }
 
-function buildMutationInputSchema(sectionType, sectionDataSchema) {
+function buildMutationInputSchema() {
   return {
     type: 'object',
     additionalProperties: false,
@@ -172,12 +172,19 @@ function buildMutationInputSchema(sectionType, sectionDataSchema) {
         type: 'string',
         description: 'Concrete section instance id inside the current draft.',
       },
+      sectionType: {
+        type: 'string',
+        description: 'Section type being updated (for example "hero" or "header"). Used to select the correct validation schema.',
+      },
       scope: {
         type: 'string',
         enum: ['local', 'global'],
         default: 'local',
       },
-      data: sectionDataSchema,
+      data: {
+        type: 'object',
+        description: 'Full replacement payload validated against the schema declared for sectionType.',
+      },
       itemPath: {
         type: 'array',
         description: 'Optional root-to-leaf selection path for targeted field mutation.',
@@ -194,11 +201,16 @@ function buildMutationInputSchema(sectionType, sectionDataSchema) {
       value: {
         description: 'Value written to the final field targeted by itemPath.',
       },
+      fieldKey: {
+        type: 'string',
+        description: 'Shorthand for a top-level scalar field update when itemPath is omitted.',
+      },
     },
     required: ['sectionId'],
     oneOf: [
       { required: ['data'] },
       { required: ['itemPath', 'value'] },
+      { required: ['fieldKey', 'value'] },
     ],
   };
 }
@@ -217,8 +229,8 @@ function inferSectionLabel(section) {
   return section?.type ?? 'section';
 }
 
-function buildToolName(sectionType) {
-  return `update-${String(sectionType)}`;
+function buildToolName() {
+  return 'update-section';
 }
 
 export function buildPageContractHref(slug) {
@@ -267,14 +279,17 @@ export function buildPageContract({ slug, pageConfig, schemas, siteConfig }) {
     label: inferSectionLabel(section),
   }));
 
-  const tools = sectionTypes
-    .filter((sectionType) => sectionSchemas[sectionType] != null)
-    .map((sectionType) => ({
-      name: buildToolName(sectionType),
-      sectionType,
-      description: `Update a ${sectionType} section in OlonJS Studio and persist immediately to file.`,
-      inputSchema: buildMutationInputSchema(sectionType, sectionSchemas[sectionType]),
-    }));
+  const tools =
+    sectionTypes.filter((sectionType) => sectionSchemas[sectionType] != null).length > 0
+      ? [
+          {
+            name: buildToolName(),
+            description:
+              'Update any section in OlonJS Studio and persist immediately to file. Use sectionType to select the matching schema from sectionSchemas.',
+            inputSchema: buildMutationInputSchema(),
+          },
+        ]
+      : [];
 
   return {
     version: '1.0.0',
@@ -325,9 +340,8 @@ export function buildPageManifest({ slug, pageConfig, schemas, siteConfig }) {
     },
     sectionTypes: contract.sectionTypes,
     sectionInstances: contract.sectionInstances,
-    tools: contract.tools.map(({ name, sectionType, description }) => ({
+    tools: contract.tools.map(({ name, description }) => ({
       name,
-      sectionType,
       description,
     })),
   };
