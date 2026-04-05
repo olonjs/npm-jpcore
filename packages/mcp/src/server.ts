@@ -41,11 +41,28 @@ export class OlonJsMcpServer {
       try {
         const webMcpTools = await this.bridge.listTools();
         return {
-          tools: webMcpTools.map((t) => ({
-            name: t.name,
-            description: t.description,
-            inputSchema: t.inputSchema as any, // MCP SDK expects specific types but general JSON schema is supported
-          })),
+          tools: [
+            {
+              name: "navigate-to-page",
+              description: "Navigate the Studio Playwright browser to a specific page by slug. Call this before update-section whenever you need to edit a page different from the current one.",
+              inputSchema: {
+                type: "object",
+                properties: {
+                  slug: {
+                    type: "string",
+                    description: "The page slug to navigate to (e.g. 'chi-sono', 'home', 'contatti').",
+                  },
+                },
+                required: ["slug"],
+                additionalProperties: false,
+              },
+            },
+            ...webMcpTools.map((t) => ({
+              name: t.name,
+              description: t.description,
+              inputSchema: t.inputSchema as any,
+            })),
+          ],
         };
       } catch (err: any) {
         console.error("Failed to list tools:", err);
@@ -56,6 +73,17 @@ export class OlonJsMcpServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       try {
         const { name, arguments: args } = request.params;
+
+        if (name === "navigate-to-page") {
+          const slug = (args as any)?.slug;
+          if (!slug) throw new Error("Missing required parameter: slug");
+          await this.bridge.navigateTo(slug);
+          return {
+            content: [{ type: "text", text: `Navigated to /admin/${slug}. Studio is now on slug "${slug}".` }],
+            isError: false,
+          };
+        }
+
         const resultString = await this.bridge.executeTool(name, JSON.stringify(args || {}));
         const parsed = JSON.parse(resultString);
         

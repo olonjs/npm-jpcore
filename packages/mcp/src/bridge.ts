@@ -11,7 +11,7 @@ export class PlaywrightBridge {
   public page: Page | null = null;
 
   constructor(
-    private targetUrl: string,
+    public targetUrl: string,
     private privateKey?: string
   ) {}
 
@@ -76,6 +76,20 @@ export class PlaywrightBridge {
     return this.page.evaluate(async ({ name, args }) => {
       return (window.navigator as any).modelContextProtocol.executeTool(name, args);
     }, { name: toolName, args: inputArgsJson });
+  }
+
+  async navigateTo(slug: string): Promise<void> {
+    if (!this.page) throw new Error("Not connected");
+    const baseUrl = this.targetUrl.replace(/\/admin.*$/, '');
+    const targetUrl = `${baseUrl}/admin/${slug}`;
+    console.error(`[PlaywrightBridge] Navigating to ${targetUrl}...`);
+    await this.page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+    await this.page.waitForFunction(() => {
+      return (window.navigator as any).modelContextProtocol !== undefined;
+    }, undefined, { timeout: 15000 }).catch(() => {
+      throw new Error(`Timeout waiting for WebMCP on /admin/${slug}.`);
+    });
+    console.error(`[PlaywrightBridge] Now on slug: ${slug}`);
   }
 
   async disconnect() {
