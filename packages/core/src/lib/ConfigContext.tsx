@@ -1,5 +1,0 @@
-export {
-  ConfigProvider,
-  useConfig,
-  type ConfigContextValue,
-} from '../runtime/config/ConfigContext';

@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
-import { Checkbox } from '../../components/ui/checkbox';
-import { Label } from '../../components/ui/label';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Checkbox } from '../ui/checkbox';
+import { Label } from '../ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../components/ui/select';
+} from '../ui/select';
 import {
   Dialog,
   DialogContent,
@@ -17,8 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../../components/ui/dialog';
-import { Button } from '../../components/ui/button';
+} from '../ui/dialog';
+import { Button } from '../ui/button';
 import {
   Layers,
   Github,
@@ -211,4 +211,3 @@ export const InputWidgets = {
 } as const;
 
 export type WidgetType = keyof typeof InputWidgets;
-

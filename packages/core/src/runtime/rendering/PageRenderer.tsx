@@ -28,6 +28,8 @@ export const PageRenderer: React.FC<Props> = ({
   onActiveSectionChangeRef.current = onActiveSectionChange;
 
   const showGlobalHeader = shouldRenderSiteGlobalHeader(pageConfig, siteConfig);
+  const headerSection = showGlobalHeader ? siteConfig.header ?? null : null;
+  const footerSection = siteConfig.footer ?? null;
 
   const handleSectionHover = (sectionId: string) => {
     onActiveSectionChangeRef.current?.(sectionId);
@@ -43,9 +45,9 @@ export const PageRenderer: React.FC<Props> = ({
     const callback = onActiveSectionChangeRef.current;
     if (!callback) return;
     const ids: string[] = [
-      ...(showGlobalHeader && siteConfig.header ? [siteConfig.header.id] : []),
+      ...(headerSection ? [headerSection.id] : []),
       ...pageConfig.sections.map((section) => section.id),
-      ...(siteConfig.footer ? [siteConfig.footer.id] : []),
+      ...(footerSection ? [footerSection.id] : []),
     ];
     const observer = new IntersectionObserver(
       (entries) => {
@@ -71,7 +73,7 @@ export const PageRenderer: React.FC<Props> = ({
       cancelAnimationFrame(rafId);
       observer.disconnect();
     };
-  }, [pageConfig.sections, pageConfig['global-header'], showGlobalHeader, siteConfig.header?.id, siteConfig.footer?.id]);
+  }, [footerSection, headerSection, pageConfig.sections, pageConfig['global-header'], showGlobalHeader]);
 
   const handleDragOver = (event: React.DragEvent, index: number) => {
     event.preventDefault();
@@ -190,17 +192,17 @@ export const PageRenderer: React.FC<Props> = ({
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)]">
-      {showGlobalHeader && siteConfig.header != null && (
+      {headerSection != null && (
         <div
           ref={(element) => {
-            sectionRefs.current[siteConfig.header.id] = element;
+            sectionRefs.current[headerSection.id] = element;
           }}
-          data-section-id={siteConfig.header.id}
-          onMouseEnter={() => handleSectionHover(siteConfig.header.id)}
+          data-section-id={headerSection.id}
+          onMouseEnter={() => handleSectionHover(headerSection.id)}
         >
           <SectionRenderer
-            section={siteConfig.header}
-            menu={resolveSectionMenuItems(siteConfig.header, menuConfig.main)}
+            section={headerSection}
+            menu={resolveSectionMenuItems(headerSection, menuConfig.main)}
             selectedId={selectedId}
           />
         </div>
@@ -208,15 +210,15 @@ export const PageRenderer: React.FC<Props> = ({
 
       <main className="flex-1">{renderPageSections()}</main>
 
-      {siteConfig.footer != null && (
+      {footerSection != null && (
         <div
           ref={(element) => {
-            sectionRefs.current[siteConfig.footer.id] = element;
+            sectionRefs.current[footerSection.id] = element;
           }}
-          data-section-id={siteConfig.footer.id}
-          onMouseEnter={() => handleSectionHover(siteConfig.footer.id)}
+          data-section-id={footerSection.id}
+          onMouseEnter={() => handleSectionHover(footerSection.id)}
         >
-          <SectionRenderer section={siteConfig.footer} selectedId={selectedId} />
+          <SectionRenderer section={footerSection} selectedId={selectedId} />
         </div>
       )}
     </div>

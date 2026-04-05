@@ -15,11 +15,11 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../../../components/ui/dialog';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { useConfig } from '../../../lib/ConfigContext';
+} from '../../ui/dialog';
+import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { useConfig } from '../../../runtime/config/ConfigContext';
 import { cn } from '../../../lib/utils';
 import type { ImageSelection } from './types';
 import type { LibraryImageEntry } from '../../../contract/types-engine';

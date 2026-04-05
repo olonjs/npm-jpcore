@@ -3,10 +3,10 @@ import { useLocation } from 'react-router-dom';
 import { resolveRuntimeConfig } from '../../contract/config-resolver';
 import type { JsonPagesConfig } from '../../contract/types-engine';
 import type { MenuItem, PageConfig, SiteConfig } from '../../contract/kernel';
-import { PageRenderer } from '../../lib/PageRenderer';
-import { StudioProvider } from '../../lib/StudioContext';
-import { ThemeLoader } from '../../lib/ThemeLoader';
-import { themeManager } from '../../utils/theme-manager';
+import { StudioProvider } from '../../studio/StudioContext';
+import { PageRenderer } from '../rendering/PageRenderer';
+import { ThemeLoader } from '../theme/ThemeLoader';
+import { themeManager } from '../theme/theme-manager';
 import {
   buildPageContractHref,
   buildPageManifestHref,

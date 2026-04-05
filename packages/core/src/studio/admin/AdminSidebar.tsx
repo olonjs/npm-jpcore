@@ -20,13 +20,13 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useConfig } from '../../lib/ConfigContext';
+import { useConfig } from '../../runtime/config/ConfigContext';
 import { cn } from '../../lib/utils';
 import { FormFactory } from './FormFactory';
 import type { PageConfig, Section } from '../../contract/kernel';
 import { Layers, ChevronUp, GripVertical, Settings, Trash2, AlertCircle, X, Plus, Save } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../components/ui/tooltip';
+import { Button } from '../ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../ui/tooltip';
 import { PageSelector } from './PageSelector';
 
 interface SelectedSectionInfo {

@@ -10,7 +10,7 @@ import { resolveRuntimeConfig } from '../../contract/config-resolver';
 import type { JsonPagesConfig, SelectionPath } from '../../contract/types-engine';
 import type { MenuItem, PageConfig, ProjectState, Section, SiteConfig } from '../../contract/kernel';
 import { StudioProvider } from '../../studio/StudioContext';
-import { ThemeLoader } from '../../lib/ThemeLoader';
+import { ThemeLoader } from '../theme/ThemeLoader';
 import { STUDIO_EVENTS } from '../../studio/events';
 import {
   buildWebMcpToolName,

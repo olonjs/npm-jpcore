@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { PageRenderer } from '../../lib/PageRenderer';
 import { StudioProvider } from '../StudioContext';
-import { themeManager } from '../../utils/theme-manager';
 import { STUDIO_EVENTS } from '../events';
 import type { PageConfig, SiteConfig, MenuConfig, MenuItem } from '../../contract/kernel';
 import type { SelectionPath } from '../../contract/types-engine';
 import { resolveHeaderMenuItems } from '../../contract/config-resolver';
+import { PageRenderer } from '../../runtime/rendering/PageRenderer';
+import { themeManager } from '../../runtime/theme/theme-manager';
 import { buildSelectionPath } from './selection-path';
 
 const INTERACTIVE_SELECTION_GUARD =

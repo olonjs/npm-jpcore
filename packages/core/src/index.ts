@@ -11,7 +11,7 @@ export * as webmcp from './webmcp';
 
 // Flat legacy surface kept intact for current tenants.
 export * from './kernel';
-export * from './lib/events';
+export * from './studio/events';
 export * from './lib/utils';
 export * from './runtime';
 export {
@@ -26,13 +26,13 @@ export {
 } from './webmcp';
 
 // Utils
-export { themeManager } from './utils/theme-manager';
-export { resolveAssetUrl } from './utils/asset-resolver';
+export { resolveAssetUrl } from './runtime/assets/asset-resolver';
+export { themeManager } from './runtime/theme/theme-manager';
 
 // Admin
-export { AdminSidebar, type LayerItem, type OnUpdateSection } from './admin/AdminSidebar';
+export { AdminSidebar, type LayerItem, type OnUpdateSection } from './studio/admin/AdminSidebar';
 export { StudioStage } from './studio/admin/StudioStage';
 export { PreviewEntry } from './studio/admin/PreviewEntry';
 export { AddSectionLibrary } from './studio/admin/AddSectionLibrary';
 export { FormFactory } from './studio/admin/FormFactory';
-export { InputWidgets, type WidgetType } from './admin/InputRegistry';
+export { InputWidgets, type WidgetType } from './studio/admin/InputRegistry';

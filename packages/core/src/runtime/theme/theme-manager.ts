@@ -1,4 +1,4 @@
-import type { ThemeConfig } from '../lib/kernel';
+import type { ThemeConfig } from '../../contract/kernel';
 
 type ThemeLeafValue = string | number;
 interface ThemeNode {
@@ -45,60 +45,15 @@ export function buildThemeVariableMap(theme: ThemeConfig): Record<string, string
   const dynamicMappings = flattenThemeNode(theme.tokens as unknown as ThemeNode);
   const mappings = { ...dynamicMappings };
 
-  addAlias(
-    mappings,
-    '--theme-primary',
-    '--theme-colors-primary',
-    dynamicMappings['--theme-colors-primary']
-  );
-  addAlias(
-    mappings,
-    '--theme-secondary',
-    '--theme-colors-secondary',
-    dynamicMappings['--theme-colors-secondary']
-  );
-  addAlias(
-    mappings,
-    '--theme-accent',
-    '--theme-colors-accent',
-    dynamicMappings['--theme-colors-accent']
-  );
-  addAlias(
-    mappings,
-    '--theme-background',
-    '--theme-colors-background',
-    dynamicMappings['--theme-colors-background']
-  );
-  addAlias(
-    mappings,
-    '--theme-surface',
-    '--theme-colors-surface',
-    dynamicMappings['--theme-colors-surface']
-  );
-  addAlias(
-    mappings,
-    '--theme-surface-alt',
-    '--theme-colors-surface-alt',
-    dynamicMappings['--theme-colors-surface-alt']
-  );
-  addAlias(
-    mappings,
-    '--theme-text',
-    '--theme-colors-text',
-    dynamicMappings['--theme-colors-text']
-  );
-  addAlias(
-    mappings,
-    '--theme-text-muted',
-    '--theme-colors-text-muted',
-    dynamicMappings['--theme-colors-text-muted']
-  );
-  addAlias(
-    mappings,
-    '--theme-border',
-    '--theme-colors-border',
-    dynamicMappings['--theme-colors-border']
-  );
+  addAlias(mappings, '--theme-primary', '--theme-colors-primary', dynamicMappings['--theme-colors-primary']);
+  addAlias(mappings, '--theme-secondary', '--theme-colors-secondary', dynamicMappings['--theme-colors-secondary']);
+  addAlias(mappings, '--theme-accent', '--theme-colors-accent', dynamicMappings['--theme-colors-accent']);
+  addAlias(mappings, '--theme-background', '--theme-colors-background', dynamicMappings['--theme-colors-background']);
+  addAlias(mappings, '--theme-surface', '--theme-colors-surface', dynamicMappings['--theme-colors-surface']);
+  addAlias(mappings, '--theme-surface-alt', '--theme-colors-surface-alt', dynamicMappings['--theme-colors-surface-alt']);
+  addAlias(mappings, '--theme-text', '--theme-colors-text', dynamicMappings['--theme-colors-text']);
+  addAlias(mappings, '--theme-text-muted', '--theme-colors-text-muted', dynamicMappings['--theme-colors-text-muted']);
+  addAlias(mappings, '--theme-border', '--theme-colors-border', dynamicMappings['--theme-colors-border']);
   addAlias(
     mappings,
     '--theme-font-primary',
@@ -117,24 +72,9 @@ export function buildThemeVariableMap(theme: ThemeConfig): Record<string, string
     '--theme-typography-font-family-display',
     dynamicMappings['--theme-typography-font-family-display']
   );
-  addAlias(
-    mappings,
-    '--theme-radius-sm',
-    '--theme-border-radius-sm',
-    dynamicMappings['--theme-border-radius-sm']
-  );
-  addAlias(
-    mappings,
-    '--theme-radius-md',
-    '--theme-border-radius-md',
-    dynamicMappings['--theme-border-radius-md']
-  );
-  addAlias(
-    mappings,
-    '--theme-radius-lg',
-    '--theme-border-radius-lg',
-    dynamicMappings['--theme-border-radius-lg']
-  );
+  addAlias(mappings, '--theme-radius-sm', '--theme-border-radius-sm', dynamicMappings['--theme-border-radius-sm']);
+  addAlias(mappings, '--theme-radius-md', '--theme-border-radius-md', dynamicMappings['--theme-border-radius-md']);
+  addAlias(mappings, '--theme-radius-lg', '--theme-border-radius-lg', dynamicMappings['--theme-border-radius-lg']);
 
   return mappings;
 }

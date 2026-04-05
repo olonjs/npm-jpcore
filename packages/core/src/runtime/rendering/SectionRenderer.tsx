@@ -1,6 +1,6 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
-import { useConfig } from '../../lib/ConfigContext';
+import { useConfig } from '../config/ConfigContext';
 import { useStudio } from '../../studio/StudioContext';
 import { cn } from '../../lib/utils';
 import type { MenuItem, Section } from '../../contract/kernel';

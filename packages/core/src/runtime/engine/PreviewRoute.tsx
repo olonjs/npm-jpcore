@@ -1,6 +1,6 @@
 import React from 'react';
 import { PreviewEntry } from '../../studio/admin/PreviewEntry';
-import { ThemeLoader } from '../../lib/ThemeLoader';
+import { ThemeLoader } from '../theme/ThemeLoader';
 
 export interface PreviewRouteProps {
   tenantCss: string;

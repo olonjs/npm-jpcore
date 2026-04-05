@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, ChevronDown, Plus } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { Popover, PopoverTrigger, PopoverContent } from '../../components/ui/popover';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 
 export interface PageSelectorProps {
   /** Available page slugs. */
