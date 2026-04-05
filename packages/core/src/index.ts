@@ -19,10 +19,11 @@ export {
   buildWebMcpToolName,
   createWebMcpToolInputSchema,
   ensureWebMcpRuntime,
+  parseWebMcpMutationArgs,
   registerWebMcpTool,
   resolveWebMcpMutationData,
   type WebMcpMutationArgs,
-} from './lib/webmcp-bridge';
+} from './webmcp';
 
 // Utils
 export { themeManager } from './utils/theme-manager';

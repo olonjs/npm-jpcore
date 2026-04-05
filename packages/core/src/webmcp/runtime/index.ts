@@ -7,4 +7,4 @@ export {
   registerWebMcpTool,
   resolveWebMcpMutationData,
   type WebMcpMutationArgs,
-} from '../webmcp/runtime/webmcp-bridge';
+} from './webmcp-bridge';

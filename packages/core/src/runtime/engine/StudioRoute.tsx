@@ -19,7 +19,7 @@ import {
   parseWebMcpMutationArgs,
   registerWebMcpTool,
   resolveWebMcpMutationData,
-} from '../../lib/webmcp-bridge';
+} from '../../webmcp';
 import {
   buildPageContractHref,
   buildPageManifestHref,

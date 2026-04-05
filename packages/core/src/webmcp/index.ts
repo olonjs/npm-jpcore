@@ -13,7 +13,7 @@ export {
   registerWebMcpTool,
   resolveWebMcpMutationData,
   type WebMcpMutationArgs,
-} from '../lib/webmcp-bridge';
+} from './runtime';
 export {
   buildLlmsTxt,
   buildPageContract,
