@@ -1,0 +1,64 @@
+{
+  "identity": {
+    "title": "JsonPages",
+    "logoUrl": "/logo.svg"
+  },
+  "pages": [
+    {
+      "slug": "home",
+      "label": "Home"
+    },
+    {
+      "slug": "docs",
+      "label": "Docs"
+    },
+    {
+      "slug": "architecture",
+      "label": "Architecture"
+    },
+    {
+      "slug": "usage",
+      "label": "Usage"
+    }
+  ],
+  "header": {
+    "id": "global-header",
+    "type": "header",
+    "data": {
+      "logoText": "olon",
+      "logoHighlight": "JS",
+      "links": {
+        "$ref": "../config/menu.json#/main"
+      }
+    },
+    "settings": {
+      "sticky": true
+    }
+  },
+  "footer": {
+    "id": "global-footer",
+    "type": "footer",
+    "data": {
+      "brandText": "Olon",
+      "brandHighlight": "JS",
+      "copyright": "© 2026 OlonJS · Guido Serio",
+      "links": [
+        {
+          "label": "Docs",
+          "href": "https://github.com/olonjs/olonjs?tab=readme-ov-file#-documentation-index"
+        },
+        {
+          "label": "GitHub",
+          "href": "https://github.com/olonjs/olonjs"
+        },
+        {
+          "label": "MIT License",
+          "href": "https://github.com/olonjs/olonjs?tab=readme-ov-file#MIT-1-ov-file"
+        }
+      ]
+    },
+    "settings": {
+      "showLogo": true
+    }
+  }
+}

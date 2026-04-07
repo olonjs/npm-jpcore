@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-page-mcp-manifest",
-  "generatedAt": "2026-04-04T16:32:54.702Z",
+  "generatedAt": "2026-04-07T16:13:47.028Z",
   "slug": "home",
   "title": "OlonJS — Contract Layer for the Agentic Web",
   "description": "OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.",
@@ -83,39 +83,8 @@
   ],
   "tools": [
     {
-      "name": "update-header",
-      "sectionType": "header",
-      "description": "Update a header section in OlonJS Studio and persist immediately to file."
-    },
-    {
-      "name": "update-footer",
-      "sectionType": "footer",
-      "description": "Update a footer section in OlonJS Studio and persist immediately to file."
-    },
-    {
-      "name": "update-olon-hero",
-      "sectionType": "olon-hero",
-      "description": "Update a olon-hero section in OlonJS Studio and persist immediately to file."
-    },
-    {
-      "name": "update-olon-why",
-      "sectionType": "olon-why",
-      "description": "Update a olon-why section in OlonJS Studio and persist immediately to file."
-    },
-    {
-      "name": "update-olon-architecture",
-      "sectionType": "olon-architecture",
-      "description": "Update a olon-architecture section in OlonJS Studio and persist immediately to file."
-    },
-    {
-      "name": "update-olon-example",
-      "sectionType": "olon-example",
-      "description": "Update a olon-example section in OlonJS Studio and persist immediately to file."
-    },
-    {
-      "name": "update-olon-getstarted",
-      "sectionType": "olon-getstarted",
-      "description": "Update a olon-getstarted section in OlonJS Studio and persist immediately to file."
+      "name": "update-section",
+      "description": "Update any section in OlonJS Studio and persist immediately to file. Use sectionType to select the matching schema from sectionSchemas."
     }
   ]
 }

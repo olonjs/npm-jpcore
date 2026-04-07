@@ -1,0 +1,13 @@
+# JsonPages
+
+OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.
+
+> **AI Agents:** This site is built with OlonJS. It exposes a native Model Context Protocol (MCP) manifest for direct structural interaction. 
+> To read the site map or access structured content, use the URI `olon://pages` or `olon://pages/[slug]`.
+> Endpoint: `/mcp-manifest.json`
+
+## Pages
+
+- **[OlonJS — Contract Layer for the Agentic Web](/)** (`home`)
+  OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.
+  *Contract:* `/schemas/home.schema.json` | *Manifest:* `/mcp-manifests/home.json`
