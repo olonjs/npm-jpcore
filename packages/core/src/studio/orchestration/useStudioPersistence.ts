@@ -114,6 +114,7 @@ export function useStudioPersistence({
   );
 
   return {
+    buildProjectState,
     hotSaveInProgress,
     hotSaveSuccessFeedback,
     persistProjectState,

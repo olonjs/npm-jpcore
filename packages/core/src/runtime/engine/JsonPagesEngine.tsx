@@ -47,8 +47,10 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
   const persistence = {
     saveToFile: config.persistence?.saveToFile,
     hotSave: config.persistence?.hotSave,
-    showLegacySave: config.persistence?.showLegacySave ?? true,
+    coldSave: config.persistence?.coldSave,
+    showLocalSave: config.persistence?.showLocalSave ?? true,
     showHotSave: config.persistence?.showHotSave ?? false,
+    showColdSave: config.persistence?.showColdSave ?? false,
   };
 
   const tenantCss = typeof themeCss?.tenant === 'string' ? themeCss.tenant : '';
@@ -168,8 +170,10 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   webMcp={config.webmcp}
                   saveToFile={persistence.saveToFile}
                   hotSave={persistence.hotSave}
-                  showLegacySave={persistence.showLegacySave}
+                  coldSave={persistence.coldSave}
+                  showLocalSave={persistence.showLocalSave}
                   showHotSave={persistence.showHotSave}
+                  showColdSave={persistence.showColdSave}
                 />
               }
             />
@@ -190,8 +194,10 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
                   webMcp={config.webmcp}
                   saveToFile={persistence.saveToFile}
                   hotSave={persistence.hotSave}
-                  showLegacySave={persistence.showLegacySave}
+                  coldSave={persistence.coldSave}
+                  showLocalSave={persistence.showLocalSave}
                   showHotSave={persistence.showHotSave}
+                  showColdSave={persistence.showColdSave}
                 />
               }
             />

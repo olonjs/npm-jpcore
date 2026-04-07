@@ -775,7 +775,7 @@ function App() {
           },
         });
       },
-      showLegacySave: !isCloudMode,
+      showLocalSave: !isCloudMode,
       showHotSave: isCloudMode,
     },
     assets: {
@@ -1005,4 +1005,3 @@ function App() {
 }
 
 export default App;
-

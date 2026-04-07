@@ -1,1 +1,5 @@
-export { resolveAssetUrl } from './asset-resolver';
+export {
+  isCanonicalAssetUrl,
+  isTransientAssetUrl,
+  resolveAssetUrl,
+} from './asset-resolver';

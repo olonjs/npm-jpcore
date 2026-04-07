@@ -13,6 +13,7 @@ export { ThemeLoader, type ThemeLoaderProps } from './theme/ThemeLoader';
 export { DefaultNotFound } from '../lib/DefaultNotFound';
 export { STUDIO_EVENTS } from '../studio/events';
 export * from './engine';
+export * from './assets';
 export * from './config';
 export * from './rendering';
 export * from './theme';

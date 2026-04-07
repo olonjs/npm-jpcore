@@ -19,6 +19,10 @@ import {
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
+import {
+  isCanonicalAssetUrl,
+  resolveAssetUrl,
+} from '../../../runtime/assets/asset-resolver';
 import { useConfig } from '../../../runtime/config/ConfigContext';
 import { cn } from '../../../lib/utils';
 import type { ImageSelection } from './types';
@@ -30,7 +34,9 @@ type TabId = (typeof TABS)[number];
 interface UploadPreview {
   name: string;
   size: number;
-  dataUrl: string;
+  previewSrc: string;
+  finalUrl?: string;
+  isPersistent: boolean;
 }
 
 interface ImagePickerDialogProps {
@@ -150,10 +156,12 @@ function UploadTab({
   preview,
   onPreviewChange,
   onAssetUpload,
+  tenantId,
 }: {
   preview: UploadPreview | null;
   onPreviewChange: (p: UploadPreview | null) => void;
   onAssetUpload?: (file: File) => Promise<string>;
+  tenantId: string;
 }) {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,17 +175,25 @@ function UploadTab({
       if (onAssetUpload) {
         try {
           const url = await onAssetUpload(file);
+          const finalUrl = isCanonicalAssetUrl(url) ? url : undefined;
           // #region agent log
           fetch('http://127.0.0.1:7588/ingest/86d71502-47e1-433c-9b6d-5a1390d00813',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'34bba5'},body:JSON.stringify({sessionId:'34bba5',location:'ImagePickerDialog.tsx:handleFile',message:'onAssetUpload resolved',data:{url:url?.slice(0,50)},timestamp:Date.now(),hypothesisId:'H2,H5'})}).catch(()=>{});
           // #endregion
-          onPreviewChange({ name: file.name, size: file.size, dataUrl: url });
+          onPreviewChange({
+            name: file.name,
+            size: file.size,
+            previewSrc: resolveAssetUrl(url, tenantId),
+            finalUrl,
+            isPersistent: finalUrl != null,
+          });
         } catch {
           const reader = new FileReader();
           reader.onload = (e) => {
             onPreviewChange({
               name: file.name,
               size: file.size,
-              dataUrl: e.target?.result as string,
+              previewSrc: e.target?.result as string,
+              isPersistent: false,
             });
           };
           reader.readAsDataURL(file);
@@ -189,12 +205,13 @@ function UploadTab({
         onPreviewChange({
           name: file.name,
           size: file.size,
-          dataUrl: e.target?.result as string,
+          previewSrc: e.target?.result as string,
+          isPersistent: false,
         });
       };
       reader.readAsDataURL(file);
     },
-    [onPreviewChange, onAssetUpload]
+    [onPreviewChange, onAssetUpload, tenantId]
   );
 
   const handleDrop = useCallback(
@@ -223,30 +240,31 @@ function UploadTab({
   );
 
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragOver}
-      onDragLeave={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragOver(false);
-      }}
-      onDrop={handleDrop}
-      onClick={() => !preview && fileInputRef.current?.click()}
-      className={cn(
-        'rounded-xl border-2 border-dashed transition-all min-h-[240px]',
-        'flex flex-col items-center justify-center overflow-hidden cursor-pointer relative',
-        dragOver
-          ? 'border-blue-500/50 bg-blue-500/[0.04]'
-          : preview
-            ? 'border-zinc-800 bg-transparent cursor-default'
-            : 'border-zinc-800 bg-white/[0.01] hover:border-zinc-600 hover:bg-white/[0.02]'
-      )}
-    >
+    <div className="space-y-3">
+      <div
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragOver}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setDragOver(false);
+        }}
+        onDrop={handleDrop}
+        onClick={() => !preview && fileInputRef.current?.click()}
+        className={cn(
+          'rounded-xl border-2 border-dashed transition-all min-h-[240px]',
+          'flex flex-col items-center justify-center overflow-hidden cursor-pointer relative',
+          dragOver
+            ? 'border-blue-500/50 bg-blue-500/[0.04]'
+            : preview
+              ? 'border-zinc-800 bg-transparent cursor-default'
+              : 'border-zinc-800 bg-white/[0.01] hover:border-zinc-600 hover:bg-white/[0.02]'
+        )}
+      >
       {preview ? (
         <>
           <img
-            src={preview.dataUrl}
+            src={preview.previewSrc}
             alt="Upload preview"
             className="w-full max-h-[320px] object-contain"
           />
@@ -276,7 +294,7 @@ function UploadTab({
             <Upload size={22} />
           </div>
           <p className="text-sm font-medium text-white mb-1">
-            Trascina un'immagine qui
+            Trascina un&apos;immagine qui
           </p>
           <p className="text-[11px] text-zinc-500 mb-3">
             oppure clicca per selezionare un file
@@ -286,13 +304,22 @@ function UploadTab({
           </span>
         </>
       )}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleInputChange}
-      />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleInputChange}
+        />
+      </div>
+      {preview != null && !preview.isPersistent && (
+        <p
+          role="alert"
+          className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-200"
+        >
+          Upload non persistito: serve un URL asset canonico per inserire l&apos;immagine.
+        </p>
+      )}
     </div>
   );
 }
@@ -377,7 +404,7 @@ export const ImagePickerDialog: React.FC<ImagePickerDialogProps> = ({
   onOpenChange,
   onSelect,
 }) => {
-  const { assets } = useConfig();
+  const { assets, tenantId = 'default' } = useConfig();
   const library = assets?.assetsManifest ?? [];
   const [tab, setTab] = useState<TabId>('library');
   const [selectedLibraryId, setSelectedLibraryId] = useState<string | null>(null);
@@ -425,15 +452,18 @@ export const ImagePickerDialog: React.FC<ImagePickerDialogProps> = ({
 
   const canConfirm =
     (tab === 'library' && selectedLibraryId != null) ||
-    (tab === 'upload' && uploadPreview != null) ||
+    (tab === 'upload' && uploadPreview?.isPersistent === true && uploadPreview.finalUrl != null) ||
     (tab === 'url' && urlPreview != null);
 
   const handleConfirm = () => {
     if (tab === 'library' && selectedLibraryId) {
       const img = library.find((i) => i.id === selectedLibraryId);
       if (img) onSelect({ url: img.url, alt: img.alt });
-    } else if (tab === 'upload' && uploadPreview) {
-      onSelect({ url: uploadPreview.dataUrl, alt: uploadPreview.name });
+    } else if (tab === 'upload' && uploadPreview?.isPersistent && uploadPreview.finalUrl) {
+      onSelect({
+        url: uploadPreview.finalUrl,
+        alt: uploadPreview.name,
+      });
     } else if (tab === 'url' && urlPreview) {
       onSelect({ url: urlPreview, alt: '' });
     }
@@ -445,7 +475,9 @@ export const ImagePickerDialog: React.FC<ImagePickerDialogProps> = ({
     tab === 'library' && selectedLibraryId
       ? '1 immagine selezionata'
       : tab === 'upload' && uploadPreview
-        ? uploadPreview.name
+        ? uploadPreview.isPersistent
+          ? uploadPreview.name
+          : 'Upload non persistito'
         : tab === 'url' && urlPreview
           ? 'URL pronto'
           : 'Nessuna selezione';
@@ -521,6 +553,7 @@ export const ImagePickerDialog: React.FC<ImagePickerDialogProps> = ({
               preview={uploadPreview}
               onPreviewChange={setUploadPreview}
               onAssetUpload={assets?.onAssetUpload}
+              tenantId={tenantId}
             />
           )}
           {tab === 'url' && (

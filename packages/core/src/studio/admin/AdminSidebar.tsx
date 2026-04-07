@@ -74,16 +74,20 @@ interface AdminSidebarProps {
   onSaveToFile?: () => void;
   /** Hot Save callback (typically cloud save2edge). */
   onHotSave?: () => void;
+  /** Cold Save callback (typically save2repo / deploy pipeline). */
+  onColdSave?: () => void;
   /** When true, show "Salvato" in the status bar (e.g. for 2s after save-to-file succeeds). */
   saveSuccessFeedback?: boolean;
   /** When true, show "Saved" feedback for hot save (e.g. for 2s after success). */
   hotSaveSuccessFeedback?: boolean;
   /** When true, hot save action is currently running. */
   hotSaveInProgress?: boolean;
-  /** Controls visibility of the Save to file button. */
-  showLegacySave?: boolean;
+  /** Controls visibility of the local Save button. */
+  showLocalSave?: boolean;
   /** Controls visibility of Hot Save button. */
   showHotSave?: boolean;
+  /** Controls visibility of Save2Repo / Cold Save button. */
+  showColdSave?: boolean;
   /** Restore page from file (resets in-memory draft for current slug). Hidden by default; set showResetToFile to display. */
   onResetToFile?: () => void;
   /** When true, shows the "Ripristina da file" button (default false = hidden). */
@@ -256,11 +260,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   hasChanges = false,
   onSaveToFile,
   onHotSave,
+  onColdSave,
   saveSuccessFeedback = false,
   hotSaveSuccessFeedback = false,
   hotSaveInProgress = false,
-  showLegacySave = true,
+  showLocalSave = true,
   showHotSave = false,
+  showColdSave = false,
   onResetToFile,
   showResetToFile = false,
   pageSlugs = [],
@@ -726,7 +732,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       </div>
 
       <div className="px-4 py-2.5 border-t border-zinc-800 bg-zinc-900/50 flex items-center justify-between gap-3 opacity-100 shrink-0">
-        {((showLegacySave && onSaveToFile != null) || (showHotSave && onHotSave != null) || onResetToFile != null) && (
+        {((showLocalSave && onSaveToFile != null) || (showHotSave && onHotSave != null) || (showColdSave && onColdSave != null) || onResetToFile != null) && (
           <>
             <div className="flex items-center gap-2 min-w-0">
               <div className={cn(
@@ -740,7 +746,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 {(saveSuccessFeedback || hotSaveSuccessFeedback) ? 'Saved' : hasChanges ? 'Unsaved Changes' : 'All Changes Saved'}
               </span>
             </div>
-            {showLegacySave && onSaveToFile != null && (
+            {showLocalSave && onSaveToFile != null && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -757,7 +763,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     <span>Save</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Save to file</TooltipContent>
+                <TooltipContent>Save to local file</TooltipContent>
               </Tooltip>
             )}
             {showHotSave && onHotSave != null && (
@@ -778,6 +784,26 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Hot save to edge</TooltipContent>
+              </Tooltip>
+            )}
+            {showColdSave && onColdSave != null && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="default"
+                    disabled={!hasChanges}
+                    className="h-9 min-w-[156px] px-5 text-sm gap-2 ml-auto"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onColdSave();
+                    }}
+                  >
+                    <Save size={14} />
+                    <span>Save2Repo</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Save to repository</TooltipContent>
               </Tooltip>
             )}
             {onResetToFile != null && showResetToFile && (

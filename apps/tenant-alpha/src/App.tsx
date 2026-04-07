@@ -29,6 +29,7 @@ const CLOUD_API_URL =
   import.meta.env.VITE_OLONJS_CLOUD_URL ?? import.meta.env.VITE_JSONPAGES_CLOUD_URL;
 const CLOUD_API_KEY =
   import.meta.env.VITE_OLONJS_API_KEY ?? import.meta.env.VITE_JSONPAGES_API_KEY;
+const SAVE2REPO_ENABLED = import.meta.env.VITE_SAVE2REPO === 'true';
 
 const themeConfig = themeData as unknown as ThemeConfig;
 const menuConfig: MenuConfig = { main: [] };
@@ -295,6 +296,45 @@ function normalizeSlugForCache(slug: string): string {
   );
 }
 
+function buildPublishedPageHref(slug: string): string {
+  return `/pages/${normalizeSlugForCache(slug)}.json`;
+}
+
+async function loadPublishedStaticContent(
+  knownSlugs: string[]
+): Promise<{ pages: Record<string, PageConfig>; siteConfig: SiteConfig }> {
+  const siteResponse = await fetch('/config/site.json', { cache: 'no-store' });
+  if (!siteResponse.ok) {
+    throw new Error(`Static site config unavailable: ${siteResponse.status}`);
+  }
+
+  const sitePayload = (await siteResponse.json().catch(() => null)) as unknown;
+  const nextSite = coerceSiteConfig(sitePayload);
+  if (!nextSite) {
+    throw new Error('Static site config is invalid.');
+  }
+
+  const pageEntries = await Promise.all(
+    knownSlugs.map(async (slug) => {
+      const response = await fetch(buildPublishedPageHref(slug), { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Static page unavailable for slug "${slug}": ${response.status}`);
+      }
+      return [slug, (await response.json().catch(() => null)) as unknown] as const;
+    })
+  );
+
+  const nextPages = normalizePageRegistry(Object.fromEntries(pageEntries));
+  if (Object.keys(nextPages).length === 0) {
+    throw new Error('Static published pages are empty.');
+  }
+
+  return {
+    pages: nextPages,
+    siteConfig: nextSite,
+  };
+}
+
 function readCachedCloudContent(fingerprint: string): CachedCloudContent | null {
   try {
     const raw = localStorage.getItem(CLOUD_CACHE_KEY);
@@ -338,6 +378,8 @@ function setTenantPreviewReady(ready: boolean): void {
 
 function App() {
   const isCloudMode = Boolean(CLOUD_API_URL && CLOUD_API_KEY);
+  const isSave2RepoMode = isCloudMode && SAVE2REPO_ENABLED;
+  const isHotSaveMode = isCloudMode && !isSave2RepoMode;
   const localInitialData = useMemo(() => (isCloudMode ? null : getInitialData()), [isCloudMode]);
   const localInitialPages = useMemo(() => {
     if (!localInitialData) return {};
@@ -419,6 +461,54 @@ function App() {
       logBootstrapEvent('boot.local.ready', { mode: 'local' });
       return;
     }
+
+    if (isSave2RepoMode) {
+      if (contentLoadInFlight.current) {
+        return;
+      }
+
+      setContentMode('cloud');
+      setContentFallback(null);
+      setShowTopProgress(true);
+      setHasInitialCloudResolved(false);
+      logBootstrapEvent('boot.start', { mode: 'save2repo-static', pageCount: Object.keys(filePages).length });
+
+      let inFlight: Promise<void> | null = null;
+      inFlight = loadPublishedStaticContent(Object.keys(filePages))
+        .then(({ pages: nextPages, siteConfig: nextSite }) => {
+          setPages(nextPages);
+          setSiteConfig(nextSite);
+          setContentMode('cloud');
+          setContentFallback(null);
+          setHasInitialCloudResolved(true);
+          logBootstrapEvent('boot.save2repo.success', {
+            mode: 'save2repo-static',
+            pageCount: Object.keys(nextPages).length,
+          });
+        })
+        .catch((error: unknown) => {
+          const failure = toCloudLoadFailure(error);
+          setContentMode('error');
+          setContentFallback(failure);
+          setHasInitialCloudResolved(true);
+          logBootstrapEvent('boot.save2repo.error', {
+            mode: 'save2repo-static',
+            reasonCode: failure.reasonCode,
+            correlationId: failure.correlationId ?? null,
+          });
+        })
+        .finally(() => {
+          setShowTopProgress(false);
+          if (contentLoadInFlight.current === inFlight) {
+            contentLoadInFlight.current = null;
+          }
+        });
+      contentLoadInFlight.current = inFlight;
+      return () => {
+        contentLoadInFlight.current = null;
+      };
+    }
+
     if (contentLoadInFlight.current) {
       return;
     }
@@ -591,7 +681,7 @@ function App() {
     });
     contentLoadInFlight.current = inFlight;
     return () => controller.abort();
-  }, [isCloudMode, CLOUD_API_KEY, CLOUD_API_URL, cloudApiCandidates, bootstrapRunId]);
+  }, [isCloudMode, isSave2RepoMode, CLOUD_API_KEY, CLOUD_API_URL, cloudApiCandidates, bootstrapRunId]);
 
   const runCloudSave = useCallback(
     async (
@@ -753,8 +843,12 @@ function App() {
           },
         });
       },
-      showLegacySave: !isCloudMode,
-      showHotSave: isCloudMode,
+      async coldSave(state: ProjectState, slug: string): Promise<void> {
+        await runCloudSave({ state, slug }, true);
+      },
+      showLocalSave: !isCloudMode,
+      showHotSave: isHotSaveMode,
+      showColdSave: isSave2RepoMode,
     },
     assets: {
       assetsBaseUrl: '/assets',
@@ -983,4 +1077,3 @@ function App() {
 }
 
 export default App;
-

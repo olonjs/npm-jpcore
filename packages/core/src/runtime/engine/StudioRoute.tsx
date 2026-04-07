@@ -47,8 +47,10 @@ export interface StudioRouteProps {
   webMcp?: JsonPagesConfig['webmcp'];
   saveToFile?: (state: ProjectState, slug: string) => Promise<void>;
   hotSave?: (state: ProjectState, slug: string) => Promise<void>;
-  showLegacySave?: boolean;
+  coldSave?: (state: ProjectState, slug: string) => Promise<void>;
+  showLocalSave?: boolean;
   showHotSave?: boolean;
+  showColdSave?: boolean;
 }
 
 export const StudioRoute: React.FC<StudioRouteProps> = ({
@@ -65,8 +67,10 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
   webMcp,
   saveToFile,
   hotSave,
-  showLegacySave = true,
+  coldSave,
+  showLocalSave = true,
   showHotSave = false,
+  showColdSave = false,
 }) => {
   const location = useLocation();
   const slug = resolveSlugFromPathname(location.pathname, 'admin');
@@ -119,6 +123,7 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
   const sidebarMin = 360;
   const sidebarMax = 920;
   const {
+    buildProjectState,
     hotSaveInProgress,
     hotSaveSuccessFeedback,
     persistProjectState,
@@ -514,6 +519,21 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     });
   };
 
+  const handleColdSave = async () => {
+    if (!coldSave) return;
+    await requestInlineFlush();
+    const currentDraft = draftRef.current;
+    const currentGlobalDraft = globalDraftRef.current;
+    if (!currentDraft) return;
+    coldSave(buildProjectState(currentDraft, currentGlobalDraft), slug)
+      .then(() => setHasChanges(false))
+      .catch((err) => {
+        console.error('[JsonPages] coldSave failed', err);
+        const msg = err instanceof Error ? err.message : String(err);
+        alert(`Save2Repo failed: ${msg}`);
+      });
+  };
+
   const handleAddSection = (sectionType: string) => {
     if (!draft) return;
     const defaultData = addSectionConfig?.getDefaultSectionData?.(sectionType) ?? {};
@@ -603,10 +623,12 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
                 onSaveToFile={saveToFile != null ? handleSaveToFile : undefined}
                 saveSuccessFeedback={saveSuccessFeedback}
                 onHotSave={hotSave != null ? handleHotSave : undefined}
+                onColdSave={coldSave != null ? handleColdSave : undefined}
                 hotSaveSuccessFeedback={hotSaveSuccessFeedback}
                 hotSaveInProgress={hotSaveInProgress}
-                showLegacySave={showLegacySave}
+                showLocalSave={showLocalSave}
                 showHotSave={showHotSave}
+                showColdSave={showColdSave}
                 onResetToFile={handleResetToFile}
                 pageSlugs={pageSlugs}
                 currentSlug={slug}

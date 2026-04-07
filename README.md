@@ -10,7 +10,7 @@
 <h1 align="center">OlonJS</h1>
 
 <p align="center">
-  <strong>The AI-Native Content Infrastructure for Vercel & Vite.</strong><br />
+  <strong>The AI-Native Content Infrastructure.</strong><br />
   Deterministic. Sovereign. Git-Backed.
 </p>
 

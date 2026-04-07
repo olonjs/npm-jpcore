@@ -229,7 +229,7 @@ function App() {
           throw new Error(body.error || body.code || `Hot save failed: ${res.status}`);
         }
       },
-      showLegacySave: !isCloudMode,
+      showLocalSave: !isCloudMode,
       showHotSave: isCloudMode,
     },
     assets: {
