@@ -8,7 +8,7 @@ interface FooterViewProps {
 
 export function Footer({ data, settings }: FooterViewProps) {
   const showLogo = settings?.showLogo ?? true;
-  const links = data.links ?? [];
+  const links = data.menu ?? [];
 
   return (
     <footer className="border-t border-border px-6 py-8">

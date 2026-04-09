@@ -115,7 +115,7 @@ export const PageRenderer: React.FC<Props> = ({
           >
             <SectionRenderer
               section={section}
-              menu={resolveSectionMenuItems(section, menuConfig.main)}
+              menu={resolveSectionMenuItems(section, menuConfig.main ?? [])}
               selectedId={selectedId}
             />
           </div>
@@ -151,7 +151,7 @@ export const PageRenderer: React.FC<Props> = ({
           />
           <SectionRenderer
             section={section}
-            menu={resolveSectionMenuItems(section, menuConfig.main)}
+            menu={resolveSectionMenuItems(section, menuConfig.main ?? [])}
             selectedId={selectedId}
             reorderable
             sectionIndex={index}
@@ -202,7 +202,7 @@ export const PageRenderer: React.FC<Props> = ({
         >
           <SectionRenderer
             section={headerSection}
-            menu={resolveSectionMenuItems(headerSection, menuConfig.main)}
+            menu={resolveSectionMenuItems(headerSection, menuConfig.main ?? [])}
             selectedId={selectedId}
           />
         </div>

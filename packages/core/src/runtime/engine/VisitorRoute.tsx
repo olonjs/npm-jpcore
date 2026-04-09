@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { resolveRuntimeConfig } from '../../contract/config-resolver';
 import type { JsonPagesConfig } from '../../contract/types-engine';
-import type { MenuItem, PageConfig, SiteConfig } from '../../contract/kernel';
+import type { MenuConfig, PageConfig, SiteConfig } from '../../contract/kernel';
 import { StudioProvider } from '../../studio/StudioContext';
 import { PageRenderer } from '../rendering/PageRenderer';
 import { ThemeLoader } from '../theme/ThemeLoader';
@@ -21,7 +21,7 @@ import {
 export interface VisitorRouteProps {
   pageRegistry: Record<string, PageConfig>;
   siteConfig: SiteConfig;
-  menuConfig: { main: MenuItem[] };
+  menuConfig: MenuConfig;
   themeConfig: JsonPagesConfig['themeConfig'];
   refDocuments?: JsonPagesConfig['refDocuments'];
   tenantCss: string;

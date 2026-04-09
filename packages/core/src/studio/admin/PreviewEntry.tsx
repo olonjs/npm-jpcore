@@ -27,8 +27,8 @@ export const PreviewEntry: React.FC = () => {
       if (event.data.type === STUDIO_EVENTS.UPDATE_DRAFTS) {
         setDraft(event.data.draft);
         setGlobalDraft(event.data.globalDraft);
-        if (event.data.menuConfig?.main) {
-          setMenuConfig({ main: event.data.menuConfig.main as MenuItem[] });
+        if (event.data.menuConfig) {
+          setMenuConfig(event.data.menuConfig as MenuConfig);
         }
         if (event.data.themeConfig) {
            themeManager.setTheme(event.data.themeConfig);
@@ -171,7 +171,8 @@ export const PreviewEntry: React.FC = () => {
   }
 
   const currentMenuConfig: MenuConfig = {
-    main: resolveHeaderMenuItems(globalDraft.header?.data, menuConfig.main),
+    ...menuConfig,
+    main: resolveHeaderMenuItems(globalDraft.header?.data, menuConfig.main ?? []),
   };
 
   const handleActiveSectionChange = (sectionId: string | null) => {

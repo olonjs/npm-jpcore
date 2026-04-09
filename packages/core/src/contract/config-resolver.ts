@@ -128,6 +128,10 @@ function buildDocuments({
 }: RuntimeResolutionInput): Map<string, unknown> {
   const documents = new Map<string, unknown>();
 
+  for (const [alias, value] of Object.entries(refDocuments ?? {})) {
+    registerDocumentAliases(documents, [alias], value);
+  }
+
   registerDocumentAliases(documents, ['site.json', 'config/site.json', 'src/data/config/site.json'], siteConfig);
   registerDocumentAliases(documents, ['theme.json', 'config/theme.json', 'src/data/config/theme.json'], themeConfig);
   registerDocumentAliases(documents, ['menu.json', 'config/menu.json', 'src/data/config/menu.json'], menuConfig);
@@ -135,10 +139,6 @@ function buildDocuments({
   for (const [slug, page] of Object.entries(pages)) {
     const safeSlug = slug.replace(/^\/+|\/+$/g, '') || 'home';
     registerDocumentAliases(documents, [`pages/${safeSlug}.json`, `src/data/pages/${safeSlug}.json`], page);
-  }
-
-  for (const [alias, value] of Object.entries(refDocuments ?? {})) {
-    registerDocumentAliases(documents, [alias], value);
   }
 
   return documents;
@@ -244,12 +244,8 @@ function isMenuItemShape(value: unknown): value is MenuItem {
 
 function getHeaderDataMenuCandidate(headerData: unknown): MenuItem[] | null {
   if (!isRecord(headerData)) return null;
-  const links = headerData.links;
-  if (Array.isArray(links) && links.every(isMenuItemShape)) return links as MenuItem[];
   const menu = headerData.menu;
   if (Array.isArray(menu) && menu.every(isMenuItemShape)) return menu as MenuItem[];
-  const menuConfig = headerData.menuConfig;
-  if (Array.isArray(menuConfig) && menuConfig.every(isMenuItemShape)) return menuConfig as MenuItem[];
   return null;
 }
 

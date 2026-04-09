@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const FooterSchema = z.object({
   brandText:        z.string().describe('ui:text'),
   copyright:        z.string().describe('ui:text'),
-  links: z.array(z.object({
+  menu: z.array(z.object({
     label: z.string().describe('ui:text'),
     href:  z.string().describe('ui:text'),
   })).optional().describe('ui:list'),

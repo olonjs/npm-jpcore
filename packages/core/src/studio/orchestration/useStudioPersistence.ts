@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import { resolveRuntimeConfig } from '../../contract/config-resolver';
-import type { MenuItem, PageConfig, ProjectState, SiteConfig } from '../../contract/kernel';
+import type { MenuConfig, PageConfig, ProjectState, SiteConfig } from '../../contract/kernel';
 import type { JsonPagesConfig } from '../../contract/types-engine';
-import { resolveMenuMainFromHeaderData } from '../../runtime/engine/route-utils';
 import { STUDIO_EVENTS } from '../events';
 
 interface UseStudioPersistenceArgs {
@@ -10,7 +9,6 @@ interface UseStudioPersistenceArgs {
   saveToFile?: (state: ProjectState, slug: string) => Promise<void>;
   hotSave?: (state: ProjectState, slug: string) => Promise<void>;
   themeConfig: JsonPagesConfig['themeConfig'];
-  menuConfig: { main: MenuItem[] };
   refDocuments?: JsonPagesConfig['refDocuments'];
 }
 
@@ -19,7 +17,6 @@ export function useStudioPersistence({
   saveToFile,
   hotSave,
   themeConfig,
-  menuConfig,
   refDocuments,
 }: UseStudioPersistenceArgs) {
   const [saveSuccessFeedback, setSaveSuccessFeedback] = useState(false);
@@ -51,36 +48,40 @@ export function useStudioPersistence({
   }, []);
 
   const buildProjectState = useCallback(
-    (nextDraft: PageConfig, nextGlobalDraft: SiteConfig): ProjectState => {
+    (
+      nextDraft: PageConfig,
+      nextGlobalDraft: SiteConfig,
+      nextMenuDraft: MenuConfig
+    ): ProjectState => {
       const resolvedSaveRuntime = resolveRuntimeConfig({
         pages: { [slug]: nextDraft },
         siteConfig: nextGlobalDraft,
         themeConfig,
-        menuConfig,
+        menuConfig: nextMenuDraft,
         refDocuments,
       });
-      const headerData = resolvedSaveRuntime.siteConfig.header?.data;
       return {
         page: nextDraft,
         site: nextGlobalDraft,
-        menu: { main: resolveMenuMainFromHeaderData(headerData, menuConfig.main) },
+        menu: nextMenuDraft,
         theme: resolvedSaveRuntime.themeConfig,
       };
     },
-    [slug, themeConfig, menuConfig, refDocuments]
+    [slug, themeConfig, refDocuments]
   );
 
   const persistProjectState = useCallback(
     async (
       nextDraft: PageConfig,
       nextGlobalDraft: SiteConfig,
+      nextMenuDraft: MenuConfig,
       onPersisted?: () => void
     ) => {
       if (!saveToFile) {
         throw new Error('saveToFile is not configured for this tenant.');
       }
 
-      await saveToFile(buildProjectState(nextDraft, nextGlobalDraft), slug);
+      await saveToFile(buildProjectState(nextDraft, nextGlobalDraft, nextMenuDraft), slug);
       onPersisted?.();
       setSaveSuccessFeedback(true);
       if (typeof window !== 'undefined') {
@@ -94,13 +95,14 @@ export function useStudioPersistence({
     async (
       nextDraft: PageConfig,
       nextGlobalDraft: SiteConfig,
+      nextMenuDraft: MenuConfig,
       onPersisted?: () => void
     ) => {
       if (!hotSave) return;
 
       setHotSaveInProgress(true);
       try {
-        await hotSave(buildProjectState(nextDraft, nextGlobalDraft), slug);
+        await hotSave(buildProjectState(nextDraft, nextGlobalDraft, nextMenuDraft), slug);
         onPersisted?.();
         setHotSaveSuccessFeedback(true);
         if (typeof window !== 'undefined') {

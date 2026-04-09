@@ -44,7 +44,8 @@ export interface MenuItem {
 }
 
 export interface MenuConfig {
-  main: MenuItem[];
+  main?: MenuItem[];
+  [key: string]: MenuItem[] | undefined;
 }
 
 export interface PageMeta {
@@ -79,7 +80,7 @@ export interface SitePageEntry {
 export interface SiteConfig {
   identity: SiteIdentity;
   header?: Section;
-  footer?: Section;
+  footer: Section;
   pages: SitePageEntry[];
 }
 
@@ -88,22 +89,12 @@ export interface ThemeTokenMap {
 }
 
 export interface ThemeColors {
-  primary: string;
-  secondary: string;
-  accent: string;
-  background: string;
-  surface: string;
-  surfaceAlt: string;
-  text: string;
-  textMuted: string;
-  border: string;
+
   [key: string]: string;
 }
 
 export interface ThemeFontFamily {
-  primary: string;
-  mono: string;
-  display?: string;
+
   [key: string]: string | undefined;
 }
 
@@ -112,9 +103,7 @@ export interface ThemeTypography {
 }
 
 export interface ThemeBorderRadius {
-  sm: string;
-  md: string;
-  lg: string;
+
   [key: string]: string;
 }
 

@@ -51,7 +51,7 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
   const isSticky = settings?.sticky ?? true;
   const navRef = useRef<HTMLElement>(null);
 
-  const linksField = data.links as unknown;
+  const linksField = data.menu as unknown;
   const rawLinks = Array.isArray(linksField) ? linksField : [];
   const menuItems = Array.isArray(menu) ? (menu as unknown[]) : [];
   // If tenant explicitly uses a JSON ref for links, resolve from menu config.

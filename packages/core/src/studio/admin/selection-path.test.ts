@@ -27,25 +27,25 @@ test('scalar field only returns single field segment', () => {
 test('array item only returns array segment with item id', () => {
   const section = new FakeElement();
   const item = new FakeElement(
-    { 'data-jp-item-id': 'item-1', 'data-jp-item-field': 'links' },
+    { 'data-jp-item-id': 'item-1', 'data-jp-item-field': 'menu' },
     section
   );
 
   const path = buildSelectionPath(item as unknown as HTMLElement, section as unknown as HTMLElement);
-  assert.deepEqual(path, [{ fieldKey: 'links', itemId: 'item-1' }]);
+  assert.deepEqual(path, [{ fieldKey: 'menu', itemId: 'item-1' }]);
 });
 
 test('array item + nested field returns root-to-leaf path', () => {
   const section = new FakeElement();
   const item = new FakeElement(
-    { 'data-jp-item-id': 'item-1', 'data-jp-item-field': 'links' },
+    { 'data-jp-item-id': 'item-1', 'data-jp-item-field': 'menu' },
     section
   );
   const label = new FakeElement({ 'data-jp-field': 'label' }, item);
 
   const path = buildSelectionPath(label as unknown as HTMLElement, section as unknown as HTMLElement);
   assert.deepEqual(path, [
-    { fieldKey: 'links', itemId: 'item-1' },
+    { fieldKey: 'menu', itemId: 'item-1' },
     { fieldKey: 'label' },
   ]);
 });

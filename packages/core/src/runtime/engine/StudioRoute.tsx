@@ -8,7 +8,7 @@ import { useStudioPersistence } from '../../studio/orchestration/useStudioPersis
 import { useStudioSelectionState } from '../../studio/orchestration/useStudioSelectionState';
 import { resolveRuntimeConfig } from '../../contract/config-resolver';
 import type { JsonPagesConfig, SelectionPath } from '../../contract/types-engine';
-import type { MenuItem, PageConfig, ProjectState, Section, SiteConfig } from '../../contract/kernel';
+import type { MenuConfig, PageConfig, ProjectState, Section, SiteConfig } from '../../contract/kernel';
 import { StudioProvider } from '../../studio/StudioContext';
 import { ThemeLoader } from '../theme/ThemeLoader';
 import { STUDIO_EVENTS } from '../../studio/events';
@@ -39,7 +39,7 @@ export interface StudioRouteProps {
   pageRegistry: Record<string, PageConfig>;
   schemas: JsonPagesConfig['schemas'];
   siteConfig: SiteConfig;
-  menuConfig: { main: MenuItem[] };
+  menuConfig: MenuConfig;
   themeConfig: JsonPagesConfig['themeConfig'];
   refDocuments?: JsonPagesConfig['refDocuments'];
   tenantCss: string;
@@ -82,6 +82,20 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
   );
   const [draft, setDraft] = useState<PageConfig | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const cloneMenuConfig = useCallback((value: unknown): MenuConfig => {
+    try {
+      return JSON.parse(JSON.stringify(value ?? {})) as MenuConfig;
+    } catch {
+      return {} as MenuConfig;
+    }
+  }, []);
+  const getInitialMenuDraft = useCallback((): MenuConfig => {
+    const refMenu =
+      refDocuments?.['src/data/config/menu.json'] ??
+      refDocuments?.['config/menu.json'] ??
+      refDocuments?.['menu.json'];
+    return cloneMenuConfig(refMenu ?? menuConfig);
+  }, [cloneMenuConfig, menuConfig, refDocuments]);
   const [globalDraft, setGlobalDraft] = useState<SiteConfig>(() => {
     try {
       const base = JSON.parse(JSON.stringify(siteConfig ?? {})) as SiteConfig;
@@ -89,13 +103,11 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
       if (!base.pages) base.pages = [];
       return base;
     } catch {
-      return {
-        identity: { title: 'Site' },
-        pages: [],
-      } as SiteConfig;
+      return siteConfig;
     }
   });
   const [addSectionLibraryOpen, setAddSectionLibraryOpen] = useState(false);
+  const [menuDraft, setMenuDraft] = useState<MenuConfig>(() => getInitialMenuDraft());
   const [sidebarWidth, setSidebarWidth] = useState(400);
   const {
     activeSectionId,
@@ -114,14 +126,15 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
         pages: draft ? { [slug]: draft } : {},
         siteConfig: globalDraft,
         themeConfig,
-        menuConfig,
+        menuConfig: menuDraft,
         refDocuments,
       }),
-    [draft, globalDraft, themeConfig, menuConfig, refDocuments, slug]
+    [draft, globalDraft, themeConfig, menuDraft, refDocuments, slug]
   );
   const resolvedDraft = draft ? resolvedRuntime.pages[slug] ?? draft : null;
   const draftRef = useRef<PageConfig | null>(draft);
   const globalDraftRef = useRef<SiteConfig>(globalDraft);
+  const menuDraftRef = useRef<MenuConfig>(menuDraft);
   const sidebarMin = 360;
   const sidebarMax = 920;
   const {
@@ -137,7 +150,6 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     saveToFile,
     hotSave,
     themeConfig,
-    menuConfig,
     refDocuments,
   });
 
@@ -148,6 +160,10 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
   useEffect(() => {
     globalDraftRef.current = globalDraft;
   }, [globalDraft]);
+
+  useEffect(() => {
+    menuDraftRef.current = menuDraft;
+  }, [menuDraft]);
 
   const handleResizeStart = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
@@ -195,6 +211,105 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     setHasChanges(false);
   }, [clearSelection, slug, pageRegistry]);
 
+  useEffect(() => {
+    setMenuDraft(getInitialMenuDraft());
+  }, [getInitialMenuDraft]);
+
+  const decodePointerSegment = useCallback((segment: string) => segment.replace(/~1/g, '/').replace(/~0/g, '~'), []);
+
+  const isRefObject = useCallback(
+    (value: unknown): value is Record<string, unknown> & { $ref: string } =>
+      isRecord(value) && typeof value.$ref === 'string' && value.$ref.trim().length > 0,
+    []
+  );
+
+  const getAuthoredGlobalSection = useCallback(
+    (site: SiteConfig, sectionId: string): Section | null => {
+      if (site.header?.id === sectionId) return site.header;
+      if (site.footer?.id === sectionId) return site.footer;
+      return null;
+    },
+    []
+  );
+
+  const getResolvedGlobalSection = useCallback(
+    (site: SiteConfig, sectionId: string): Section | null => {
+      if (site.header?.id === sectionId) return site.header;
+      if (site.footer?.id === sectionId) return site.footer;
+      return null;
+    },
+    []
+  );
+
+  const getMenuBindingPointer = useCallback(
+    (sectionData: unknown): string[] | null => {
+      if (!isRecord(sectionData) || !isRefObject(sectionData.menu)) return null;
+      const rawRef = sectionData.menu.$ref.trim();
+      const [rawDocPath, rawPointer = ''] = rawRef.split('#');
+      if (!/menu\.json$/i.test(rawDocPath)) return null;
+      const pointer = rawPointer.replace(/^\//, '');
+      if (!pointer) return null;
+      const segments = pointer
+        .split('/')
+        .map(decodePointerSegment)
+        .filter(Boolean);
+      return segments.length > 0 ? segments : null;
+    },
+    [decodePointerSegment, isRefObject]
+  );
+
+  const writeValueAtPath = useCallback((target: unknown, path: string[], value: unknown): unknown => {
+    if (path.length === 0) return value;
+
+    const [head, ...tail] = path;
+    const source = isRecord(target) ? target : {};
+    return {
+      ...source,
+      [head]: writeValueAtPath(source[head], tail, value),
+    };
+  }, []);
+
+  const applyGlobalSectionUpdate = useCallback(
+    (
+      sectionId: string,
+      nextData: Record<string, unknown>,
+      currentGlobalDraft: SiteConfig,
+      currentResolvedSite: SiteConfig,
+      currentMenuDraft: MenuConfig
+    ): { nextGlobalDraft: SiteConfig; nextMenuDraft: MenuConfig } => {
+      const authoredSection = getAuthoredGlobalSection(currentGlobalDraft, sectionId);
+      const resolvedSection = getResolvedGlobalSection(currentResolvedSite, sectionId);
+      if (!authoredSection || !resolvedSection) {
+        return { nextGlobalDraft: currentGlobalDraft, nextMenuDraft: currentMenuDraft };
+      }
+
+      let nextMenuDraft = currentMenuDraft;
+      const menuPointer = getMenuBindingPointer(authoredSection.data);
+      const resolvedMenuValue = nextData.menu;
+      const authoredData = isRecord(authoredSection.data) ? authoredSection.data : {};
+
+      const normalizedData: Record<string, unknown> = menuPointer
+        ? {
+            ...nextData,
+            ...(authoredData.menu !== undefined ? { menu: authoredData.menu } : {}),
+          }
+        : nextData;
+
+      if (menuPointer && Array.isArray(resolvedMenuValue)) {
+        nextMenuDraft = writeValueAtPath(currentMenuDraft, menuPointer, resolvedMenuValue) as MenuConfig;
+      }
+
+      const nextSection = { ...authoredSection, data: normalizedData } as Section;
+      const nextGlobalDraft =
+        authoredSection.type === 'header'
+          ? { ...currentGlobalDraft, header: nextSection }
+          : { ...currentGlobalDraft, footer: nextSection };
+
+      return { nextGlobalDraft, nextMenuDraft };
+    },
+    [getAuthoredGlobalSection, getMenuBindingPointer, getResolvedGlobalSection, writeValueAtPath]
+  );
+
   const handleResetToFile = useCallback(() => {
     const data = resolvePageFromRegistry(pageRegistry, slug);
     if (data) setDraft(JSON.parse(JSON.stringify(data)));
@@ -222,6 +337,7 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
 
       const currentDraft = draftRef.current;
       const currentGlobalDraft = globalDraftRef.current;
+      const currentMenuDraft = menuDraftRef.current;
       if (!currentDraft) {
         throw new Error('Studio draft is not ready yet.');
       }
@@ -252,16 +368,26 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
           throw new Error(`Missing schema for section type "${sectionTypeToUse}".`);
         }
 
-        const currentData = isRecord(targetSection.data) ? targetSection.data : {};
+        const resolvedCurrentSection = getResolvedGlobalSection(resolvedRuntime.siteConfig, args.sectionId);
+        const currentData =
+          resolvedCurrentSection && isRecord(resolvedCurrentSection.data)
+            ? resolvedCurrentSection.data
+            : isRecord(targetSection.data)
+              ? targetSection.data
+              : {};
         const nextData = resolveWebMcpMutationData(currentData, args);
         const parsedData = schema.parse(nextData) as Record<string, unknown>;
-        const nextSection = { ...targetSection, data: parsedData } as Section;
-        const nextGlobalDraft = {
-          ...currentGlobalDraft,
-          ...(targetSection.type === 'header' ? { header: nextSection } : { footer: nextSection }),
-        };
+        const { nextGlobalDraft, nextMenuDraft } = applyGlobalSectionUpdate(
+          args.sectionId,
+          parsedData,
+          currentGlobalDraft,
+          resolvedRuntime.siteConfig,
+          currentMenuDraft
+        );
         globalDraftRef.current = nextGlobalDraft;
+        menuDraftRef.current = nextMenuDraft;
         setGlobalDraft(nextGlobalDraft);
+        setMenuDraft(nextMenuDraft);
       } else {
         const targetSection = currentDraft.sections.find((section) => section.id === args.sectionId);
         if (!targetSection) {
@@ -313,7 +439,7 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
         isError: false,
       };
     },
-    [slug, requestInlineFlush, schemas]
+    [applyGlobalSectionUpdate, getResolvedGlobalSection, requestInlineFlush, resolvedRuntime.siteConfig, schemas, slug]
   );
 
   const executeWebMcpSave = useCallback(
@@ -321,16 +447,17 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
       await requestInlineFlush();
       const currentDraft = draftRef.current;
       const currentGlobalDraft = globalDraftRef.current;
+      const currentMenuDraft = menuDraftRef.current;
       if (!currentDraft) {
         throw new Error('Studio draft is not ready yet.');
       }
 
       if (showHotSave && hotSave) {
-        await runHotSave(currentDraft, currentGlobalDraft, () => setHasChanges(false));
+        await runHotSave(currentDraft, currentGlobalDraft, currentMenuDraft, () => setHasChanges(false));
       } else if (showLocalSave && saveToFile) {
-        await persistProjectState(currentDraft, currentGlobalDraft, () => setHasChanges(false));
+        await persistProjectState(currentDraft, currentGlobalDraft, currentMenuDraft, () => setHasChanges(false));
       } else if (showColdSave && coldSave) {
-        await coldSave(buildProjectState(currentDraft, currentGlobalDraft), slug);
+        await coldSave(buildProjectState(currentDraft, currentGlobalDraft, currentMenuDraft), slug);
         setHasChanges(false);
       } else {
         throw new Error('No save mode is configured for this tenant.');
@@ -490,11 +617,17 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     if (!selected || !draft) return;
     setHasChanges(true);
     if (selected.scope === 'global') {
-      if (selected.type === 'header' && globalDraft.header != null) {
-        setGlobalDraft({ ...globalDraft, header: { ...globalDraft.header, data: newData } as Section });
-      } else if (selected.type === 'footer' && globalDraft.footer != null) {
-        setGlobalDraft({ ...globalDraft, footer: { ...globalDraft.footer, data: newData } as Section });
-      }
+      const { nextGlobalDraft, nextMenuDraft } = applyGlobalSectionUpdate(
+        selected.id,
+        newData,
+        globalDraft,
+        resolvedRuntime.siteConfig,
+        menuDraft
+      );
+      setGlobalDraft(nextGlobalDraft);
+      setMenuDraft(nextMenuDraft);
+      globalDraftRef.current = nextGlobalDraft;
+      menuDraftRef.current = nextMenuDraft;
     } else {
       const updatedSections = draft.sections.map((s) =>
         s.id === selected.id ? ({ ...s, data: newData } as Section) : s
@@ -507,11 +640,17 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     (sectionId: string, scope: 'global' | 'local', _sectionType: string, newData: Record<string, unknown>) => {
       setHasChanges(true);
       if (scope === 'global') {
-        if (globalDraft.header?.id === sectionId) {
-          setGlobalDraft({ ...globalDraft, header: { ...globalDraft.header!, data: newData } as Section });
-        } else if (globalDraft.footer?.id === sectionId) {
-          setGlobalDraft({ ...globalDraft, footer: { ...globalDraft.footer!, data: newData } as Section });
-        }
+        const { nextGlobalDraft, nextMenuDraft } = applyGlobalSectionUpdate(
+          sectionId,
+          newData,
+          globalDraft,
+          resolvedRuntime.siteConfig,
+          menuDraft
+        );
+        setGlobalDraft(nextGlobalDraft);
+        setMenuDraft(nextMenuDraft);
+        globalDraftRef.current = nextGlobalDraft;
+        menuDraftRef.current = nextMenuDraft;
       } else if (draft) {
         const updatedSections = draft.sections.map((s) =>
           s.id === sectionId ? ({ ...s, data: newData } as Section) : s
@@ -519,7 +658,7 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
         setDraft({ ...draft, sections: updatedSections });
       }
     },
-    [draft, globalDraft]
+    [applyGlobalSectionUpdate, draft, globalDraft, menuDraft, resolvedRuntime.siteConfig]
   );
 
   const handleSaveToFile = async () => {
@@ -527,8 +666,9 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     await requestInlineFlush();
     const currentDraft = draftRef.current;
     const currentGlobalDraft = globalDraftRef.current;
+    const currentMenuDraft = menuDraftRef.current;
     if (!currentDraft) return;
-    persistProjectState(currentDraft, currentGlobalDraft, () => setHasChanges(false)).catch((err) => {
+    persistProjectState(currentDraft, currentGlobalDraft, currentMenuDraft, () => setHasChanges(false)).catch((err) => {
       console.error('[JsonPages] saveToFile failed', err);
       const msg = err instanceof Error ? err.message : String(err);
       alert(`Save to file failed: ${msg}`);
@@ -540,8 +680,9 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     await requestInlineFlush();
     const currentDraft = draftRef.current;
     const currentGlobalDraft = globalDraftRef.current;
+    const currentMenuDraft = menuDraftRef.current;
     if (!currentDraft) return;
-    runHotSave(currentDraft, currentGlobalDraft, () => setHasChanges(false)).catch((err) => {
+    runHotSave(currentDraft, currentGlobalDraft, currentMenuDraft, () => setHasChanges(false)).catch((err) => {
       console.error('[JsonPages] hotSave failed', err);
       const msg = err instanceof Error ? err.message : String(err);
       alert(`Hot save failed: ${msg}`);
@@ -553,8 +694,9 @@ export const StudioRoute: React.FC<StudioRouteProps> = ({
     await requestInlineFlush();
     const currentDraft = draftRef.current;
     const currentGlobalDraft = globalDraftRef.current;
+    const currentMenuDraft = menuDraftRef.current;
     if (!currentDraft) return;
-    coldSave(buildProjectState(currentDraft, currentGlobalDraft), slug)
+    coldSave(buildProjectState(currentDraft, currentGlobalDraft, currentMenuDraft), slug)
       .then(() => setHasChanges(false))
       .catch((err) => {
         console.error('[JsonPages] coldSave failed', err);

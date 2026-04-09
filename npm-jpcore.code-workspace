@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "C:/Users/gseri/Desktop/GEMINI/AISTUDIO/Dev/JPS/olon-js"
+		},
+		{
+			"path": "../temp/llms"
+		},
+		{
+			"path": "../temp/gumlon"
 		}
 	]
 }

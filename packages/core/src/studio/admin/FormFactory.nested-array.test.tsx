@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event';
 import { z } from 'zod';
 import { FormFactory } from './FormFactory';
 
-/** Mirrors header-style links → optional children lists (no `id` in JSON → legacy-* keys). */
-const nestedLinksSchema = z.object({
-  links: z
+/** Mirrors header-style menu → optional children lists (no `id` in JSON → legacy-* keys). */
+const nestedMenuSchema = z.object({
+  menu: z
     .array(
       z.object({
         label: z.string().describe('ui:text'),
@@ -29,7 +29,7 @@ describe('FormFactory nested ui:list', () => {
   it('keeps inner array row expanded when expandedItemPath does not include inner openItemId', async () => {
     const user = userEvent.setup();
     const data = {
-      links: [
+      menu: [
         {
           label: 'Platform',
           href: '/platform',
@@ -43,7 +43,7 @@ describe('FormFactory nested ui:list', () => {
 
     render(
       <FormFactory
-        schema={nestedLinksSchema}
+        schema={nestedMenuSchema}
         data={data}
         onChange={() => {}}
         expandedItemPath={null}
