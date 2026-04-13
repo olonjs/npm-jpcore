@@ -371,6 +371,42 @@ function buildThemeFontVarsCss(input: unknown): string {
   return `:root{--theme-font-primary:${primary};--theme-font-serif:${serif};--theme-font-mono:${mono};}`;
 }
 
+const REMOTE_CSS_LINK_ATTR = 'data-jp-tenant-remote-css';
+
+function isRemoteStylesheetHref(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function extractLeadingRemoteCssImports(cssText: string): { hrefs: string[]; rest: string } {
+  const hrefs = new Set<string>();
+  const leadingTriviaPattern = /^(?:\s+|\/\*[\s\S]*?\*\/)*/;
+  const importPattern =
+    /^@import\s+url\(\s*(?:'([^']+)'|"([^"]+)"|([^'")\s][^)]*))\s*\)\s*([^;]*);/i;
+  let rest = cssText;
+
+  for (;;) {
+    const trivia = rest.match(leadingTriviaPattern);
+    if (trivia && trivia[0]) {
+      rest = rest.slice(trivia[0].length);
+    }
+
+    const match = rest.match(importPattern);
+    if (!match) break;
+
+    const href = (match[1] ?? match[2] ?? match[3] ?? '').trim();
+    const trailingDirectives = (match[4] ?? '').trim();
+
+    if (!isRemoteStylesheetHref(href) || trailingDirectives.length > 0) {
+      break;
+    }
+
+    hrefs.add(href);
+    rest = rest.slice(match[0].length);
+  }
+
+  return { hrefs: Array.from(hrefs), rest };
+}
+
 function setTenantPreviewReady(ready: boolean): void {
   if (typeof window !== 'undefined') {
     (window as Window & { __TENANT_PREVIEW_READY__?: boolean }).__TENANT_PREVIEW_READY__ = ready;
@@ -785,6 +821,39 @@ function App() {
     void runCloudSave(pendingCloudSave.current, false);
   }, [runCloudSave]);
 
+  const tenantCssParts = useMemo(() => extractLeadingRemoteCssImports(tenantCss), [tenantCss]);
+  const resolvedTenantCss = useMemo(
+    () => [buildThemeFontVarsCss(themeConfig), tenantCssParts.rest].filter(Boolean).join('\n'),
+    [tenantCssParts],
+  );
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const createdLinks: HTMLLinkElement[] = [];
+
+    tenantCssParts.hrefs.forEach((href) => {
+      const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find(
+        (link) => (link as HTMLLinkElement).href === href,
+      ) as HTMLLinkElement | undefined;
+      if (existing) return;
+
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.setAttribute(REMOTE_CSS_LINK_ATTR, href);
+      document.head.appendChild(link);
+      createdLinks.push(link);
+    });
+
+    return () => {
+      createdLinks.forEach((link) => {
+        if (link.getAttribute(REMOTE_CSS_LINK_ATTR) !== link.href) return;
+        if (link.parentNode) link.parentNode.removeChild(link);
+      });
+    };
+  }, [tenantCssParts]);
+
   const config: JsonPagesConfig = {
     tenantId: TENANT_ID,
     basePath: APP_BASE_PATH,
@@ -795,7 +864,7 @@ function App() {
     themeConfig,
     menuConfig,
     refDocuments,
-    themeCss: { tenant: `${buildThemeFontVarsCss(themeConfig)}\n${tenantCss}` },
+    themeCss: { tenant: resolvedTenantCss },
     addSection: addSectionConfig,
     webmcp: {
       enabled: true,

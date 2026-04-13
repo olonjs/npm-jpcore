@@ -117,7 +117,7 @@ if (targets.length === 0) {
 console.log(`[bake] Targets: ${targets.map((t) => t.slug).join(', ')}`);
 
 const ssrEntryUrl = pathToFileURL(path.resolve(root, 'dist-ssr/entry-ssg.js')).href;
-const { render, getCss, getPageMeta, getWebMcpBuildState } = await import(ssrEntryUrl);
+const { render, getCss, getRemoteStylesheets, getPageMeta, getWebMcpBuildState } = await import(ssrEntryUrl);
 
 const template = await fs.readFile(path.resolve(root, 'dist/index.html'), 'utf-8');
 const hasCommentMarker = template.includes('<!--app-html-->');
@@ -128,6 +128,9 @@ if (!hasCommentMarker && !hasRootDivMarker) {
 
 const inlinedCss = getCss();
 const styleTag = `<style data-bake="inline">${inlinedCss}</style>`;
+const remoteStylesheetTags = getRemoteStylesheets()
+  .map((href) => `<link rel="stylesheet" href="${escapeHtmlAttribute(href)}">`)
+  .join('\n  ');
 const webMcpBuildState = getWebMcpBuildState();
 
 for (const { slug } of targets) {
@@ -201,7 +204,7 @@ for (const { slug, out, depth } of targets) {
   ].join('\n  ');
 
   let bakedHtml = fixedTemplate
-    .replace('</head>', `  ${styleTag}\n  ${contractLinks}\n</head>`)
+    .replace('</head>', `  ${remoteStylesheetTags ? `${remoteStylesheetTags}\n  ` : ''}${styleTag}\n  ${contractLinks}\n</head>`)
     .replace(/<title>.*?<\/title>/, `<title>${safeTitle}</title>\n    ${metaTags}`);
 
   if (hasCommentMarker) {
