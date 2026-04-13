@@ -1,0 +1,28 @@
+{
+  "header": {
+    "id": "global-header",
+    "type": "header",
+    "data": {
+      "logoText": "Olon",
+      "badge": "JS",
+      "menu": {
+        "$ref": "../config/menu.json#/main"
+      }
+    }
+  },
+  "footer": {
+    "id": "global-footer",
+    "type": "footer",
+    "data": {
+      "brandText": "OlonJS",
+      "copyright": "© 2026 OlonJS · v1.5 · Guido Serio",
+      "menu": {
+        "$ref": "../config/menu.json#/footer"
+      }
+    }
+  },
+  "identity": {
+    "title": "Site"
+  },
+  "pages": []
+}

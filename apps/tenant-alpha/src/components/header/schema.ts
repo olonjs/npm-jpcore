@@ -12,7 +12,7 @@ export const HeaderSchema = z.object({
   signinHref: z.string().optional().describe('ui:text'),
   ctaHref: z.string().optional().describe('ui:text'),
   ctaLabel: z.string().optional().describe('ui:text'),
-  menu: z.array(z.object({
+  links: z.array(z.object({
     label: z.string().describe('ui:text'),
     href: z.string().describe('ui:text'),
     isCta: z.boolean().default(false).describe('ui:checkbox'),

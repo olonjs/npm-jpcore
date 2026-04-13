@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -63,8 +63,7 @@ function normalizeManifestSlug(raw) {
 }
 
 async function loadWebMcpBuilders() {
-  const corePkgPath = path.dirname(fileURLToPath(import.meta.resolve('@olonjs/core/package.json')));
-  const moduleUrl = pathToFileURL(path.resolve(corePkgPath, 'src', 'lib', 'webmcp-contracts.mjs')).href;
+  const moduleUrl = import.meta.resolve('@olonjs/core');
   return import(moduleUrl);
 }
 export default defineConfig({
@@ -79,9 +78,10 @@ export default defineConfig({
           const isPageJsonRequest = isTenantPageJsonRequest(req, pathname);
 
           const handleManifestRequest = async () => {
-            const { buildPageContract, buildPageManifest, buildSiteManifest, buildLlmsTxt } = await loadWebMcpBuilders();
-            const ssrEntry = await server.ssrLoadModule('/src/entry-ssg.tsx');
-            const buildState = ssrEntry.getWebMcpBuildState();
+            const core = await loadWebMcpBuilders();
+            const { buildPageContract, buildPageManifest, buildSiteManifest, buildLlmsTxt } = core.webmcp;
+            const runtime = await server.ssrLoadModule('/src/runtime.ts');
+            const buildState = runtime.getWebMcpBuildState();
 
             if (req.method === 'GET' && pathname === '/llms.txt') {
               res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -249,6 +249,4 @@ export default defineConfig({
     },
   },
 });
-
-
 

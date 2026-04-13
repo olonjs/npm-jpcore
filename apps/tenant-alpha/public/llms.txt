@@ -1,4 +1,4 @@
-# Site
+# OlonJS
 
 OlonJS is a TypeScript framework for building JSON-driven websites with a deterministic data contract. Every section is typed, validated, and structurally addressable.
 

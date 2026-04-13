@@ -12,9 +12,9 @@
       "data": {
         "id": "hero-main",
         "eyebrow": "CONTRACT LAYER · V1.5 · OPEN SOURCE",
-        "headline": "Build Websites ",
-        "subline": "AI Agents Can Operate",
-        "body": "Aaa agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
+        "headline": "Contract Layer",
+        "subline": "for the agentic web.",
+        "body": "AI agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
         "primaryCta": {
           "label": "Get started",
           "href": "#getstarted"

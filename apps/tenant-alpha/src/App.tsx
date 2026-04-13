@@ -32,12 +32,13 @@ const CLOUD_API_KEY =
 const SAVE2REPO_ENABLED = import.meta.env.VITE_SAVE2REPO === 'true';
 
 const themeConfig = themeData as unknown as ThemeConfig;
-const menuConfig: MenuConfig = { main: [] };
+const menuConfig = menuData as unknown as MenuConfig;
 const refDocuments = {
-  'menu.json': menuData,
-  'config/menu.json': menuData,
-  'src/data/config/menu.json': menuData,
+  'menu.json': menuConfig,
+  'config/menu.json': menuConfig,
+  'src/data/config/menu.json': menuConfig,
 } satisfies NonNullable<JsonPagesConfig['refDocuments']>;
+
 const TENANT_ID = 'alpha';
 
 const filePages = getFilePages();

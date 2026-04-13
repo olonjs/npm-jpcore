@@ -1644,7 +1644,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.112",
+    "@olonjs/core": "^1.0.113",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -5315,7 +5315,7 @@ interface FooterViewProps {
 
 export function Footer({ data, settings }: FooterViewProps) {
   const showLogo = settings?.showLogo ?? true;
-  const links = data.links ?? [];
+  const links = data.menu ?? [];
 
   return (
     <footer className="border-t border-border px-6 py-8">
@@ -5374,7 +5374,7 @@ import { z } from 'zod';
 export const FooterSchema = z.object({
   brandText:        z.string().describe('ui:text'),
   copyright:        z.string().describe('ui:text'),
-  links: z.array(z.object({
+  menu: z.array(z.object({
     label: z.string().describe('ui:text'),
     href:  z.string().describe('ui:text'),
   })).optional().describe('ui:list'),
@@ -5564,7 +5564,7 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
   const isSticky = settings?.sticky ?? true;
   const navRef = useRef<HTMLElement>(null);
 
-  const linksField = data.links as unknown;
+  const linksField = data.menu as unknown;
   const rawLinks = Array.isArray(linksField) ? linksField : [];
   const menuItems = Array.isArray(menu) ? (menu as unknown[]) : [];
   // If tenant explicitly uses a JSON ref for links, resolve from menu config.
@@ -6007,7 +6007,7 @@ export const HeaderSchema = z.object({
   signinHref: z.string().optional().describe('ui:text'),
   ctaHref: z.string().optional().describe('ui:text'),
   ctaLabel: z.string().optional().describe('ui:text'),
-  links: z.array(z.object({
+  menu: z.array(z.object({
     label: z.string().describe('ui:text'),
     href: z.string().describe('ui:text'),
     isCta: z.boolean().default(false).describe('ui:checkbox'),
@@ -10694,14 +10694,13 @@ echo "Creating src/data/config/menu.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu.json"
 {
   "main": [
-    { 
-      "label": "Why",
-      "href": "#Why"
-      
-    },
     {
       "label": "Architecture",
       "href": "#Architecture"
+    },
+    {
+      "label": "Whys",
+      "href": "#Why"
     },
     {
       "label": "Example",
@@ -10711,14 +10710,59 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu.json"
       "label": "Get started",
       "href": "#Getstarted"
     },
-	{
+    {
       "label": "GitHub",
       "href": "https://github.com/olonjs/core"
+    }
+  ],
+  "footer": [
+    {
+      "label": "GitHubs",
+      "href": "https://github.com/olonjs/core"
+    }
+  ],
+  "nested": [
+    {
+      "label": "Why",
+      "href": "/why",
+      "children": [
+        {
+          "label": "Overview",
+          "href": "/platform/overview"
+        },
+        {
+          "label": "Architecture",
+          "href": "/platform/architecture"
+        },
+        {
+          "label": "Security",
+          "href": "/platform/security"
+        },
+        {
+          "label": "Integrations",
+          "href": "/platform/integrations"
+        },
+        {
+          "label": "Roadmap",
+          "href": "/platform/roadmap"
+        }
+      ]
+    },
+    {
+      "label": "Solutions",
+      "href": "/solutions"
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing"
+    },
+    {
+      "label": "Resources",
+      "href": "/resources"
     }
   ]
 }
 END_OF_FILE_CONTENT
-# SKIP: src/data/config/menu.json:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/data/config/menu_example_for_schema.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu_example_for_schema.json"
 {
@@ -10767,51 +10811,15 @@ END_OF_FILE_CONTENT
 echo "Creating src/data/config/site.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
 {
-  "identity": {
-    "title": "OlonJS",
-    "logoUrl": "/brand/mark/olon-mark-dark.svg"
-  },
-  "pages": [
-    {
-      "slug": "home",
-      "label": "Home"
-    },
-    {
-      "slug": "design-system",
-      "label": "Design System"
-    }
-  ],
   "header": {
     "id": "global-header",
     "type": "header",
     "data": {
       "logoText": "Olon",
       "badge": "JS",
-      "links": [
-        {
-          "label": "Why",
-          "href": "#Why"
-        },
-        {
-          "label": "Architecture",
-          "href": "#Architecture"
-        },
-        {
-          "label": "Example",
-          "href": "#Example"
-        },
-        {
-          "label": "Get started",
-          "href": "#Getstarted"
-        },
-        {
-          "label": "GitHub",
-          "href": "https://github.com/olonjs/core"
-        }
-      ],
-      "ctaLabel": "",
-      "ctaHref": "",
-      "signinHref": ""
+      "menu": {
+        "$ref": "../config/menu.json#/main"
+      }
     }
   },
   "footer": {
@@ -10820,21 +10828,17 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "data": {
       "brandText": "OlonJS",
       "copyright": "© 2026 OlonJS · v1.5 · Guido Serio",
-      "links": [
-        {
-          "label": "GitHub",
-          "href": "https://github.com/olonjs/core"
-        }
-      ],
-      "designSystemHref": ""
-    },
-    "settings": {
-      "showLogo": true
+      "menu": {
+        "$ref": "../config/menu.json#/footer"
+      }
     }
-  }
+  },
+  "identity": {
+    "title": "Site"
+  },
+  "pages": []
 }
 END_OF_FILE_CONTENT
-# SKIP: src/data/config/site.json:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/data/config/theme.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/theme.json"
 {
@@ -11002,7 +11006,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/theme.json"
   }
 }
 END_OF_FILE_CONTENT
-# SKIP: src/data/config/theme.json:Zone.Identifier is binary and cannot be embedded as text.
 mkdir -p "src/data/pages"
 echo "Creating src/data/pages/design-system.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/pages/design-system.json"
@@ -11063,9 +11066,9 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
       "data": {
         "id": "hero-main",
         "eyebrow": "CONTRACT LAYER · V1.5 · OPEN SOURCE",
-        "headline": "Contract Layer",
-        "subline": "for the agentic web.",
-        "body": "AI agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
+        "headline": "Build Websites ",
+        "subline": "AI Agents Can Operate",
+        "body": "Aaa agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
         "primaryCta": {
           "label": "Get started",
           "href": "#getstarted"
@@ -13927,6 +13930,7 @@ export default defineConfig({
                 if (!fs.existsSync(DATA_CONFIG_DIR)) fs.mkdirSync(DATA_CONFIG_DIR, { recursive: true });
                 if (!fs.existsSync(DATA_PAGES_DIR)) fs.mkdirSync(DATA_PAGES_DIR, { recursive: true });
                 if (projectState.site != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'site.json'), JSON.stringify(projectState.site, null, 2), 'utf8');
+                if (projectState.menu != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'menu.json'), JSON.stringify(projectState.menu, null, 2), 'utf8');
                 if (projectState.theme != null) fs.writeFileSync(path.join(DATA_CONFIG_DIR, 'theme.json'), JSON.stringify(projectState.theme, null, 2), 'utf8');
                 if (projectState.page != null) {
                   const safeSlug = (slug.replace(/[^a-zA-Z0-9-_]/g, '_') || 'page');
@@ -13978,7 +13982,6 @@ export default defineConfig({
     },
   },
 });
-
 
 
 

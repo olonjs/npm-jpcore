@@ -1,25 +1,12 @@
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { ConfigProvider, PageRenderer, StudioProvider, resolveRuntimeConfig } from '@olonjs/core';
-import type { JsonPagesConfig, MenuConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
+import type { JsonPagesConfig, PageConfig, ThemeConfig } from '@/types';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ComponentRegistry } from '@/lib/ComponentRegistry';
 import { SECTION_SCHEMAS } from '@/lib/schemas';
-import { getFilePages } from '@/lib/getFilePages';
-import siteData from '@/data/config/site.json';
-import menuData from '@/data/config/menu.json';
-import themeData from '@/data/config/theme.json';
+import { menuConfig, pages, refDocuments, siteConfig, themeConfig } from '@/runtime';
 import tenantCss from '@/index.css?inline';
-
-const siteConfig = siteData as unknown as SiteConfig;
-const menuConfig: MenuConfig = { main: [] };
-const themeConfig = themeData as unknown as ThemeConfig;
-const pages = getFilePages();
-const refDocuments = {
-  'menu.json': menuData,
-  'config/menu.json': menuData,
-  'src/data/config/menu.json': menuData,
-} satisfies NonNullable<JsonPagesConfig['refDocuments']>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -148,16 +135,4 @@ export function getPageMeta(slug: string): { title: string; description: string 
   const title = typeof rawMeta.title === 'string' ? rawMeta.title : resolved.slug;
   const description = typeof rawMeta.description === 'string' ? rawMeta.description : '';
   return { title, description };
-}
-
-export function getWebMcpBuildState(): {
-  pages: Record<string, PageConfig>;
-  schemas: JsonPagesConfig['schemas'];
-  siteConfig: SiteConfig;
-} {
-  return {
-    pages,
-    schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
-    siteConfig,
-  };
 }
