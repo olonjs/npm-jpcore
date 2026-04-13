@@ -20,6 +20,7 @@ import themeData from '@/data/config/theme.json';
 import menuData from '@/data/config/menu.json';
 import { getFilePages } from '@/lib/getFilePages';
 import { DopaDrawer } from '@/components/save-drawer/DopaDrawer';
+import { EmptyTenantView } from '@/components/empty-tenant';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
@@ -931,6 +932,7 @@ function App() {
   };
 
   const shouldRenderEngine = !isCloudMode || hasInitialCloudResolved;
+  const isTenantEmpty = Object.keys(pages).length === 0;
 
   useEffect(() => {
     if (!shouldRenderEngine) {
@@ -1008,7 +1010,7 @@ function App() {
           </div>
         </div>
       ) : null}
-      {shouldRenderEngine ? <JsonPagesEngine config={config} /> : null}
+     {shouldRenderEngine ? (isTenantEmpty ? <EmptyTenantView /> : <JsonPagesEngine config={config} />) : null}
       {isCloudMode && (contentMode === 'error' || contentFallback?.reasonCode === 'CLOUD_REFRESH_FAILED') ? (
         <div
           role="status"
