@@ -1445,7 +1445,6 @@ When you receive a OlonJS tenant task:
 5. State assumptions when inferring intended branded output from examples.
 
 END_OF_FILE_CONTENT
-# SKIP: .cursor/skills-cursor/olonjs/SKILL.md:Zone.Identifier is binary and cannot be embedded as text.
 mkdir -p ".cursor/skills-cursor/shell"
 echo "Creating .cursor/skills-cursor/shell/SKILL.md..."
 cat << 'END_OF_FILE_CONTENT' > ".cursor/skills-cursor/shell/SKILL.md"
@@ -1644,7 +1643,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.113",
+    "@olonjs/core": "^1.0.114",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -2553,6 +2552,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/App.tsx"
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { JsonPagesEngine } from '@olonjs/core';
 import type { JsonPagesConfig, LibraryImageEntry, ProjectState } from '@olonjs/core';
+import { normalizeBasePath, withBasePath } from '@olonjs/core';
 import { ComponentRegistry } from '@/lib/ComponentRegistry';
 import { SECTION_SCHEMAS } from '@/lib/schemas';
 import { addSectionConfig } from '@/lib/addSectionConfig';
@@ -2577,14 +2577,16 @@ const CLOUD_API_URL =
 const CLOUD_API_KEY =
   import.meta.env.VITE_OLONJS_API_KEY ?? import.meta.env.VITE_JSONPAGES_API_KEY;
 const SAVE2REPO_ENABLED = import.meta.env.VITE_SAVE2REPO === 'true';
+const APP_BASE_PATH = normalizeBasePath(import.meta.env.BASE_URL || '/');
 
 const themeConfig = themeData as unknown as ThemeConfig;
-const menuConfig: MenuConfig = { main: [] };
+const menuConfig = menuData as unknown as MenuConfig;
 const refDocuments = {
-  'menu.json': menuData,
-  'config/menu.json': menuData,
-  'src/data/config/menu.json': menuData,
+  'menu.json': menuConfig,
+  'config/menu.json': menuConfig,
+  'src/data/config/menu.json': menuConfig,
 } satisfies NonNullable<JsonPagesConfig['refDocuments']>;
+
 const TENANT_ID = 'alpha';
 
 const filePages = getFilePages();
@@ -2844,13 +2846,13 @@ function normalizeSlugForCache(slug: string): string {
 }
 
 function buildPublishedPageHref(slug: string): string {
-  return `/pages/${normalizeSlugForCache(slug)}.json`;
+  return withBasePath(`/pages/${normalizeSlugForCache(slug)}.json`, APP_BASE_PATH);
 }
 
 async function loadPublishedStaticContent(
   knownSlugs: string[]
 ): Promise<{ pages: Record<string, PageConfig>; siteConfig: SiteConfig }> {
-  const siteResponse = await fetch('/config/site.json', { cache: 'no-store' });
+  const siteResponse = await fetch(withBasePath('/config/site.json', APP_BASE_PATH), { cache: 'no-store' });
   if (!siteResponse.ok) {
     throw new Error(`Static site config unavailable: ${siteResponse.status}`);
   }
@@ -3330,6 +3332,7 @@ function App() {
 
   const config: JsonPagesConfig = {
     tenantId: TENANT_ID,
+    basePath: APP_BASE_PATH,
     registry: ComponentRegistry as JsonPagesConfig['registry'],
     schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
     pages,
@@ -3398,7 +3401,7 @@ function App() {
       showColdSave: isSave2RepoMode,
     },
     assets: {
-      assetsBaseUrl: '/assets',
+      assetsBaseUrl: withBasePath('/assets', APP_BASE_PATH),
       assetsManifest,
       async onAssetUpload(file: File): Promise<string> {
         if (!file.type.startsWith('image/')) throw new Error('Invalid file type.');
@@ -3814,7 +3817,6 @@ export function useTheme() {
 }
 
 END_OF_FILE_CONTENT
-# SKIP: src/components/ThemeProvider.tsx:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/components/ThemeToggle.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ThemeToggle.tsx"
 import { Sun, Moon } from 'lucide-react'
@@ -3845,7 +3847,243 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
 }
 
 END_OF_FILE_CONTENT
-# SKIP: src/components/ThemeToggle.tsx:Zone.Identifier is binary and cannot be embedded as text.
+mkdir -p "src/components/accommodations-section"
+echo "Creating src/components/accommodations-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/accommodations-section/View.tsx"
+// Layout: Hero=N/A, Features=HORIZONTAL SCROLL (cards in scrollable row)
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Check } from 'lucide-react';
+import type { AccommodationsSectionData, AccommodationsSectionSettings } from './types';
+
+export const AccommodationsSection: React.FC<{ data: AccommodationsSectionData; settings: AccommodationsSectionSettings }> = ({ data }) => {
+  return (
+    <section
+      style={{
+        '--local-bg': 'var(--elevated)',
+        '--local-text': 'var(--foreground)',
+        '--local-text-muted': 'var(--muted-foreground)',
+        '--local-primary': 'var(--primary)',
+        '--local-accent': 'var(--accent)',
+        '--local-border': 'var(--border)',
+        '--local-surface': 'var(--card)',
+        '--local-radius-lg': 'var(--theme-radius-lg)',
+        '--local-radius-md': 'var(--theme-radius-md)',
+      } as React.CSSProperties}
+      className="relative z-0 py-28 bg-[var(--local-bg)]"
+    >
+      <div className="max-w-[var(--theme-spacing-container-max)] mx-auto px-6">
+        {/* Header */}
+        <div className="text-center mb-12">
+          {data.label && (
+            <div className="inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[var(--local-accent)] mb-4" data-jp-field="label">
+              <span className="w-5 h-px bg-[var(--local-primary)]" />
+              {data.label}
+            </div>
+          )}
+          <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)] mb-4" data-jp-field="title">
+            {data.title}
+          </h2>
+          {data.subtitle && (
+            <p className="text-lg text-[var(--local-text-muted)] max-w-2xl mx-auto" data-jp-field="subtitle">
+              {data.subtitle}
+            </p>
+          )}
+        </div>
+
+        {/* Horizontal Scrolling Cards */}
+        <ScrollArea className="w-full">
+          <div className="flex gap-6 pb-4" style={{ width: 'max-content' }}>
+            {data.accommodations.map((accommodation, idx) => (
+              <Card
+                key={accommodation.id || `legacy-${idx}`}
+                className="w-80 flex-shrink-0 bg-[var(--local-surface)] border-[var(--local-border)] rounded-[var(--local-radius-lg)] overflow-hidden group hover:shadow-lg transition-all duration-300"
+                data-jp-item-id={accommodation.id || `legacy-${idx}`}
+                data-jp-item-field="accommodations"
+              >
+                {accommodation.image?.url && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={accommodation.image.url}
+                      alt={accommodation.image.alt}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  </div>
+                )}
+
+                <CardHeader className="pb-3">
+                  <CardTitle className="font-display text-xl text-[var(--local-text)]">
+                    {accommodation.title}
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <p className="text-[var(--local-text-muted)] leading-relaxed">
+                    {accommodation.description}
+                  </p>
+
+                  {accommodation.features.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm text-[var(--local-text)]">Caratteristiche:</h4>
+                      <div className="space-y-1">
+                        {accommodation.features.map((feature, featureIdx) => (
+                          <div key={featureIdx} className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-[var(--local-primary)] flex-shrink-0" />
+                            <span className="text-sm text-[var(--local-text-muted)]">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+
+        {data.accommodations.length > 3 && (
+          <div className="text-center mt-6">
+            <p className="text-sm text-[var(--local-text-muted)]">
+              Scorri orizzontalmente per vedere tutte le sistemazioni
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/accommodations-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/accommodations-section/index.ts"
+export { AccommodationsSection } from './View';
+export { AccommodationsSectionSchema } from './schema';
+export type { AccommodationsSectionData, AccommodationsSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/accommodations-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/accommodations-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem, ImageSelectionSchema } from '@/lib/base-schemas';
+
+const AccommodationItem = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  features: z.array(z.string()).describe('ui:list'),
+  image: ImageSelectionSchema,
+});
+
+export const AccommodationsSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  subtitle: z.string().optional().describe('ui:textarea'),
+  accommodations: z.array(AccommodationItem).describe('ui:list'),
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/accommodations-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/accommodations-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { AccommodationsSectionSchema } from './schema';
+
+export type AccommodationsSectionData = z.infer<typeof AccommodationsSectionSchema>;
+export type AccommodationsSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/activities-section"
+echo "Creating src/components/activities-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/activities-section/View.tsx"
+// Layout: Hero=F (MINIMAL HERO), Features=D (ACCORDION)
+import React from 'react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import type { ActivitiesSectionData, ActivitiesSectionSettings } from './types';
+
+export const ActivitiesSectionComponent: React.FC<{ data: ActivitiesSectionData; settings: ActivitiesSectionSettings }> = ({ data }) => (
+  <section
+    style={{
+      '--local-bg': 'var(--background)',
+      '--local-text': 'var(--foreground)',
+      '--local-text-muted': 'var(--muted-foreground)',
+      '--local-primary': 'var(--primary)',
+      '--local-accent': 'var(--accent)',
+      '--local-border': 'var(--border)',
+      '--local-surface': 'var(--card)',
+      '--local-radius-lg': 'var(--theme-radius-lg)',
+    } as React.CSSProperties}
+    className="relative z-0 py-24"
+  >
+    <div className="max-w-[900px] mx-auto px-8">
+      {data.label && (
+        <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase text-[var(--local-accent)] mb-4" data-jp-field="label">
+          <span className="w-5 h-px bg-[var(--local-primary)]" />
+          {data.label}
+        </div>
+      )}
+      <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)]" data-jp-field="title">{data.title}</h2>
+      <p className="mt-5 text-[var(--local-text-muted)] max-w-2xl" data-jp-field="description">{data.description}</p>
+      <Accordion type="single" collapsible className="mt-8 rounded-[var(--local-radius-lg)] border border-[var(--local-border)] bg-[var(--local-surface)] px-6">
+        {data.items.map((item, idx) => (
+          <AccordionItem
+            key={item.id || 'legacy-' + idx}
+            value={item.id || 'legacy-' + idx}
+            data-jp-item-id={item.id || 'legacy-' + idx}
+            data-jp-item-field="items"
+          >
+            <AccordionTrigger className="font-display text-left text-[var(--local-text)]">{item.title}</AccordionTrigger>
+            <AccordionContent className="text-[var(--local-text-muted)]">{item.body}</AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
+  </section>
+);
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/activities-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/activities-section/index.ts"
+export { ActivitiesSectionComponent } from './View';
+export { ActivitiesSectionSchema } from './schema';
+export type { ActivitiesSectionData, ActivitiesSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/activities-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/activities-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
+
+const ActivitySchema = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  body: z.string().describe('ui:textarea'),
+});
+
+export const ActivitiesSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  items: z.array(ActivitySchema).describe('ui:list'),
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/activities-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/activities-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { ActivitiesSectionSchema } from './schema';
+
+export type ActivitiesSectionData = z.infer<typeof ActivitiesSectionSchema>;
+export type ActivitiesSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+
+END_OF_FILE_CONTENT
 mkdir -p "src/components/cloud-ai-native-grid"
 echo "Creating src/components/cloud-ai-native-grid/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/cloud-ai-native-grid/View.tsx"
@@ -3944,6 +4182,104 @@ export type CloudAiNativeGridSettings = z.infer<typeof CloudAiNativeGridSettings
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/contact"
+mkdir -p "src/components/contact-section"
+echo "Creating src/components/contact-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/contact-section/View.tsx"
+// Layout: Hero=E (MAGAZINE), Features=C (TIMELINE)
+import React from 'react';
+import { ArrowRight, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import type { ContactSectionData, ContactSectionSettings } from './types';
+
+export const ContactSectionComponent: React.FC<{ data: ContactSectionData; settings: ContactSectionSettings }> = ({ data }) => (
+  <section
+    style={{
+      '--local-bg': 'var(--background)',
+      '--local-text': 'var(--foreground)',
+      '--local-text-muted': 'var(--muted-foreground)',
+      '--local-primary': 'var(--primary)',
+      '--local-primary-foreground': 'var(--primary-foreground)',
+      '--local-accent': 'var(--accent)',
+      '--local-border': 'var(--border)',
+      '--local-surface': 'var(--card)',
+      '--local-radius-md': 'var(--theme-radius-md)',
+      '--local-radius-lg': 'var(--theme-radius-lg)',
+    } as React.CSSProperties}
+    className="relative z-0 py-24"
+  >
+    <div className="max-w-[1200px] mx-auto px-8 grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <div>
+        {data.label && (
+          <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase text-[var(--local-accent)] mb-4" data-jp-field="label">
+            <span className="w-5 h-px bg-[var(--local-primary)]" />
+            {data.label}
+          </div>
+        )}
+        <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)]" data-jp-field="title">{data.title}</h2>
+        <p className="mt-4 max-w-lg text-[var(--local-text-muted)]" data-jp-field="description">{data.description}</p>
+        <Button asChild variant="default" className="mt-6 bg-[var(--local-primary)] text-[var(--local-primary-foreground)] hover:opacity-90 rounded-[var(--local-radius-md)]">
+          <a href={data.primaryCta.href}>{data.primaryCta.label} <ArrowRight className="h-4 w-4" /></a>
+        </Button>
+      </div>
+      <div className="grid gap-4">
+        {data.details.map((item, idx) => (
+          <Card key={item.id || 'legacy-' + idx} className="border-[var(--local-border)] bg-[var(--local-surface)] rounded-[var(--local-radius-lg)]" data-jp-item-id={item.id || 'legacy-' + idx} data-jp-item-field="details">
+            <CardContent className="p-6 flex gap-4">
+              <MapPin className="h-5 w-5 mt-1 text-[var(--local-accent)]" />
+              <div>
+                <h3 className="font-display font-bold text-[1.2rem] text-[var(--local-text)]">{item.title}</h3>
+                <p className="mt-2 text-sm text-[var(--local-text-muted)] whitespace-pre-line">{item.body}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/contact-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/contact-section/index.ts"
+export { ContactSectionComponent } from './View';
+export { ContactSectionSchema } from './schema';
+export type { ContactSectionData, ContactSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/contact-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/contact-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem, CtaSchema } from '@/lib/base-schemas';
+
+const DetailSchema = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  body: z.string().describe('ui:textarea'),
+});
+
+export const ContactSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  details: z.array(DetailSchema).describe('ui:list'),
+  primaryCta: CtaSchema,
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/contact-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/contact-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { ContactSectionSchema } from './schema';
+
+export type ContactSectionData = z.infer<typeof ContactSectionSchema>;
+export type ContactSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+
+END_OF_FILE_CONTENT
 echo "Creating src/components/contact/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/contact/View.tsx"
 import { useState, type CSSProperties } from 'react';
@@ -4269,6 +4605,103 @@ import { CtaBannerSchema } from './schema';
 
 export type CtaBannerData     = z.infer<typeof CtaBannerSchema>;
 export type CtaBannerSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/cuisine-section"
+echo "Creating src/components/cuisine-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/cuisine-section/View.tsx"
+// Layout: Hero=B (BENTO GRID), Features=A (BENTO)
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import type { CuisineSectionData, CuisineSectionSettings } from './types';
+
+export const CuisineSectionComponent: React.FC<{ data: CuisineSectionData; settings: CuisineSectionSettings }> = ({ data }) => (
+  <section
+    style={{
+      '--local-bg': 'var(--card)',
+      '--local-text': 'var(--foreground)',
+      '--local-text-muted': 'var(--muted-foreground)',
+      '--local-primary': 'var(--primary)',
+      '--local-accent': 'var(--accent)',
+      '--local-border': 'var(--border)',
+      '--local-surface': 'var(--background)',
+      '--local-radius-md': 'var(--theme-radius-md)',
+      '--local-radius-lg': 'var(--theme-radius-lg)',
+    } as React.CSSProperties}
+    className="relative z-0 py-24 bg-[var(--local-bg)]"
+  >
+    <div className="max-w-[1200px] mx-auto px-8">
+      {data.label && (
+        <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase text-[var(--local-accent)] mb-4" data-jp-field="label">
+          <span className="w-5 h-px bg-[var(--local-primary)]" />
+          {data.label}
+        </div>
+      )}
+      <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] items-start">
+        <div>
+          <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)]" data-jp-field="title">{data.title}</h2>
+          <p className="mt-5 text-[var(--local-text-muted)] max-w-lg" data-jp-field="description">{data.description}</p>
+          <img src={data.image?.url} alt={data.image?.alt || ''} className="mt-8 w-full h-[360px] object-cover rounded-[var(--local-radius-lg)] border border-[var(--local-border)]" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {data.products.map((item, idx) => (
+            <Card
+              key={item.id || 'legacy-' + idx}
+              className={'border-[var(--local-border)] bg-[var(--local-surface)] rounded-[var(--local-radius-lg)] ' + (idx === 0 ? 'md:col-span-2' : '')}
+              data-jp-item-id={item.id || 'legacy-' + idx}
+              data-jp-item-field="products"
+            >
+              <CardContent className="p-6">
+                <h3 className="font-display font-bold text-[1.2rem] text-[var(--local-text)]">{item.title}</h3>
+                <p className="mt-2 text-sm text-[var(--local-text-muted)]">{item.body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/cuisine-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/cuisine-section/index.ts"
+export { CuisineSectionComponent } from './View';
+export { CuisineSectionSchema } from './schema';
+export type { CuisineSectionData, CuisineSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/cuisine-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/cuisine-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem, ImageSelectionSchema } from '@/lib/base-schemas';
+
+const ProductSchema = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  body: z.string().describe('ui:textarea'),
+});
+
+export const CuisineSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  image: ImageSelectionSchema.optional().default({ url: '', alt: '' }),
+  products: z.array(ProductSchema).describe('ui:list'),
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/cuisine-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/cuisine-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { CuisineSectionSchema } from './schema';
+
+export type CuisineSectionData = z.infer<typeof CuisineSectionSchema>;
+export type CuisineSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/design-system"
@@ -5129,6 +5562,111 @@ export type DevexData     = z.infer<typeof DevexSchema>;
 export type DevexSettings = z.infer<typeof BaseSectionSettingsSchema>;
 
 END_OF_FILE_CONTENT
+mkdir -p "src/components/docs-layout"
+mkdir -p "src/components/experiences-section"
+echo "Creating src/components/experiences-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/experiences-section/View.tsx"
+// Layout: Hero=B (BENTO GRID), Features=A (BENTO)
+import React from 'react';
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import type { ExperiencesSectionData, ExperiencesSectionSettings } from './types';
+
+export const ExperiencesSectionComponent: React.FC<{ data: ExperiencesSectionData; settings: ExperiencesSectionSettings }> = ({ data }) => (
+  <section
+    style={{
+      '--local-bg': 'var(--card)',
+      '--local-text': 'var(--foreground)',
+      '--local-text-muted': 'var(--muted-foreground)',
+      '--local-primary': 'var(--primary)',
+      '--local-primary-foreground': 'var(--primary-foreground)',
+      '--local-accent': 'var(--accent)',
+      '--local-border': 'var(--border)',
+      '--local-surface': 'var(--background)',
+      '--local-radius-md': 'var(--theme-radius-md)',
+      '--local-radius-lg': 'var(--theme-radius-lg)',
+    } as React.CSSProperties}
+    className="relative z-0 py-24 bg-[var(--local-bg)]"
+  >
+    <div className="max-w-[1200px] mx-auto px-8">
+      {data.label && (
+        <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase text-[var(--local-accent)] mb-4" data-jp-field="label">
+          <span className="w-5 h-px bg-[var(--local-primary)]" />
+          {data.label}
+        </div>
+      )}
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div>
+          <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)]" data-jp-field="title">{data.title}</h2>
+          <p className="mt-4 max-w-2xl text-[var(--local-text-muted)]" data-jp-field="description">{data.description}</p>
+        </div>
+        <Button asChild variant="default" className="bg-[var(--local-primary)] text-[var(--local-primary-foreground)] hover:opacity-90 rounded-[var(--local-radius-md)]">
+          <a href={data.primaryCta.href}>{data.primaryCta.label} <ArrowRight className="h-4 w-4" /></a>
+        </Button>
+      </div>
+      <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {data.items.map((item, idx) => (
+          <Card
+            key={item.id || 'legacy-' + idx}
+            className={'border-[var(--local-border)] bg-[var(--local-surface)] rounded-[var(--local-radius-lg)] ' + (idx === 0 ? 'xl:col-span-2' : '')}
+            data-jp-item-id={item.id || 'legacy-' + idx}
+            data-jp-item-field="items"
+          >
+            <CardContent className="p-6">
+              <h3 className="font-display font-bold text-[1.2rem] text-[var(--local-text)]">{item.title}</h3>
+              <p className="mt-2 text-sm text-[var(--local-text-muted)]">{item.body}</p>
+              <p className="mt-4 text-sm text-[var(--local-text)]">{item.details}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/experiences-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/experiences-section/index.ts"
+export { ExperiencesSectionComponent } from './View';
+export { ExperiencesSectionSchema } from './schema';
+export type { ExperiencesSectionData, ExperiencesSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/experiences-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/experiences-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem, CtaSchema } from '@/lib/base-schemas';
+
+const ExperienceSchema = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  body: z.string().describe('ui:textarea'),
+  details: z.string().describe('ui:textarea'),
+});
+
+export const ExperiencesSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  items: z.array(ExperienceSchema).describe('ui:list'),
+  primaryCta: CtaSchema,
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/experiences-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/experiences-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { ExperiencesSectionSchema } from './schema';
+
+export type ExperiencesSectionData = z.infer<typeof ExperiencesSectionSchema>;
+export type ExperiencesSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+
+END_OF_FILE_CONTENT
 mkdir -p "src/components/feature-grid"
 echo "Creating src/components/feature-grid/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/feature-grid/View.tsx"
@@ -5302,6 +5840,147 @@ export type FeatureGridData     = z.infer<typeof FeatureGridSchema>;
 export type FeatureGridSettings = z.infer<typeof FeatureGridSettingsSchema>;
 
 END_OF_FILE_CONTENT
+mkdir -p "src/components/features-overview"
+echo "Creating src/components/features-overview/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/features-overview/View.tsx"
+// Layout: Hero=N/A, Features=BENTO (irregular grid)
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Leaf, Mountain, Utensils } from 'lucide-react';
+import type { FeaturesOverviewData, FeaturesOverviewSettings } from './types';
+
+export const FeaturesOverview: React.FC<{ data: FeaturesOverviewData; settings: FeaturesOverviewSettings }> = ({ data }) => {
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'leaf': return <Leaf className="w-6 h-6" />;
+      case 'mountain': return <Mountain className="w-6 h-6" />;
+      case 'utensils': return <Utensils className="w-6 h-6" />;
+      default: return <Leaf className="w-6 h-6" />;
+    }
+  };
+
+  return (
+    <section
+      style={{
+        '--local-bg': 'var(--background)',
+        '--local-text': 'var(--foreground)',
+        '--local-text-muted': 'var(--muted-foreground)',
+        '--local-primary': 'var(--primary)',
+        '--local-accent': 'var(--accent)',
+        '--local-border': 'var(--border)',
+        '--local-surface': 'var(--card)',
+        '--local-radius-lg': 'var(--theme-radius-lg)',
+        '--local-radius-md': 'var(--theme-radius-md)',
+      } as React.CSSProperties}
+      className="relative z-0 py-28 bg-[var(--local-bg)]"
+    >
+      <div className="max-w-[var(--theme-spacing-container-max)] mx-auto px-6">
+        {/* Header */}
+        <div className="text-center mb-16">
+          {data.label && (
+            <div className="inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[var(--local-accent)] mb-4" data-jp-field="label">
+              <span className="w-5 h-px bg-[var(--local-primary)]" />
+              {data.label}
+            </div>
+          )}
+          <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)] mb-4" data-jp-field="title">
+            {data.title}
+          </h2>
+          {data.description && (
+            <p className="text-lg text-[var(--local-text-muted)] max-w-2xl mx-auto" data-jp-field="description">
+              {data.description}
+            </p>
+          )}
+        </div>
+
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+          {data.features.map((feature, idx) => (
+            <Card
+              key={feature.id || `legacy-${idx}`}
+              className={`
+                bg-[var(--local-surface)] border-[var(--local-border)] rounded-[var(--local-radius-lg)]
+                overflow-hidden group hover:shadow-lg transition-all duration-300
+                ${idx === 0 ? 'lg:col-span-2' : ''}
+                ${idx === 1 ? 'lg:row-span-2' : ''}
+              `}
+              data-jp-item-id={feature.id || `legacy-${idx}`}
+              data-jp-item-field="features"
+            >
+              {feature.image?.url && (
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={feature.image.url}
+                    alt={feature.image.alt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  {feature.icon && (
+                    <div className="absolute top-4 left-4 p-3 bg-[var(--local-primary)] rounded-[var(--local-radius-md)] text-white">
+                      {getIcon(feature.icon)}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <CardContent className="p-6">
+                <h3 className="font-display font-bold text-xl text-[var(--local-text)] mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-[var(--local-text-muted)] leading-relaxed">
+                  {feature.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/features-overview/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/features-overview/index.ts"
+export { FeaturesOverview } from './View';
+export { FeaturesOverviewSchema } from './schema';
+export type { FeaturesOverviewData, FeaturesOverviewSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/features-overview/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/features-overview/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem, ImageSelectionSchema } from '@/lib/base-schemas';
+
+const FeatureItem = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  icon: z.string().optional().describe('ui:text'),
+  image: ImageSelectionSchema,
+});
+
+export const FeaturesOverviewSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  description: z.string().optional().describe('ui:textarea'),
+  features: z.array(FeatureItem).describe('ui:list'),
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/features-overview/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/features-overview/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { FeaturesOverviewSchema } from './schema';
+
+export type FeaturesOverviewData = z.infer<typeof FeaturesOverviewSchema>;
+export type FeaturesOverviewSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+
+END_OF_FILE_CONTENT
 mkdir -p "src/components/footer"
 echo "Creating src/components/footer/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/footer/View.tsx"
@@ -5315,7 +5994,7 @@ interface FooterViewProps {
 
 export function Footer({ data, settings }: FooterViewProps) {
   const showLogo = settings?.showLogo ?? true;
-  const links = data.menu ?? [];
+  const links = data.links ?? [];
 
   return (
     <footer className="border-t border-border px-6 py-8">
@@ -5374,7 +6053,7 @@ import { z } from 'zod';
 export const FooterSchema = z.object({
   brandText:        z.string().describe('ui:text'),
   copyright:        z.string().describe('ui:text'),
-  menu: z.array(z.object({
+  links: z.array(z.object({
     label: z.string().describe('ui:text'),
     href:  z.string().describe('ui:text'),
   })).optional().describe('ui:list'),
@@ -5564,7 +6243,7 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
   const isSticky = settings?.sticky ?? true;
   const navRef = useRef<HTMLElement>(null);
 
-  const linksField = data.menu as unknown;
+  const linksField = data.links as unknown;
   const rawLinks = Array.isArray(linksField) ? linksField : [];
   const menuItems = Array.isArray(menu) ? (menu as unknown[]) : [];
   // If tenant explicitly uses a JSON ref for links, resolve from menu config.
@@ -5846,7 +6525,6 @@ export function Header({ data, settings, menu }: HeaderViewProps) {
 }
 
 END_OF_FILE_CONTENT
-# SKIP: src/components/header/View.tsx:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/components/header/View_.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/header/View_.tsx"
 import React, { useState } from 'react';
@@ -5990,7 +6668,6 @@ export * from './View';
 export * from './schema';
 export * from './types';
 END_OF_FILE_CONTENT
-# SKIP: src/components/header/index.ts:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/components/header/schema.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/header/schema.ts"
 import { z } from 'zod';
@@ -6007,7 +6684,7 @@ export const HeaderSchema = z.object({
   signinHref: z.string().optional().describe('ui:text'),
   ctaHref: z.string().optional().describe('ui:text'),
   ctaLabel: z.string().optional().describe('ui:text'),
-  menu: z.array(z.object({
+  links: z.array(z.object({
     label: z.string().describe('ui:text'),
     href: z.string().describe('ui:text'),
     isCta: z.boolean().default(false).describe('ui:checkbox'),
@@ -6023,7 +6700,6 @@ export const HeaderSettingsSchema = z.object({
   sticky: z.boolean().default(true).describe('ui:checkbox'),
 });
 END_OF_FILE_CONTENT
-# SKIP: src/components/header/schema.ts:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/components/header/types.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/header/types.ts"
 import { z } from 'zod';
@@ -6043,9 +6719,139 @@ export type HeaderData = z.infer<typeof HeaderSchema>;
  */
 export type HeaderSettings = z.infer<typeof HeaderSettingsSchema>;
 END_OF_FILE_CONTENT
-# SKIP: src/components/header/types.ts:Zone.Identifier is binary and cannot be embedded as text.
 mkdir -p "src/components/hero"
-# SKIP: src/components/hero/RadialBackground - Copy.tsx:Zone.Identifier is binary and cannot be embedded as text.
+mkdir -p "src/components/hero-section"
+echo "Creating src/components/hero-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hero-section/View.tsx"
+// Layout: Hero=FULLSCREEN CINEMATIC, Features=N/A
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import type { HeroSectionData, HeroSectionSettings } from './types';
+
+export const HeroSection: React.FC<{ data: HeroSectionData; settings: HeroSectionSettings }> = ({ data }) => {
+  return (
+    <section
+      style={{
+        '--local-bg': 'var(--background)',
+        '--local-text': 'var(--foreground)',
+        '--local-text-muted': 'var(--muted-foreground)',
+        '--local-primary': 'var(--primary)',
+        '--local-primary-foreground': 'var(--primary-foreground)',
+        '--local-accent': 'var(--accent)',
+        '--local-border': 'var(--border)',
+        '--local-radius-md': 'var(--theme-radius-md)',
+      } as React.CSSProperties}
+      className="relative z-0 min-h-screen flex items-center justify-center bg-[var(--local-bg)] overflow-hidden"
+    >
+      {/* Background Image */}
+      {data.heroImage?.url && (
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${data.heroImage.url})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+        </div>
+      )}
+
+      {/* Decorative Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,color-mix(in_oklch,var(--local-accent)_15%,transparent)_35%,transparent_70%)] pointer-events-none" />
+
+      {/* Content */}
+      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        {data.label && (
+          <div className="inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-white/90 mb-6 jp-animate-in" data-jp-field="label">
+            <span className="w-8 h-px bg-white/60" />
+            {data.label}
+            <span className="w-8 h-px bg-white/60" />
+          </div>
+        )}
+
+        <h1 className="font-display font-black text-[clamp(3rem,6vw,5.5rem)] leading-[1.0] tracking-tight text-white mb-6 jp-animate-in jp-d1" data-jp-field="title">
+          {data.title}
+          {data.titleHighlight && (
+            <>
+              {' '}
+              <em className="not-italic bg-gradient-to-br from-[var(--local-accent)] to-orange-300 bg-clip-text text-transparent" data-jp-field="titleHighlight">
+                {data.titleHighlight}
+              </em>
+            </>
+          )}
+        </h1>
+
+        <p className="text-xl leading-relaxed text-white/90 max-w-2xl mx-auto mb-8 jp-animate-in jp-d2" data-jp-field="description">
+          {data.description}
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center jp-animate-in jp-d3">
+          <Button
+            asChild
+            variant="default"
+            size="lg"
+            className="bg-[var(--local-primary)] text-[var(--local-primary-foreground)] hover:opacity-90 px-8 py-4 text-base font-semibold rounded-[var(--local-radius-md)]"
+          >
+            <a href={data.primaryCta.href}>{data.primaryCta.label}</a>
+          </Button>
+
+          {data.secondaryCta && (
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="border-white/30 text-white hover:bg-white/10 px-8 py-4 text-base font-semibold rounded-[var(--local-radius-md)]"
+            >
+              <a href={data.secondaryCta.href}>{data.secondaryCta.label}</a>
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/70">
+        <span className="text-xs uppercase tracking-widest">Scopri di più</span>
+        <div className="w-px h-12 bg-gradient-to-b from-white/40 to-transparent" />
+      </div>
+    </section>
+  );
+};
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/hero-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hero-section/index.ts"
+export { HeroSection } from './View';
+export { HeroSectionSchema } from './schema';
+export type { HeroSectionData, HeroSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/hero-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hero-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, CtaSchema, ImageSelectionSchema } from '@/lib/base-schemas';
+
+export const HeroSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  titleHighlight: z.string().optional().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  primaryCta: CtaSchema,
+  secondaryCta: CtaSchema.optional(),
+  heroImage: ImageSelectionSchema,
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/hero-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hero-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { HeroSectionSchema } from './schema';
+
+export type HeroSectionData = z.infer<typeof HeroSectionSchema>;
+export type HeroSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+
+END_OF_FILE_CONTENT
 echo "Creating src/components/hero/RadialBackground.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/hero/RadialBackground.tsx"
 import { useEffect, useRef, useState } from 'react';
@@ -6412,6 +7218,101 @@ import { HeroSchema, HeroSettingsSchema } from './schema';
 
 export type HeroData     = z.infer<typeof HeroSchema>;
 export type HeroSettings = z.infer<typeof HeroSettingsSchema>;
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/hospitality-section"
+echo "Creating src/components/hospitality-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hospitality-section/View.tsx"
+// Layout: Hero=A (SPLIT 60/40), Features=A (BENTO)
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import type { HospitalitySectionData, HospitalitySectionSettings } from './types';
+
+export const HospitalitySectionComponent: React.FC<{ data: HospitalitySectionData; settings: HospitalitySectionSettings }> = ({ data }) => (
+  <section
+    style={{
+      '--local-bg': 'var(--background)',
+      '--local-text': 'var(--foreground)',
+      '--local-text-muted': 'var(--muted-foreground)',
+      '--local-primary': 'var(--primary)',
+      '--local-accent': 'var(--accent)',
+      '--local-border': 'var(--border)',
+      '--local-surface': 'var(--card)',
+      '--local-radius-md': 'var(--theme-radius-md)',
+      '--local-radius-lg': 'var(--theme-radius-lg)',
+    } as React.CSSProperties}
+    className="relative z-0 py-24"
+  >
+    <div className="max-w-[1200px] mx-auto px-8 grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-center">
+      <img src={data.image?.url} alt={data.image?.alt || ''} className="w-full h-[520px] object-cover rounded-[var(--local-radius-lg)] border border-[var(--local-border)]" />
+      <div>
+        {data.label && (
+          <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase text-[var(--local-accent)] mb-4" data-jp-field="label">
+            <span className="w-5 h-px bg-[var(--local-primary)]" />
+            {data.label}
+          </div>
+        )}
+        <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)]" data-jp-field="title">{data.title}</h2>
+        <p className="mt-5 max-w-xl text-[var(--local-text-muted)]" data-jp-field="description">{data.description}</p>
+        <div className="grid md:grid-cols-2 gap-4 mt-8">
+          {data.items.map((item, idx) => (
+            <Card
+              key={item.id || 'legacy-' + idx}
+              className="rounded-[var(--local-radius-md)] border-[var(--local-border)] bg-[var(--local-surface)]"
+              data-jp-item-id={item.id || 'legacy-' + idx}
+              data-jp-item-field="items"
+            >
+              <CardContent className="p-5">
+                <h3 className="font-display font-bold text-[1.2rem] text-[var(--local-text)]">{item.title}</h3>
+                <p className="mt-2 text-sm text-[var(--local-text-muted)]">{item.body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/hospitality-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hospitality-section/index.ts"
+export { HospitalitySectionComponent } from './View';
+export { HospitalitySectionSchema } from './schema';
+export type { HospitalitySectionData, HospitalitySectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/hospitality-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hospitality-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem, ImageSelectionSchema } from '@/lib/base-schemas';
+
+const ItemSchema = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  body: z.string().describe('ui:textarea'),
+});
+
+export const HospitalitySectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  image: ImageSelectionSchema.optional().default({ url: '', alt: '' }),
+  items: z.array(ItemSchema).describe('ui:list'),
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/hospitality-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/hospitality-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { HospitalitySectionSchema } from './schema';
+
+export type HospitalitySectionData = z.infer<typeof HospitalitySectionSchema>;
+export type HospitalitySectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/login"
@@ -7573,6 +8474,124 @@ import { PageHeroSchema } from './schema';
 
 export type PageHeroData     = z.infer<typeof PageHeroSchema>;
 export type PageHeroSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+END_OF_FILE_CONTENT
+mkdir -p "src/components/pricing-section"
+echo "Creating src/components/pricing-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/pricing-section/View.tsx"
+// Layout: Hero=E (MAGAZINE), Features=C (TIMELINE)
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { PricingSectionData, PricingSectionSettings } from './types';
+
+export const PricingSectionComponent: React.FC<{ data: PricingSectionData; settings: PricingSectionSettings }> = ({ data }) => (
+  <section
+    style={{
+      '--local-bg': 'var(--background)',
+      '--local-text': 'var(--foreground)',
+      '--local-text-muted': 'var(--muted-foreground)',
+      '--local-primary': 'var(--primary)',
+      '--local-accent': 'var(--accent)',
+      '--local-border': 'var(--border)',
+      '--local-surface': 'var(--card)',
+      '--local-radius-md': 'var(--theme-radius-md)',
+      '--local-radius-lg': 'var(--theme-radius-lg)',
+    } as React.CSSProperties}
+    className="relative z-0 py-24"
+  >
+    <div className="max-w-[1200px] mx-auto px-8">
+      {data.label && (
+        <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase text-[var(--local-accent)] mb-4" data-jp-field="label">
+          <span className="w-5 h-px bg-[var(--local-primary)]" />
+          {data.label}
+        </div>
+      )}
+      <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)]" data-jp-field="title">{data.title}</h2>
+      <p className="mt-4 max-w-2xl text-[var(--local-text-muted)]" data-jp-field="description">{data.description}</p>
+
+      <Card className="mt-8 border-[var(--local-border)] bg-[var(--local-surface)] rounded-[var(--local-radius-lg)]">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Treatment</TableHead>
+                <TableHead>Rate</TableHead>
+                <TableHead>Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.rows.map((item, idx) => (
+                <TableRow key={item.id || 'legacy-' + idx} data-jp-item-id={item.id || 'legacy-' + idx} data-jp-item-field="rows">
+                  <TableCell className="font-medium">{item.treatment}</TableCell>
+                  <TableCell>{item.price}</TableCell>
+                  <TableCell>{item.details}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-3 mt-6">
+        {data.notes.map((item, idx) => (
+          <Card key={item.id || 'legacy-' + idx} className="border-[var(--local-border)] bg-[var(--local-surface)] rounded-[var(--local-radius-md)]" data-jp-item-id={item.id || 'legacy-' + idx} data-jp-item-field="notes">
+            <CardContent className="p-5">
+              <h3 className="font-display font-bold text-[1.1rem] text-[var(--local-text)]">{item.title}</h3>
+              <p className="mt-2 text-sm text-[var(--local-text-muted)]">{item.body}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/pricing-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/pricing-section/index.ts"
+export { PricingSectionComponent } from './View';
+export { PricingSectionSchema } from './schema';
+export type { PricingSectionData, PricingSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/pricing-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/pricing-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
+
+const RowSchema = BaseArrayItem.extend({
+  treatment: z.string().describe('ui:text'),
+  price: z.string().describe('ui:text'),
+  details: z.string().describe('ui:textarea'),
+});
+
+const NoteSchema = BaseArrayItem.extend({
+  title: z.string().describe('ui:text'),
+  body: z.string().describe('ui:textarea'),
+});
+
+export const PricingSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  description: z.string().describe('ui:textarea'),
+  rows: z.array(RowSchema).describe('ui:list'),
+  notes: z.array(NoteSchema).describe('ui:list'),
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/pricing-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/pricing-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { PricingSectionSchema } from './schema';
+
+export type PricingSectionData = z.infer<typeof PricingSectionSchema>;
+export type PricingSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
 
 END_OF_FILE_CONTENT
 mkdir -p "src/components/problem-statement"
@@ -8786,6 +9805,100 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/save-drawer/saverStyle.css"
 
 
 END_OF_FILE_CONTENT
+mkdir -p "src/components/testimonials-section"
+echo "Creating src/components/testimonials-section/View.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/testimonials-section/View.tsx"
+// Layout: Hero=B (BENTO GRID), Features=B (HORIZONTAL SCROLL)
+import React from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent } from '@/components/ui/card';
+import type { TestimonialsSectionData, TestimonialsSectionSettings } from './types';
+
+export const TestimonialsSectionComponent: React.FC<{ data: TestimonialsSectionData; settings: TestimonialsSectionSettings }> = ({ data }) => (
+  <section
+    style={{
+      '--local-bg': 'var(--card)',
+      '--local-text': 'var(--foreground)',
+      '--local-text-muted': 'var(--muted-foreground)',
+      '--local-primary': 'var(--primary)',
+      '--local-accent': 'var(--accent)',
+      '--local-border': 'var(--border)',
+      '--local-surface': 'var(--background)',
+      '--local-radius-md': 'var(--theme-radius-md)',
+      '--local-radius-lg': 'var(--theme-radius-lg)',
+    } as React.CSSProperties}
+    className="relative z-0 py-24 bg-[var(--local-bg)]"
+  >
+    <div className="max-w-[1200px] mx-auto px-8">
+      {data.label && (
+        <div className="jp-section-label inline-flex items-center gap-2 text-[0.72rem] font-bold uppercase text-[var(--local-accent)] mb-4" data-jp-field="label">
+          <span className="w-5 h-px bg-[var(--local-primary)]" />
+          {data.label}
+        </div>
+      )}
+      <h2 className="font-display font-black text-[clamp(2rem,4.5vw,3.8rem)] leading-[1.05] tracking-tight text-[var(--local-text)]" data-jp-field="title">{data.title}</h2>
+      <ScrollArea className="w-full mt-8">
+        <div className="flex gap-5 pb-4">
+          {data.items.map((item, idx) => (
+            <Card
+              key={item.id || 'legacy-' + idx}
+              className="min-w-[320px] max-w-[360px] border-[var(--local-border)] bg-[var(--local-surface)] rounded-[var(--local-radius-lg)]"
+              data-jp-item-id={item.id || 'legacy-' + idx}
+              data-jp-item-field="items"
+            >
+              <CardContent className="p-6">
+                <p className="text-[var(--local-text)] leading-relaxed">“{item.quote}”</p>
+                <div className="mt-5 font-display text-xl text-[var(--local-text)]">{item.name}</div>
+                <div className="text-sm text-[var(--local-text-muted)]">{item.meta}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  </section>
+);
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/testimonials-section/index.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/testimonials-section/index.ts"
+export { TestimonialsSectionComponent } from './View';
+export { TestimonialsSectionSchema } from './schema';
+export type { TestimonialsSectionData, TestimonialsSectionSettings } from './types';
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/testimonials-section/schema.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/testimonials-section/schema.ts"
+import { z } from 'zod';
+import { BaseSectionData, BaseArrayItem } from '@/lib/base-schemas';
+
+const TestimonialSchema = BaseArrayItem.extend({
+  name: z.string().describe('ui:text'),
+  quote: z.string().describe('ui:textarea'),
+  meta: z.string().describe('ui:text'),
+});
+
+export const TestimonialsSectionSchema = BaseSectionData.extend({
+  label: z.string().optional().describe('ui:text'),
+  title: z.string().describe('ui:text'),
+  items: z.array(TestimonialSchema).describe('ui:list'),
+});
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/testimonials-section/types.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/testimonials-section/types.ts"
+import { z } from 'zod';
+import { BaseSectionSettingsSchema } from '@/lib/base-schemas';
+import { TestimonialsSectionSchema } from './schema';
+
+export type TestimonialsSectionData = z.infer<typeof TestimonialsSectionSchema>;
+export type TestimonialsSectionSettings = z.infer<typeof BaseSectionSettingsSchema>;
+
+
+END_OF_FILE_CONTENT
 mkdir -p "src/components/tiptap"
 echo "Creating src/components/tiptap/INTEGRATION.md..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/tiptap/INTEGRATION.md"
@@ -9993,6 +11106,223 @@ export function OlonLogo({
 }
 
 END_OF_FILE_CONTENT
+echo "Creating src/components/ui/accordion.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/accordion.tsx"
+import * as React from "react"
+import { Accordion as AccordionPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+
+function Accordion({
+  className,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Root>) {
+  return (
+    <AccordionPrimitive.Root
+      data-slot="accordion"
+      className={cn("flex w-full flex-col", className)}
+      {...props}
+    />
+  )
+}
+
+function AccordionItem({
+  className,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Item>) {
+  return (
+    <AccordionPrimitive.Item
+      data-slot="accordion-item"
+      className={cn("not-last:border-b", className)}
+      {...props}
+    />
+  )
+}
+
+function AccordionTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+  return (
+    <AccordionPrimitive.Header className="flex">
+      <AccordionPrimitive.Trigger
+        data-slot="accordion-trigger"
+        className={cn(
+          "group/accordion-trigger relative flex flex-1 items-start justify-between rounded-lg border border-transparent py-2.5 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:after:border-ring disabled:pointer-events-none disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4 **:data-[slot=accordion-trigger-icon]:text-muted-foreground",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <ChevronDownIcon data-slot="accordion-trigger-icon" className="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden" />
+        <ChevronUpIcon data-slot="accordion-trigger-icon" className="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline" />
+      </AccordionPrimitive.Trigger>
+    </AccordionPrimitive.Header>
+  )
+}
+
+function AccordionContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof AccordionPrimitive.Content>) {
+  return (
+    <AccordionPrimitive.Content
+      data-slot="accordion-content"
+      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
+      {...props}
+    >
+      <div
+        className={cn(
+          "h-(--radix-accordion-content-height) pt-0 pb-2.5 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
+          className
+        )}
+      >
+        {children}
+      </div>
+    </AccordionPrimitive.Content>
+  )
+}
+
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/aspect-ratio.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/aspect-ratio.tsx"
+"use client"
+
+import { AspectRatio as AspectRatioPrimitive } from "radix-ui"
+
+function AspectRatio({
+  ...props
+}: React.ComponentProps<typeof AspectRatioPrimitive.Root>) {
+  return <AspectRatioPrimitive.Root data-slot="aspect-ratio" {...props} />
+}
+
+export { AspectRatio }
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/avatar.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/avatar.tsx"
+"use client"
+
+import * as React from "react"
+import { Avatar as AvatarPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+function Avatar({
+  className,
+  size = "default",
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Root> & {
+  size?: "default" | "sm" | "lg"
+}) {
+  return (
+    <AvatarPrimitive.Root
+      data-slot="avatar"
+      data-size={size}
+      className={cn(
+        "group/avatar relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AvatarImage({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  return (
+    <AvatarPrimitive.Image
+      data-slot="avatar-image"
+      className={cn(
+        "aspect-square size-full rounded-full object-cover",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AvatarFallback({
+  className,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+  return (
+    <AvatarPrimitive.Fallback
+      data-slot="avatar-fallback"
+      className={cn(
+        "flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground group-data-[size=sm]/avatar:text-xs",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AvatarBadge({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="avatar-badge"
+      className={cn(
+        "absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground bg-blend-color ring-2 ring-background select-none",
+        "group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden",
+        "group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2",
+        "group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AvatarGroup({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="avatar-group"
+      className={cn(
+        "group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:ring-background",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AvatarGroupCount({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="avatar-group-count"
+      className={cn(
+        "relative flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground ring-2 ring-background group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+  AvatarBadge,
+}
+
+
+END_OF_FILE_CONTENT
 echo "Creating src/components/ui/badge.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/badge.tsx"
 import * as React from 'react'
@@ -10024,6 +11354,133 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 export { Badge, badgeVariants }
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/breadcrumb.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/breadcrumb.tsx"
+import * as React from "react"
+import { Slot } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
+
+function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
+  return (
+    <nav
+      aria-label="breadcrumb"
+      data-slot="breadcrumb"
+      className={cn(className)}
+      {...props}
+    />
+  )
+}
+
+function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
+  return (
+    <ol
+      data-slot="breadcrumb-list"
+      className={cn(
+        "flex flex-wrap items-center gap-1.5 text-sm wrap-break-word text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
+  return (
+    <li
+      data-slot="breadcrumb-item"
+      className={cn("inline-flex items-center gap-1", className)}
+      {...props}
+    />
+  )
+}
+
+function BreadcrumbLink({
+  asChild,
+  className,
+  ...props
+}: React.ComponentProps<"a"> & {
+  asChild?: boolean
+}) {
+  const Comp = asChild ? Slot.Root : "a"
+
+  return (
+    <Comp
+      data-slot="breadcrumb-link"
+      className={cn("transition-colors hover:text-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="breadcrumb-page"
+      role="link"
+      aria-disabled="true"
+      aria-current="page"
+      className={cn("font-normal text-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+function BreadcrumbSeparator({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<"li">) {
+  return (
+    <li
+      data-slot="breadcrumb-separator"
+      role="presentation"
+      aria-hidden="true"
+      className={cn("[&>svg]:size-3.5", className)}
+      {...props}
+    >
+      {children ?? (
+        <ChevronRightIcon />
+      )}
+    </li>
+  )
+}
+
+function BreadcrumbEllipsis({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="breadcrumb-ellipsis"
+      role="presentation"
+      aria-hidden="true"
+      className={cn(
+        "flex size-5 items-center justify-center [&>svg]:size-4",
+        className
+      )}
+      {...props}
+    >
+      <MoreHorizontalIcon
+      />
+      <span className="sr-only">More</span>
+    </span>
+  )
+}
+
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+}
+
 
 END_OF_FILE_CONTENT
 echo "Creating src/components/ui/button.tsx..."
@@ -10182,6 +11639,498 @@ export { Checkbox }
 
 
 END_OF_FILE_CONTENT
+echo "Creating src/components/ui/dialog.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/dialog.tsx"
+import * as React from "react"
+import { Dialog as DialogPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { XIcon } from "lucide-react"
+
+function Dialog({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+}
+
+function DialogTrigger({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+}
+
+function DialogPortal({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+}
+
+function DialogClose({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+}
+
+function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  return (
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn(
+        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  showCloseButton?: boolean
+}) {
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        className={cn(
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close data-slot="dialog-close" asChild>
+            <Button
+              variant="ghost"
+              className="absolute top-2 right-2"
+              size="sm"
+            >
+              <XIcon
+              />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+}
+
+function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-header"
+      className={cn("flex flex-col gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogFooter({
+  className,
+  showCloseButton = false,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & {
+  showCloseButton?: boolean
+}) {
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn(
+        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      {showCloseButton && (
+        <DialogPrimitive.Close asChild>
+          <Button variant="outline">Close</Button>
+        </DialogPrimitive.Close>
+      )}
+    </div>
+  )
+}
+
+function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title
+      data-slot="dialog-title"
+      className={cn(
+        "text-base leading-none font-medium",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      data-slot="dialog-description"
+      className={cn(
+        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+}
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/dropdown-menu.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/dropdown-menu.tsx"
+import * as React from "react"
+import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { CheckIcon, ChevronRightIcon } from "lucide-react"
+
+function DropdownMenu({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+}
+
+function DropdownMenuPortal({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
+  return (
+    <DropdownMenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
+  )
+}
+
+function DropdownMenuTrigger({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
+  return (
+    <DropdownMenuPrimitive.Trigger
+      data-slot="dropdown-menu-trigger"
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuContent({
+  className,
+  align = "start",
+  sideOffset = 4,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  return (
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.Content
+        data-slot="dropdown-menu-content"
+        sideOffset={sideOffset}
+        align={align}
+        className={cn("z-50 max-h-(--radix-dropdown-menu-content-available-height) w-(--radix-dropdown-menu-trigger-width) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:overflow-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
+  )
+}
+
+function DropdownMenuGroup({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
+  return (
+    <DropdownMenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+  )
+}
+
+function DropdownMenuItem({
+  className,
+  inset,
+  variant = "default",
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
+  inset?: boolean
+  variant?: "default" | "destructive"
+}) {
+  return (
+    <DropdownMenuPrimitive.Item
+      data-slot="dropdown-menu-item"
+      data-inset={inset}
+      data-variant={variant}
+      className={cn(
+        "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuCheckboxItem({
+  className,
+  children,
+  checked,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.CheckboxItem
+      data-slot="dropdown-menu-checkbox-item"
+      data-inset={inset}
+      className={cn(
+        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      checked={checked}
+      {...props}
+    >
+      <span
+        className="pointer-events-none absolute right-2 flex items-center justify-center"
+        data-slot="dropdown-menu-checkbox-item-indicator"
+      >
+        <DropdownMenuPrimitive.ItemIndicator>
+          <CheckIcon
+          />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.CheckboxItem>
+  )
+}
+
+function DropdownMenuRadioGroup({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
+  return (
+    <DropdownMenuPrimitive.RadioGroup
+      data-slot="dropdown-menu-radio-group"
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuRadioItem({
+  className,
+  children,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.RadioItem
+      data-slot="dropdown-menu-radio-item"
+      data-inset={inset}
+      className={cn(
+        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      <span
+        className="pointer-events-none absolute right-2 flex items-center justify-center"
+        data-slot="dropdown-menu-radio-item-indicator"
+      >
+        <DropdownMenuPrimitive.ItemIndicator>
+          <CheckIcon
+          />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </DropdownMenuPrimitive.RadioItem>
+  )
+}
+
+function DropdownMenuLabel({
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.Label
+      data-slot="dropdown-menu-label"
+      data-inset={inset}
+      className={cn(
+        "px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
+  return (
+    <DropdownMenuPrimitive.Separator
+      data-slot="dropdown-menu-separator"
+      className={cn("-mx-1 my-1 h-px bg-border", className)}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuShortcut({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="dropdown-menu-shortcut"
+      className={cn(
+        "ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuSub({
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
+  return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />
+}
+
+function DropdownMenuSubTrigger({
+  className,
+  inset,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger> & {
+  inset?: boolean
+}) {
+  return (
+    <DropdownMenuPrimitive.SubTrigger
+      data-slot="dropdown-menu-sub-trigger"
+      data-inset={inset}
+      className={cn(
+        "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <ChevronRightIcon className="ml-auto" />
+    </DropdownMenuPrimitive.SubTrigger>
+  )
+}
+
+function DropdownMenuSubContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
+  return (
+    <DropdownMenuPrimitive.SubContent
+      data-slot="dropdown-menu-sub-content"
+      className={cn("z-50 min-w-[96px] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+      {...props}
+    />
+  )
+}
+
+export {
+  DropdownMenu,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+}
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/hover-card.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/hover-card.tsx"
+"use client"
+
+import * as React from "react"
+import { HoverCard as HoverCardPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+function HoverCard({
+  ...props
+}: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
+  return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />
+}
+
+function HoverCardTrigger({
+  ...props
+}: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {
+  return (
+    <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />
+  )
+}
+
+function HoverCardContent({
+  className,
+  align = "center",
+  sideOffset = 4,
+  ...props
+}: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
+  return (
+    <HoverCardPrimitive.Portal data-slot="hover-card-portal">
+      <HoverCardPrimitive.Content
+        data-slot="hover-card-content"
+        align={align}
+        sideOffset={sideOffset}
+        className={cn(
+          "z-50 w-64 origin-(--radix-hover-card-content-transform-origin) rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          className
+        )}
+        {...props}
+      />
+    </HoverCardPrimitive.Portal>
+  )
+}
+
+export { HoverCard, HoverCardTrigger, HoverCardContent }
+
+
+END_OF_FILE_CONTENT
 echo "Creating src/components/ui/input.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/input.tsx"
 import * as React from 'react'
@@ -10230,6 +12179,267 @@ const Label = React.forwardRef<
 Label.displayName = 'Label'
 
 export { Label }
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/navigation-menu.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/navigation-menu.tsx"
+import * as React from "react"
+import { cva } from "class-variance-authority"
+import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { ChevronDownIcon } from "lucide-react"
+
+function NavigationMenu({
+  className,
+  children,
+  viewport = true,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
+  viewport?: boolean
+}) {
+  return (
+    <NavigationMenuPrimitive.Root
+      data-slot="navigation-menu"
+      data-viewport={viewport}
+      className={cn(
+        "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      {viewport && <NavigationMenuViewport />}
+    </NavigationMenuPrimitive.Root>
+  )
+}
+
+function NavigationMenuList({
+  className,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
+  return (
+    <NavigationMenuPrimitive.List
+      data-slot="navigation-menu-list"
+      className={cn(
+        "group flex flex-1 list-none items-center justify-center gap-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function NavigationMenuItem({
+  className,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
+  return (
+    <NavigationMenuPrimitive.Item
+      data-slot="navigation-menu-item"
+      className={cn("relative", className)}
+      {...props}
+    />
+  )
+}
+
+const navigationMenuTriggerStyle = cva(
+  "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-muted/50 data-popup-open:hover:bg-muted data-open:bg-muted/50 data-open:hover:bg-muted data-open:focus:bg-muted"
+)
+
+function NavigationMenuTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.Trigger>) {
+  return (
+    <NavigationMenuPrimitive.Trigger
+      data-slot="navigation-menu-trigger"
+      className={cn(navigationMenuTriggerStyle(), "group", className)}
+      {...props}
+    >
+      {children}{" "}
+      <ChevronDownIcon className="relative top-px ml-1 size-3 transition duration-300 group-data-popup-open/navigation-menu-trigger:rotate-180 group-data-open/navigation-menu-trigger:rotate-180" aria-hidden="true" />
+    </NavigationMenuPrimitive.Trigger>
+  )
+}
+
+function NavigationMenuContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.Content>) {
+  return (
+    <NavigationMenuPrimitive.Content
+      data-slot="navigation-menu-content"
+      className={cn(
+        "top-0 left-0 w-full p-1 ease-[cubic-bezier(0.22,1,0.36,1)] group-data-[viewport=false]/navigation-menu:top-full group-data-[viewport=false]/navigation-menu:mt-1.5 group-data-[viewport=false]/navigation-menu:overflow-hidden group-data-[viewport=false]/navigation-menu:rounded-lg group-data-[viewport=false]/navigation-menu:bg-popover group-data-[viewport=false]/navigation-menu:text-popover-foreground group-data-[viewport=false]/navigation-menu:shadow group-data-[viewport=false]/navigation-menu:ring-1 group-data-[viewport=false]/navigation-menu:ring-foreground/10 group-data-[viewport=false]/navigation-menu:duration-300 data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out **:data-[slot=navigation-menu-link]:focus:ring-0 **:data-[slot=navigation-menu-link]:focus:outline-none md:absolute md:w-auto group-data-[viewport=false]/navigation-menu:data-open:animate-in group-data-[viewport=false]/navigation-menu:data-open:fade-in-0 group-data-[viewport=false]/navigation-menu:data-open:zoom-in-95 group-data-[viewport=false]/navigation-menu:data-closed:animate-out group-data-[viewport=false]/navigation-menu:data-closed:fade-out-0 group-data-[viewport=false]/navigation-menu:data-closed:zoom-out-95",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function NavigationMenuViewport({
+  className,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.Viewport>) {
+  return (
+    <div
+      className={cn(
+        "absolute top-full left-0 isolate z-50 flex justify-center"
+      )}
+    >
+      <NavigationMenuPrimitive.Viewport
+        data-slot="navigation-menu-viewport"
+        className={cn(
+          "origin-top-center relative mt-1.5 h-(--radix-navigation-menu-viewport-height) w-full overflow-hidden rounded-lg bg-popover text-popover-foreground shadow ring-1 ring-foreground/10 duration-100 md:w-(--radix-navigation-menu-viewport-width) data-open:animate-in data-open:zoom-in-90 data-closed:animate-out data-closed:zoom-out-90",
+          className
+        )}
+        {...props}
+      />
+    </div>
+  )
+}
+
+function NavigationMenuLink({
+  className,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.Link>) {
+  return (
+    <NavigationMenuPrimitive.Link
+      data-slot="navigation-menu-link"
+      className={cn(
+        "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 in-data-[slot=navigation-menu-content]:rounded-md data-active:bg-muted/50 data-active:hover:bg-muted data-active:focus:bg-muted [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function NavigationMenuIndicator({
+  className,
+  ...props
+}: React.ComponentProps<typeof NavigationMenuPrimitive.Indicator>) {
+  return (
+    <NavigationMenuPrimitive.Indicator
+      data-slot="navigation-menu-indicator"
+      className={cn(
+        "top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:animate-in data-[state=visible]:fade-in",
+        className
+      )}
+      {...props}
+    >
+      <div className="relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm bg-border shadow-md" />
+    </NavigationMenuPrimitive.Indicator>
+  )
+}
+
+export {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuContent,
+  NavigationMenuTrigger,
+  NavigationMenuLink,
+  NavigationMenuIndicator,
+  NavigationMenuViewport,
+  navigationMenuTriggerStyle,
+}
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/progress.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/progress.tsx"
+import * as React from "react"
+import { Progress as ProgressPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+function Progress({
+  className,
+  value,
+  ...props
+}: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+  return (
+    <ProgressPrimitive.Root
+      data-slot="progress"
+      className={cn(
+        "relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted",
+        className
+      )}
+      {...props}
+    >
+      <ProgressPrimitive.Indicator
+        data-slot="progress-indicator"
+        className="size-full flex-1 bg-primary transition-all"
+        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+      />
+    </ProgressPrimitive.Root>
+  )
+}
+
+export { Progress }
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/scroll-area.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/scroll-area.tsx"
+import * as React from "react"
+import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+function ScrollArea({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof ScrollAreaPrimitive.Root>) {
+  return (
+    <ScrollAreaPrimitive.Root
+      data-slot="scroll-area"
+      className={cn("relative", className)}
+      {...props}
+    >
+      <ScrollAreaPrimitive.Viewport
+        data-slot="scroll-area-viewport"
+        className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
+      >
+        {children}
+      </ScrollAreaPrimitive.Viewport>
+      <ScrollBar />
+      <ScrollAreaPrimitive.Corner />
+    </ScrollAreaPrimitive.Root>
+  )
+}
+
+function ScrollBar({
+  className,
+  orientation = "vertical",
+  ...props
+}: React.ComponentProps<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>) {
+  return (
+    <ScrollAreaPrimitive.ScrollAreaScrollbar
+      data-slot="scroll-area-scrollbar"
+      data-orientation={orientation}
+      orientation={orientation}
+      className={cn(
+        "flex touch-none p-px transition-colors select-none data-horizontal:h-2.5 data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2.5 data-vertical:border-l data-vertical:border-l-transparent",
+        className
+      )}
+      {...props}
+    >
+      <ScrollAreaPrimitive.ScrollAreaThumb
+        data-slot="scroll-area-thumb"
+        className="relative flex-1 rounded-full bg-border"
+      />
+    </ScrollAreaPrimitive.ScrollAreaScrollbar>
+  )
+}
+
+export { ScrollArea, ScrollBar }
+
 
 END_OF_FILE_CONTENT
 echo "Creating src/components/ui/select.tsx..."
@@ -10642,6 +12852,158 @@ Separator.displayName = 'Separator'
 export { Separator }
 
 END_OF_FILE_CONTENT
+echo "Creating src/components/ui/sheet.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/sheet.tsx"
+"use client"
+
+import * as React from "react"
+import { Dialog as SheetPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { XIcon } from "lucide-react"
+
+function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />
+}
+
+function SheetTrigger({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
+}
+
+function SheetClose({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Close>) {
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
+}
+
+function SheetPortal({
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Portal>) {
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+}
+
+function SheetOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
+  return (
+    <SheetPrimitive.Overlay
+      data-slot="sheet-overlay"
+      className={cn(
+        "fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function SheetContent({
+  className,
+  children,
+  side = "right",
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Content> & {
+  side?: "top" | "right" | "bottom" | "left"
+  showCloseButton?: boolean
+}) {
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        data-slot="sheet-content"
+        data-side={side}
+        className={cn(
+          "fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-[side=bottom]:data-open:slide-in-from-bottom-10 data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10 data-closed:animate-out data-closed:fade-out-0 data-[side=bottom]:data-closed:slide-out-to-bottom-10 data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <SheetPrimitive.Close data-slot="sheet-close" asChild>
+            <Button
+              variant="ghost"
+              className="absolute top-3 right-3"
+              size="sm"
+            >
+              <XIcon
+              />
+              <span className="sr-only">Close</span>
+            </Button>
+          </SheetPrimitive.Close>
+        )}
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  )
+}
+
+function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-header"
+      className={cn("flex flex-col gap-0.5 p-4", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-footer"
+      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      {...props}
+    />
+  )
+}
+
+function SheetTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Title>) {
+  return (
+    <SheetPrimitive.Title
+      data-slot="sheet-title"
+      className={cn(
+        "text-base font-medium text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function SheetDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Description>) {
+  return (
+    <SheetPrimitive.Description
+      data-slot="sheet-description"
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Sheet,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+}
+
+
+END_OF_FILE_CONTENT
 echo "Creating src/components/ui/skeleton.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/skeleton.tsx"
 import { cn } from '@/lib/utils';
@@ -10660,6 +13022,256 @@ function Skeleton({
 }
 
 export { Skeleton };
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/switch.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/switch.tsx"
+import * as React from "react"
+import { Switch as SwitchPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+function Switch({
+  className,
+  size = "default",
+  ...props
+}: React.ComponentProps<typeof SwitchPrimitive.Root> & {
+  size?: "sm" | "default"
+}) {
+  return (
+    <SwitchPrimitive.Root
+      data-slot="switch"
+      data-size={size}
+      className={cn(
+        "peer group/switch relative inline-flex shrink-0 items-center rounded-full border border-transparent transition-all outline-none after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=default]:h-[18.4px] data-[size=default]:w-[32px] data-[size=sm]:h-[14px] data-[size=sm]:w-[24px] dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:bg-primary data-unchecked:bg-input dark:data-unchecked:bg-input/80 data-disabled:cursor-not-allowed data-disabled:opacity-50",
+        className
+      )}
+      {...props}
+    >
+      <SwitchPrimitive.Thumb
+        data-slot="switch-thumb"
+        className="pointer-events-none block rounded-full bg-background ring-0 transition-transform group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 group-data-[size=default]/switch:data-checked:translate-x-[calc(100%-2px)] group-data-[size=sm]/switch:data-checked:translate-x-[calc(100%-2px)] dark:data-checked:bg-primary-foreground group-data-[size=default]/switch:data-unchecked:translate-x-0 group-data-[size=sm]/switch:data-unchecked:translate-x-0 dark:data-unchecked:bg-foreground"
+      />
+    </SwitchPrimitive.Root>
+  )
+}
+
+export { Switch }
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/table.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/table.tsx"
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Table({ className, ...props }: React.ComponentProps<"table">) {
+  return (
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto"
+    >
+      <table
+        data-slot="table"
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
+    </div>
+  )
+}
+
+function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+  return (
+    <thead
+      data-slot="table-header"
+      className={cn("[&_tr]:border-b", className)}
+      {...props}
+    />
+  )
+}
+
+function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+  return (
+    <tbody
+      data-slot="table-body"
+      className={cn("[&_tr:last-child]:border-0", className)}
+      {...props}
+    />
+  )
+}
+
+function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+  return (
+    <tfoot
+      data-slot="table-footer"
+      className={cn(
+        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+  return (
+    <tr
+      data-slot="table-row"
+      className={cn(
+        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+  return (
+    <th
+      data-slot="table-head"
+      className={cn(
+        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+  return (
+    <td
+      data-slot="table-cell"
+      className={cn(
+        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableCaption({
+  className,
+  ...props
+}: React.ComponentProps<"caption">) {
+  return (
+    <caption
+      data-slot="table-caption"
+      className={cn("mt-4 text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+}
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/tabs.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/tabs.tsx"
+"use client"
+
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Tabs as TabsPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+function Tabs({
+  className,
+  orientation = "horizontal",
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+  return (
+    <TabsPrimitive.Root
+      data-slot="tabs"
+      data-orientation={orientation}
+      className={cn(
+        "group/tabs flex gap-2 data-horizontal:flex-col",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+const tabsListVariants = cva(
+  "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-horizontal/tabs:h-8 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
+  {
+    variants: {
+      variant: {
+        default: "bg-muted",
+        line: "gap-1 bg-transparent",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function TabsList({
+  className,
+  variant = "default",
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.List> &
+  VariantProps<typeof tabsListVariants>) {
+  return (
+    <TabsPrimitive.List
+      data-slot="tabs-list"
+      data-variant={variant}
+      className={cn(tabsListVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+function TabsTrigger({
+  className,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+  return (
+    <TabsPrimitive.Trigger
+      data-slot="tabs-trigger"
+      className={cn(
+        "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-1.5 py-0.5 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 dark:text-muted-foreground dark:hover:text-foreground group-data-[variant=default]/tabs-list:data-active:shadow-sm group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
+        "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
+        "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TabsContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+  return (
+    <TabsPrimitive.Content
+      data-slot="tabs-content"
+      className={cn("flex-1 text-sm outline-none", className)}
+      {...props}
+    />
+  )
+}
+
+export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }
+
 
 END_OF_FILE_CONTENT
 echo "Creating src/components/ui/textarea.tsx..."
@@ -10688,6 +13300,212 @@ export { Textarea }
 
 
 END_OF_FILE_CONTENT
+echo "Creating src/components/ui/toggle-group.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/toggle-group.tsx"
+import * as React from "react"
+import { type VariantProps } from "class-variance-authority"
+import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { toggleVariants } from "@/components/ui/toggle"
+
+const ToggleGroupContext = React.createContext<
+  VariantProps<typeof toggleVariants> & {
+    spacing?: number
+    orientation?: "horizontal" | "vertical"
+  }
+>({
+  size: "default",
+  variant: "default",
+  spacing: 0,
+  orientation: "horizontal",
+})
+
+function ToggleGroup({
+  className,
+  variant,
+  size,
+  spacing = 0,
+  orientation = "horizontal",
+  children,
+  ...props
+}: React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
+  VariantProps<typeof toggleVariants> & {
+    spacing?: number
+    orientation?: "horizontal" | "vertical"
+  }) {
+  return (
+    <ToggleGroupPrimitive.Root
+      data-slot="toggle-group"
+      data-variant={variant}
+      data-size={size}
+      data-spacing={spacing}
+      data-orientation={orientation}
+      style={{ "--gap": spacing } as React.CSSProperties}
+      className={cn(
+        "group/toggle-group flex w-fit flex-row items-center gap-[--spacing(var(--gap))] rounded-lg data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-vertical:flex-col data-vertical:items-stretch",
+        className
+      )}
+      {...props}
+    >
+      <ToggleGroupContext.Provider
+        value={{ variant, size, spacing, orientation }}
+      >
+        {children}
+      </ToggleGroupContext.Provider>
+    </ToggleGroupPrimitive.Root>
+  )
+}
+
+function ToggleGroupItem({
+  className,
+  children,
+  variant = "default",
+  size = "default",
+  ...props
+}: React.ComponentProps<typeof ToggleGroupPrimitive.Item> &
+  VariantProps<typeof toggleVariants>) {
+  const context = React.useContext(ToggleGroupContext)
+
+  return (
+    <ToggleGroupPrimitive.Item
+      data-slot="toggle-group-item"
+      data-variant={context.variant || variant}
+      data-size={context.size || size}
+      data-spacing={context.spacing}
+      className={cn(
+        "shrink-0 group-data-[spacing=0]/toggle-group:rounded-none group-data-[spacing=0]/toggle-group:px-2 focus:z-10 focus-visible:z-10 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-end]:pr-1.5 group-data-[spacing=0]/toggle-group:has-data-[icon=inline-start]:pl-1.5 group-data-horizontal/toggle-group:data-[spacing=0]:first:rounded-l-lg group-data-vertical/toggle-group:data-[spacing=0]:first:rounded-t-lg group-data-horizontal/toggle-group:data-[spacing=0]:last:rounded-r-lg group-data-vertical/toggle-group:data-[spacing=0]:last:rounded-b-lg group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:border-l-0 group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:border-t-0 group-data-horizontal/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-l group-data-vertical/toggle-group:data-[spacing=0]:data-[variant=outline]:first:border-t",
+        toggleVariants({
+          variant: context.variant || variant,
+          size: context.size || size,
+        }),
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </ToggleGroupPrimitive.Item>
+  )
+}
+
+export { ToggleGroup, ToggleGroupItem }
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/toggle.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/toggle.tsx"
+"use client"
+
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Toggle as TogglePrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+const toggleVariants = cva(
+  "group/toggle inline-flex items-center justify-center gap-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all outline-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        default: "bg-transparent",
+        outline: "border border-input bg-transparent hover:bg-muted",
+      },
+      size: {
+        default:
+          "h-8 min-w-8 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        sm: "h-7 min-w-7 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-9 min-w-9 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Toggle({
+  className,
+  variant = "default",
+  size = "default",
+  ...props
+}: React.ComponentProps<typeof TogglePrimitive.Root> &
+  VariantProps<typeof toggleVariants>) {
+  return (
+    <TogglePrimitive.Root
+      data-slot="toggle"
+      className={cn(toggleVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Toggle, toggleVariants }
+
+
+END_OF_FILE_CONTENT
+echo "Creating src/components/ui/tooltip.tsx..."
+cat << 'END_OF_FILE_CONTENT' > "src/components/ui/tooltip.tsx"
+"use client"
+
+import * as React from "react"
+import { Tooltip as TooltipPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+function TooltipProvider({
+  delayDuration = 0,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
+  return (
+    <TooltipPrimitive.Provider
+      data-slot="tooltip-provider"
+      delayDuration={delayDuration}
+      {...props}
+    />
+  )
+}
+
+function Tooltip({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+}
+
+function TooltipTrigger({
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+}
+
+function TooltipContent({
+  className,
+  sideOffset = 0,
+  children,
+  ...props
+}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  return (
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Content
+        data-slot="tooltip-content"
+        sideOffset={sideOffset}
+        className={cn(
+          "z-50 inline-flex w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin) items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pr-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 **:data-[slot=kbd]:relative **:data-[slot=kbd]:isolate **:data-[slot=kbd]:z-50 **:data-[slot=kbd]:rounded-sm data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground" />
+      </TooltipPrimitive.Content>
+    </TooltipPrimitive.Portal>
+  )
+}
+
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }
+
+
+END_OF_FILE_CONTENT
 mkdir -p "src/data"
 mkdir -p "src/data/config"
 echo "Creating src/data/config/menu.json..."
@@ -10695,12 +13513,12 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu.json"
 {
   "main": [
     {
-      "label": "Architecture",
-      "href": "#Architecture"
+      "label": "Why",
+      "href": "#Why"
     },
     {
-      "label": "Whys",
-      "href": "#Why"
+      "label": "Architecture",
+      "href": "#Architecture"
     },
     {
       "label": "Example",
@@ -10713,52 +13531,6 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/menu.json"
     {
       "label": "GitHub",
       "href": "https://github.com/olonjs/core"
-    }
-  ],
-  "footer": [
-    {
-      "label": "GitHubs",
-      "href": "https://github.com/olonjs/core"
-    }
-  ],
-  "nested": [
-    {
-      "label": "Why",
-      "href": "/why",
-      "children": [
-        {
-          "label": "Overview",
-          "href": "/platform/overview"
-        },
-        {
-          "label": "Architecture",
-          "href": "/platform/architecture"
-        },
-        {
-          "label": "Security",
-          "href": "/platform/security"
-        },
-        {
-          "label": "Integrations",
-          "href": "/platform/integrations"
-        },
-        {
-          "label": "Roadmap",
-          "href": "/platform/roadmap"
-        }
-      ]
-    },
-    {
-      "label": "Solutions",
-      "href": "/solutions"
-    },
-    {
-      "label": "Pricing",
-      "href": "/pricing"
-    },
-    {
-      "label": "Resources",
-      "href": "/resources"
     }
   ]
 }
@@ -10811,15 +13583,51 @@ END_OF_FILE_CONTENT
 echo "Creating src/data/config/site.json..."
 cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
 {
+  "identity": {
+    "title": "OlonJS",
+    "logoUrl": "/brand/mark/olon-mark-dark.svg"
+  },
+  "pages": [
+    {
+      "slug": "home",
+      "label": "Home"
+    },
+    {
+      "slug": "design-system",
+      "label": "Design System"
+    }
+  ],
   "header": {
     "id": "global-header",
     "type": "header",
     "data": {
       "logoText": "Olon",
       "badge": "JS",
-      "menu": {
-        "$ref": "../config/menu.json#/main"
-      }
+      "links": [
+        {
+          "label": "Why",
+          "href": "#Why"
+        },
+        {
+          "label": "Architecture",
+          "href": "#Architecture"
+        },
+        {
+          "label": "Example",
+          "href": "#Example"
+        },
+        {
+          "label": "Get started",
+          "href": "#Getstarted"
+        },
+        {
+          "label": "GitHub",
+          "href": "https://github.com/olonjs/core"
+        }
+      ],
+      "ctaLabel": "",
+      "ctaHref": "",
+      "signinHref": ""
     }
   },
   "footer": {
@@ -10828,15 +13636,18 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "data": {
       "brandText": "OlonJS",
       "copyright": "© 2026 OlonJS · v1.5 · Guido Serio",
-      "menu": {
-        "$ref": "../config/menu.json#/footer"
-      }
+      "links": [
+        {
+          "label": "GitHub",
+          "href": "https://github.com/olonjs/core"
+        }
+      ],
+      "designSystemHref": ""
+    },
+    "settings": {
+      "showLogo": true
     }
-  },
-  "identity": {
-    "title": "Site"
-  },
-  "pages": []
+  }
 }
 END_OF_FILE_CONTENT
 echo "Creating src/data/config/theme.json..."
@@ -11066,9 +13877,9 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/pages/home.json"
       "data": {
         "id": "hero-main",
         "eyebrow": "CONTRACT LAYER · V1.5 · OPEN SOURCE",
-        "headline": "Build Websites ",
-        "subline": "AI Agents Can Operate",
-        "body": "Aaa agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
+        "headline": "Contract Layer",
+        "subline": "for the agentic web.",
+        "body": "AI agents are becoming operational actors in commerce, marketing, and support. They need more than content — they need a contract. OlonJS is the deterministic machine contract for websites: every site typed, structured, and addressable by design. No custom glue. No fragile integrations. Just a contract any agent can read and operate.",
         "primaryCta": {
           "label": "Get started",
           "href": "#getstarted"
@@ -11842,25 +14653,12 @@ cat << 'END_OF_FILE_CONTENT' > "src/entry-ssg.tsx"
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { ConfigProvider, PageRenderer, StudioProvider, resolveRuntimeConfig } from '@olonjs/core';
-import type { JsonPagesConfig, MenuConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
+import type { JsonPagesConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ComponentRegistry } from '@/lib/ComponentRegistry';
 import { SECTION_SCHEMAS } from '@/lib/schemas';
-import { getFilePages } from '@/lib/getFilePages';
-import siteData from '@/data/config/site.json';
-import menuData from '@/data/config/menu.json';
-import themeData from '@/data/config/theme.json';
+import { menuConfig, pages, refDocuments, siteConfig, themeConfig } from '@/runtime';
 import tenantCss from '@/index.css?inline';
-
-const siteConfig = siteData as unknown as SiteConfig;
-const menuConfig: MenuConfig = { main: [] };
-const themeConfig = themeData as unknown as ThemeConfig;
-const pages = getFilePages();
-const refDocuments = {
-  'menu.json': menuData,
-  'config/menu.json': menuData,
-  'src/data/config/menu.json': menuData,
-} satisfies NonNullable<JsonPagesConfig['refDocuments']>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -13543,6 +16341,38 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 
 END_OF_FILE_CONTENT
+echo "Creating src/runtime.ts..."
+cat << 'END_OF_FILE_CONTENT' > "src/runtime.ts"
+import type { JsonPagesConfig, MenuConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
+import { SECTION_SCHEMAS } from '@/lib/schemas';
+import { getFilePages } from '@/lib/getFilePages';
+import siteData from '@/data/config/site.json';
+import menuData from '@/data/config/menu.json';
+import themeData from '@/data/config/theme.json';
+
+export const siteConfig = siteData as unknown as SiteConfig;
+export const themeConfig = themeData as unknown as ThemeConfig;
+export const menuConfig = menuData as unknown as MenuConfig;
+export const pages = getFilePages();
+export const refDocuments = {
+  'menu.json': menuConfig,
+  'config/menu.json': menuConfig,
+  'src/data/config/menu.json': menuConfig,
+} satisfies NonNullable<JsonPagesConfig['refDocuments']>;
+
+export function getWebMcpBuildState(): {
+  pages: Record<string, PageConfig>;
+  schemas: JsonPagesConfig['schemas'];
+  siteConfig: SiteConfig;
+} {
+  return {
+    pages,
+    schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+    siteConfig,
+  };
+}
+
+END_OF_FILE_CONTENT
 mkdir -p "src/types"
 echo "Creating src/types.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/types.ts"
@@ -13739,7 +16569,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13796,8 +16626,7 @@ function normalizeManifestSlug(raw) {
 }
 
 async function loadWebMcpBuilders() {
-  const corePkgPath = path.dirname(fileURLToPath(import.meta.resolve('@olonjs/core/package.json')));
-  const moduleUrl = pathToFileURL(path.resolve(corePkgPath, 'src', 'lib', 'webmcp-contracts.mjs')).href;
+  const moduleUrl = import.meta.resolve('@olonjs/core');
   return import(moduleUrl);
 }
 export default defineConfig({
@@ -13812,9 +16641,10 @@ export default defineConfig({
           const isPageJsonRequest = isTenantPageJsonRequest(req, pathname);
 
           const handleManifestRequest = async () => {
-            const { buildPageContract, buildPageManifest, buildSiteManifest, buildLlmsTxt } = await loadWebMcpBuilders();
-            const ssrEntry = await server.ssrLoadModule('/src/entry-ssg.tsx');
-            const buildState = ssrEntry.getWebMcpBuildState();
+            const core = await loadWebMcpBuilders();
+            const { buildPageContract, buildPageManifest, buildSiteManifest, buildLlmsTxt } = core.webmcp;
+            const runtime = await server.ssrLoadModule('/src/runtime.ts');
+            const buildState = runtime.getWebMcpBuildState();
 
             if (req.method === 'GET' && pathname === '/llms.txt') {
               res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -13982,8 +16812,6 @@ export default defineConfig({
     },
   },
 });
-
-
 
 
 END_OF_FILE_CONTENT
