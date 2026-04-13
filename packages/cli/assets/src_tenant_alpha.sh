@@ -1643,7 +1643,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.116",
+    "@olonjs/core": "^1.0.117",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -2064,7 +2064,7 @@ if (targets.length === 0) {
 console.log(`[bake] Targets: ${targets.map((t) => t.slug).join(', ')}`);
 
 const ssrEntryUrl = pathToFileURL(path.resolve(root, 'dist-ssr/entry-ssg.js')).href;
-const { render, getCss, getPageMeta, getWebMcpBuildState } = await import(ssrEntryUrl);
+const { render, getCss, getRemoteStylesheets, getPageMeta, getWebMcpBuildState } = await import(ssrEntryUrl);
 
 const template = await fs.readFile(path.resolve(root, 'dist/index.html'), 'utf-8');
 const hasCommentMarker = template.includes('<!--app-html-->');
@@ -2075,6 +2075,9 @@ if (!hasCommentMarker && !hasRootDivMarker) {
 
 const inlinedCss = getCss();
 const styleTag = `<style data-bake="inline">${inlinedCss}</style>`;
+const remoteStylesheetTags = getRemoteStylesheets()
+  .map((href) => `<link rel="stylesheet" href="${escapeHtmlAttribute(href)}">`)
+  .join('\n  ');
 const webMcpBuildState = getWebMcpBuildState();
 
 for (const { slug } of targets) {
@@ -2148,7 +2151,7 @@ for (const { slug, out, depth } of targets) {
   ].join('\n  ');
 
   let bakedHtml = fixedTemplate
-    .replace('</head>', `  ${styleTag}\n  ${contractLinks}\n</head>`)
+    .replace('</head>', `  ${remoteStylesheetTags ? `${remoteStylesheetTags}\n  ` : ''}${styleTag}\n  ${contractLinks}\n</head>`)
     .replace(/<title>.*?<\/title>/, `<title>${safeTitle}</title>\n    ${metaTags}`);
 
   if (hasCommentMarker) {
@@ -2917,6 +2920,42 @@ function buildThemeFontVarsCss(input: unknown): string {
   return `:root{--theme-font-primary:${primary};--theme-font-serif:${serif};--theme-font-mono:${mono};}`;
 }
 
+const REMOTE_CSS_LINK_ATTR = 'data-jp-tenant-remote-css';
+
+function isRemoteStylesheetHref(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function extractLeadingRemoteCssImports(cssText: string): { hrefs: string[]; rest: string } {
+  const hrefs = new Set<string>();
+  const leadingTriviaPattern = /^(?:\s+|\/\*[\s\S]*?\*\/)*/;
+  const importPattern =
+    /^@import\s+url\(\s*(?:'([^']+)'|"([^"]+)"|([^'")\s][^)]*))\s*\)\s*([^;]*);/i;
+  let rest = cssText;
+
+  for (;;) {
+    const trivia = rest.match(leadingTriviaPattern);
+    if (trivia && trivia[0]) {
+      rest = rest.slice(trivia[0].length);
+    }
+
+    const match = rest.match(importPattern);
+    if (!match) break;
+
+    const href = (match[1] ?? match[2] ?? match[3] ?? '').trim();
+    const trailingDirectives = (match[4] ?? '').trim();
+
+    if (!isRemoteStylesheetHref(href) || trailingDirectives.length > 0) {
+      break;
+    }
+
+    hrefs.add(href);
+    rest = rest.slice(match[0].length);
+  }
+
+  return { hrefs: Array.from(hrefs), rest };
+}
+
 function setTenantPreviewReady(ready: boolean): void {
   if (typeof window !== 'undefined') {
     (window as Window & { __TENANT_PREVIEW_READY__?: boolean }).__TENANT_PREVIEW_READY__ = ready;
@@ -3331,6 +3370,39 @@ function App() {
     void runCloudSave(pendingCloudSave.current, false);
   }, [runCloudSave]);
 
+  const tenantCssParts = useMemo(() => extractLeadingRemoteCssImports(tenantCss), [tenantCss]);
+  const resolvedTenantCss = useMemo(
+    () => [buildThemeFontVarsCss(themeConfig), tenantCssParts.rest].filter(Boolean).join('\n'),
+    [tenantCssParts],
+  );
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const createdLinks: HTMLLinkElement[] = [];
+
+    tenantCssParts.hrefs.forEach((href) => {
+      const existing = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find(
+        (link) => (link as HTMLLinkElement).href === href,
+      ) as HTMLLinkElement | undefined;
+      if (existing) return;
+
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      link.setAttribute(REMOTE_CSS_LINK_ATTR, href);
+      document.head.appendChild(link);
+      createdLinks.push(link);
+    });
+
+    return () => {
+      createdLinks.forEach((link) => {
+        if (link.getAttribute(REMOTE_CSS_LINK_ATTR) !== link.href) return;
+        if (link.parentNode) link.parentNode.removeChild(link);
+      });
+    };
+  }, [tenantCssParts]);
+
   const config: JsonPagesConfig = {
     tenantId: TENANT_ID,
     basePath: APP_BASE_PATH,
@@ -3341,7 +3413,7 @@ function App() {
     themeConfig,
     menuConfig,
     refDocuments,
-    themeCss: { tenant: `${buildThemeFontVarsCss(themeConfig)}\n${tenantCss}` },
+    themeCss: { tenant: resolvedTenantCss },
     addSection: addSectionConfig,
     webmcp: {
       enabled: true,
@@ -8044,6 +8116,39 @@ function buildThemeCssFromSot(theme: ThemeConfig): string {
   return `:root{${serialized}}`;
 }
 
+function isRemoteStylesheetHref(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function extractLeadingRemoteCssImports(cssText: string): { hrefs: string[]; rest: string } {
+  const hrefs = new Set<string>();
+  const leadingTriviaPattern = /^(?:\s+|\/\*[\s\S]*?\*\/)*/;
+  const importPattern =
+    /^@import(?:\s+url\(\s*(?:'([^']+)'|"([^"]+)"|([^'")\s][^)]*))\s*\)|\s*(['"])([^'"]+)\4)\s*([^;]*);/i;
+  let rest = cssText;
+
+  for (;;) {
+    const trivia = rest.match(leadingTriviaPattern);
+    if (trivia && trivia[0]) {
+      rest = rest.slice(trivia[0].length);
+    }
+
+    const match = rest.match(importPattern);
+    if (!match) break;
+
+    const href = (match[1] ?? match[2] ?? match[3] ?? match[5] ?? '').trim();
+    const trailingDirectives = (match[6] ?? '').trim();
+    if (!isRemoteStylesheetHref(href) || trailingDirectives.length > 0) {
+      break;
+    }
+
+    hrefs.add(href);
+    rest = rest.slice(match[0].length);
+  }
+
+  return { hrefs: Array.from(hrefs), rest };
+}
+
 function resolveTenantId(): string {
   const site: Record<string, unknown> = isRecord(siteConfig) ? siteConfig : {};
   const identityRaw = site['identity'];
@@ -8099,8 +8204,13 @@ export function render(slug: string): string {
 
 export function getCss(): string {
   const themeCss = buildThemeCssFromSot(themeConfig);
-  if (!themeCss) return tenantCss;
-  return `${themeCss}\n${tenantCss}`;
+  const { rest } = extractLeadingRemoteCssImports(tenantCss);
+  if (!themeCss) return rest;
+  return `${themeCss}\n${rest}`;
+}
+
+export function getRemoteStylesheets(): string[] {
+  return extractLeadingRemoteCssImports(tenantCss).hrefs;
 }
 
 export function getPageMeta(slug: string): { title: string; description: string } {
@@ -8127,6 +8237,7 @@ export function getWebMcpBuildState(): {
 }
 
 END_OF_FILE_CONTENT
+# SKIP: src/entry-ssg.tsx:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/fonts.css..."
 cat << 'END_OF_FILE_CONTENT' > "src/fonts.css"
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
