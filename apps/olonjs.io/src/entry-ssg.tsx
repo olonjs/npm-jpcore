@@ -1,7 +1,7 @@
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
 import { ConfigProvider, PageRenderer, StudioProvider, resolveRuntimeConfig } from '@olonjs/core';
-import type { JsonPagesConfig, PageConfig, ThemeConfig } from '@/types';
+import type { JsonPagesConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ComponentRegistry } from '@/lib/ComponentRegistry';
 import { SECTION_SCHEMAS } from '@/lib/schemas';
@@ -135,4 +135,16 @@ export function getPageMeta(slug: string): { title: string; description: string 
   const title = typeof rawMeta.title === 'string' ? rawMeta.title : resolved.slug;
   const description = typeof rawMeta.description === 'string' ? rawMeta.description : '';
   return { title, description };
+}
+
+export function getWebMcpBuildState(): {
+  pages: Record<string, PageConfig>;
+  schemas: JsonPagesConfig['schemas'];
+  siteConfig: SiteConfig;
+} {
+  return {
+    pages,
+    schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+    siteConfig,
+  };
 }
