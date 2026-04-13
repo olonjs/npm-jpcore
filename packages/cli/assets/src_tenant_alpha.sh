@@ -1643,7 +1643,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.114",
+    "@olonjs/core": "^1.0.115",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -8073,8 +8073,8 @@ function hasRenderableCta(cta: { label?: string; href?: string } | undefined): c
 }
 
 export function OlonHeroView({ data }: Props) {
-  const { tenantId = 'default' } = useConfig();
-  const imageUrl = data.image?.url ? resolveAssetUrl(data.image.url, tenantId) : heroPlugImage;
+  const { tenantId = 'default', basePath = '/' } = useConfig();
+  const imageUrl = data.image?.url ? resolveAssetUrl(data.image.url, tenantId, basePath) : heroPlugImage;
 
   return (
     <section
