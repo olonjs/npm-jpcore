@@ -8,7 +8,6 @@ This document defines the current architecture of `npm-jpcore`.
 - `packages/cli` -> `@olonjs/cli`
 - `packages/stack` -> `@olonjs/stack`
 - `apps/tenant-alpha` -> template source app (`alpha`)
-- `apps/tenant-agritourism` -> template source app (`agritourism`)
 
 Root workspace config is in `package.json` (`workspaces: ["packages/*", "apps/*"]`).
 
@@ -28,14 +27,13 @@ Root workspace config is in `package.json` (`workspaces: ["packages/*", "apps/*"
 
 - scaffolds new tenants
 - resolves DNA from template assets
-- command surface: `olonjs new tenant <name> [--template <name>] [--agritourism] [--script <path>]` (`jsonpages` alias supported)
+- command surface: `olonjs new tenant <name> [--template <name>] [--script <path>]` (`jsonpages` alias supported)
 
 ## Template architecture
 
 DNA templates are packaged under:
 
 - `packages/cli/assets/templates/alpha/`
-- `packages/cli/assets/templates/agritourism/`
 
 Each template contains:
 
@@ -51,7 +49,6 @@ Backward compatibility path still exists for `alpha`:
 Template DNA must originate from source apps:
 
 - `apps/tenant-alpha` => `alpha`
-- `apps/tenant-agritourism` => `agritourism`
 
 Manual edits directly in template DNA files are not the preferred workflow.
 
@@ -60,7 +57,6 @@ Manual edits directly in template DNA files are not the preferred workflow.
 ## Local development
 
 - `npm run dev` -> `tenant-alpha`
-- `npm run dev2` -> `tenant-agritourism`
 
 ## DNA regeneration
 

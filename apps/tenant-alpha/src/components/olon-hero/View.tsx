@@ -14,8 +14,8 @@ function hasRenderableCta(cta: { label?: string; href?: string } | undefined): c
 }
 
 export function OlonHeroView({ data }: Props) {
-  const { tenantId = 'default' } = useConfig();
-  const imageUrl = data.image?.url ? resolveAssetUrl(data.image.url, tenantId) : heroPlugImage;
+  const { tenantId = 'default', basePath = '/' } = useConfig();
+  const imageUrl = data.image?.url ? resolveAssetUrl(data.image.url, tenantId, basePath) : heroPlugImage;
 
   return (
     <section

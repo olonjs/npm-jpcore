@@ -91,7 +91,6 @@ program
   .argument('<type>', 'Type of artifact (tenant)')
   .argument('<name>', 'Name of the new tenant')
   .option('--template <name>', 'Template profile (default: alpha)', 'alpha')
-  .option('--agritourism', 'Alias for --template agritourism')
   .option('--script <path>', 'Override default deterministic script path')
   .action(async (type, name, options) => {
     if (type !== 'tenant') {
@@ -101,7 +100,7 @@ program
 
     const targetDir = path.join(process.cwd(), name);
     const availableTemplates = getAvailableTemplates();
-    const template = options.agritourism ? 'agritourism' : options.template;
+    const template = options.template;
     const scriptPath = options.script
       ? path.resolve(process.cwd(), options.script)
       : resolveTemplateScriptPath(template);

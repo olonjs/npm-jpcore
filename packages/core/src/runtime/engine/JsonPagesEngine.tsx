@@ -120,6 +120,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
           registry,
           schemas,
           tenantId: config.tenantId ?? 'default',
+          basePath: routerBasePath,
           assets: config.assets,
           overlayDisabledSectionTypes: config.overlayDisabledSectionTypes,
         }}

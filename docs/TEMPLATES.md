@@ -7,7 +7,6 @@ This document defines multi-template governance for CLI DNA assets.
 Required templates in current repository:
 
 - `alpha`
-- `agritourism`
 
 ## Asset layout
 
@@ -25,7 +24,6 @@ Compatibility copy for `alpha`:
 Template DNA must be generated from source apps:
 
 - `apps/tenant-alpha` (template `alpha`)
-- `apps/tenant-agritourism` (template `agritourism`)
 
 SOT generation command:
 
@@ -36,7 +34,6 @@ npm run dist:dna:all
 This delegates to each source app `dist` script:
 
 - `npm run dist -w tenant-alpha`
-- `npm run dist -w tenant-agritourism`
 
 ## Conformance
 

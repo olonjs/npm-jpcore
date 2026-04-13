@@ -195,10 +195,6 @@ function getCommandPlan() {
     { step: "4/6", desc: "tenant-alpha", cmd: "npm install -w tenant-alpha", cwd: "root", skip: false },
     { step: "4/6", desc: "tenant-alpha", cmd: "npm run build -w tenant-alpha", cwd: "root", skip: false },
     { step: "4/6", desc: "tenant-alpha", cmd: "npm run dist -w tenant-alpha", cwd: "root", skip: false },
-    { step: "4/6", desc: "tenant-agritourism", cmd: "Update package.json @olonjs/core -> ^<new-version>", cwd: "apps/tenant-agritourism", skip: false },
-    { step: "4/6", desc: "tenant-agritourism", cmd: "npm install -w tenant-agritourism", cwd: "root", skip: false },
-    { step: "4/6", desc: "tenant-agritourism", cmd: "npm run build -w tenant-agritourism", cwd: "root", skip: false },
-    { step: "4/6", desc: "tenant-agritourism", cmd: "npm run dist -w tenant-agritourism", cwd: "root", skip: false },
     { step: "5/6", desc: "@olonjs/cli", cmd: "npm run build -w @olonjs/cli", cwd: "root", skip: false },
     { step: "5/6", desc: "@olonjs/cli", cmd: "npm version patch --no-git-tag-version -w @olonjs/cli", cwd: "root", skip: false },
     { step: "5/6", desc: "@olonjs/cli (publish)", cmd: "npm publish --access public -w @olonjs/cli", cwd: "root", skip: dryRun },
@@ -347,7 +343,6 @@ function main() {
     const coreVersion = stepCore();
     const mcpVersion = stepMcp();
     stepTenant("tenant-alpha", coreVersion);
-    stepTenant("tenant-agritourism", coreVersion);
     const cliVersion = stepCli();
     stepCompatPackages(stackVersion, coreVersion, cliVersion);
 

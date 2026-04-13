@@ -1,6 +1,6 @@
 ---
 description: CLI and template DNA governance — activated when editing CLI or tenant source apps
-globs: packages/cli/**, apps/tenant-alpha/**, apps/tenant-agritourism/**
+globs: packages/cli/**, apps/tenant-alpha/**
 ---
 
 # CLI & Template DNA Governance

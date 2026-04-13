@@ -15,7 +15,6 @@ AI-native content infrastructure for Vercel & Vite. Deterministic, sovereign, gi
 | **CLI** | `packages/cli` | `@olonjs/cli` | Tenant scaffolding from DNA templates |
 | **Stack** | `packages/stack` | `@olonjs/stack` | Version manifest for dependency alignment |
 | **Tenant Alpha** | `apps/tenant-alpha` | — | Reference DNA template source (default) |
-| **Tenant Agritourism** | `apps/tenant-agritourism` | — | Second DNA template source |
 
 ## Core / Tenant split (fundamental invariant)
 
@@ -30,7 +29,6 @@ The tenant does NOT implement the CMS. It implements the tenant protocol consume
 Template DNA is generated from source apps, never edited manually:
 
 - `apps/tenant-alpha` -> `packages/cli/assets/templates/alpha/`
-- `apps/tenant-agritourism` -> `packages/cli/assets/templates/agritourism/`
 
 Commands:
 - `npm run dist:dna:all` — regenerate all template DNA
@@ -55,7 +53,7 @@ Commands:
 ## CLI usage
 
 ```
-npx @olonjs/cli new tenant <name> [--template <name>] [--agritourism]
+npx @olonjs/cli new tenant <name> [--template <name>]
 ```
 
 Aliases: `olonjs` (primary), `jsonpages` (compatibility).

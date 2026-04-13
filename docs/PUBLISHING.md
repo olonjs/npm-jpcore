@@ -6,7 +6,7 @@ This document is the operational source of truth for publishing `@olonjs/stack`,
 
 - Standard flow: `npm run release`
 - Enterprise-gated flow: `npm run release:enterprise`
-- Multi-template DNA governance (`alpha`, `agritourism`)
+- DNA governance (`alpha`)
 
 ## Prerequisites
 
@@ -47,8 +47,8 @@ Current behavior includes:
 - build all workspaces
 - patch version + publish `stack`
 - build, patch version + publish `core`
-- update both tenant apps to new `@olonjs/core`
-- build and `dist` `tenant-alpha` and `tenant-agritourism`
+- update tenant app to new `@olonjs/core`
+- build and `dist` `tenant-alpha`
 - build, patch version + publish `cli`
 - sync bridge dependencies and publish `@jsonpages/*` compatibility packages
 
@@ -67,7 +67,6 @@ Use this for gated releases when template governance must be enforced before pub
 ### Source of truth
 
 - `apps/tenant-alpha` is SoT for template `alpha`
-- `apps/tenant-agritourism` is SoT for template `agritourism`
 
 ### Dist command
 
@@ -80,7 +79,6 @@ npm run dist:dna:all
 This runs:
 
 - `npm run dist -w tenant-alpha`
-- `npm run dist -w tenant-agritourism`
 
 ### Template conformance
 

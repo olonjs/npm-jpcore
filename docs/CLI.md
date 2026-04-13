@@ -20,15 +20,13 @@ olonjs new tenant <name>
 Supported options:
 
 - `--template <name>`: choose template profile (default `alpha`)
-- `--agritourism`: alias for `--template agritourism`
 - `--script <path>`: override template DNA path directly
 
 Examples:
 
 ```bash
 olonjs new tenant my-site
-olonjs new tenant my-site --template agritourism
-olonjs new tenant my-site --agritourism
+olonjs new tenant my-site --template alpha
 ```
 
 ## Template resolution

@@ -12,6 +12,7 @@ export interface ConfigContextValue {
   registry: Registry;
   schemas: Schemas;
   tenantId?: string;
+  basePath?: string;
   assets?: AssetsConfig;
   overlayDisabledSectionTypes?: string[];
 }
@@ -19,7 +20,10 @@ export interface ConfigContextValue {
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
 
 export const ConfigProvider: React.FC<{
-  config: Pick<JsonPagesConfig, 'registry' | 'schemas' | 'tenantId' | 'assets' | 'overlayDisabledSectionTypes'>;
+  config: Pick<
+    JsonPagesConfig,
+    'registry' | 'schemas' | 'tenantId' | 'basePath' | 'assets' | 'overlayDisabledSectionTypes'
+  >;
   children: React.ReactNode;
 }> = ({ config, children }) => (
   <ConfigContext.Provider
@@ -27,6 +31,7 @@ export const ConfigProvider: React.FC<{
       registry: config.registry,
       schemas: config.schemas,
       tenantId: config.tenantId,
+      basePath: config.basePath,
       assets: config.assets,
       overlayDisabledSectionTypes: config.overlayDisabledSectionTypes,
     }}

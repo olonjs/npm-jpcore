@@ -29,6 +29,15 @@ describe('resolveAssetUrl', () => {
     expect(resolveAssetUrl('hero.png', 'tenant-a')).toBe('/assets/tenant-a/hero.png');
   });
 
+  it('resolves paths under sub-route base path', () => {
+    expect(resolveAssetUrl('assets/images/foo.png', 'tenant-a', '/core/')).toBe(
+      '/core/assets/images/foo.png'
+    );
+    expect(resolveAssetUrl('/assets/images/foo.png', 'tenant-a', '/core/')).toBe(
+      '/core/assets/images/foo.png'
+    );
+  });
+
   it('keeps /uploaded-assets URLs unchanged', () => {
     expect(resolveAssetUrl('/uploaded-assets/hero.png', 'tenant-a')).toBe(
       '/uploaded-assets/hero.png'

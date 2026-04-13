@@ -34,7 +34,6 @@ This repository contains the OlonJS stack:
 - `packages/cli`: tenant generator (`@olonjs/cli`)
 - `packages/stack`: dependency manifest (`@olonjs/stack`)
 - `apps/tenant-alpha`: reference DNA template source
-- `apps/tenant-agritourism`: second DNA template source
 
 Use this file as entrypoint. Canonical docs are under `docs/`
 
@@ -55,7 +54,6 @@ This repository manages the entire OlonJS ecosystem:
 - **`packages/cli` (@olonjs/cli):** The primary entry point for developers. Scaffolds new tenants by projecting DNA templates.
 - **`packages/stack` (@olonjs/stack):** Version manifest package to keep dependency policy aligned.
 - **`apps/tenant-alpha`:** Source of truth for the `alpha` DNA template.
-- **`apps/tenant-agritourism`:** Source of truth for the `agritourism` DNA template.
 
 ## 🚦 Getting Started
 
@@ -64,7 +62,7 @@ The only command you need to start a new project with the OlonJS DNA:
 ```bash
 npx @olonjs/cli new tenant my-agentic-site --template alpha
 ```
-*Supported templates: `alpha` (default), `agritourism`.*
+*Supported templates: `alpha` (default).*
 
 ### Local Monorepo Development
 ```bash
@@ -74,17 +72,14 @@ npm install
 # Run the reference alpha tenant
 npm run dev
 
-# Run the agritourism tenant
-npm run dev2
 ```
 ### Root scripts
 
 - `npm run dev`: run `tenant-alpha` in dev mode
-- `npm run dev2`: run `tenant-agritourism` in dev mode
 - `npm run build`: build `tenant-alpha`
 - `npm run build:all`: run `build` for all workspaces (if script exists)
-- `npm run check:templates`: validate CLI template assets (`alpha`, `agritourism`)
-- `npm run dist:dna:all`: regenerate DNA via tenants SOT (`tenant-alpha` + `tenant-agritourism`)
+- `npm run check:templates`: validate CLI template assets (`alpha`)
+- `npm run dist:dna:all`: regenerate DNA via tenant SOT (`tenant-alpha`)
 - `npm run release`: legacy release flow (`scripts/release.js`)
 - `npm run release:enterprise`: gated release flow (`check:templates` + `dist:dna:all` + `release`)
 
@@ -93,7 +88,6 @@ npm run dev2
 DNA is generated from tenant apps, not edited manually:
 
 - `apps/tenant-alpha` -> template `alpha`
-- `apps/tenant-agritourism` -> template `agritourism`
 
 Each source app owns its own `dist` script.
 Root `dist:dna:all` delegates to those `dist` scripts.

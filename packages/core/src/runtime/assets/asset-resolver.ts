@@ -1,6 +1,8 @@
 /**
  * Centralized asset resolution for tenant-scoped static assets.
  */
+import { withBasePath } from '../url';
+
 const FILE_EXTENSION_RE = /\.(jpg|jpeg|png|gif|svg|pdf|webp|mp4|webm|ogg)$/i;
 const WINDOWS_PATH_RE = /^[a-zA-Z]:[\\/]/;
 const ABSOLUTE_URL_RE = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
@@ -21,7 +23,11 @@ export const isCanonicalAssetUrl = (path: string): boolean => {
   return value.startsWith('/assets/') || value.startsWith('/uploaded-assets/');
 };
 
-export const resolveAssetUrl = (path: string, tenantId: string = 'default'): string => {
+export const resolveAssetUrl = (
+  path: string,
+  tenantId: string = 'default',
+  basePath: string = '/'
+): string => {
   const value = path.trim();
   if (!value) return value;
 
@@ -29,14 +35,14 @@ export const resolveAssetUrl = (path: string, tenantId: string = 'default'): str
     return value;
   }
 
-  if (value.startsWith('/assets/') || value.startsWith('/uploaded-assets/')) return value;
-  if (value.startsWith('assets/')) return `/${value}`;
+  if (value.startsWith('/assets/') || value.startsWith('/uploaded-assets/')) return withBasePath(value, basePath);
+  if (value.startsWith('assets/')) return withBasePath(`/${value}`, basePath);
 
   const hasFileExtension = FILE_EXTENSION_RE.test(value);
   if (!hasFileExtension) {
-    return value.startsWith('/') ? value : `/${value}`;
+    return withBasePath(value.startsWith('/') ? value : `/${value}`, basePath);
   }
 
   const cleanPath = value.replace(/^\//, '');
-  return `/assets/${tenantId}/${cleanPath}`;
+  return withBasePath(`/assets/${tenantId}/${cleanPath}`, basePath);
 };
