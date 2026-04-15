@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-page-mcp-manifest",
-  "generatedAt": "2026-04-13T19:19:44.726Z",
+  "generatedAt": "2026-04-15T17:19:39.706Z",
   "slug": "post",
   "title": "Post",
   "description": "Smoke test page for header + tiptap + footer flow.",

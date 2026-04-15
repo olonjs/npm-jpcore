@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-page-mcp-manifest",
-  "generatedAt": "2026-04-13T19:19:44.723Z",
+  "generatedAt": "2026-04-15T17:19:39.705Z",
   "slug": "platform/overview",
   "title": "OlonJS — Platform Overview",
   "description": "Overview of the OlonJS platform, architecture direction, and product surface.",
