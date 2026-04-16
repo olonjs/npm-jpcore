@@ -10,3 +10,4 @@ packages/core/dist/
 *.Identifier
 # Windows Alternate Data Stream (invalid path on Git/Linux)
 *:Zone.Identifier
+.claude/
