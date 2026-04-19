@@ -9,7 +9,7 @@
     "verify:webmcp": "node scripts/webmcp-feature-check.mjs",
     "prebuild": "node scripts/sync-pages-to-public.mjs && node scripts/generate-llms-txt.mjs",
     "build": "tsc && vite build",
-    "dist": "bash ./src2Code.sh --template alpha src .cursor vercel.json index.html tsconfig.json tsconfig.node.json vite.config.ts scripts ",
+    "dist": "bash ./src2Code.sh --template alpha src .cursor vercel.json components.json index.html tsconfig.json package.json tsconfig.node.json vite.config.ts scripts ",
     "preview": "vite preview",
     "bake:email": "tsx scripts/bake-email.tsx",
     "bakemail": "npm run bake:email --",

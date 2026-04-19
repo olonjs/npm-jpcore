@@ -11,6 +11,12 @@
 		},
 		{
 			"path": "../temp/gumlon"
+		},
+		{
+			"path": "../jsonpages-platform"
+		},
+		{
+			"path": "../temp/santa13"
 		}
 	]
 }
