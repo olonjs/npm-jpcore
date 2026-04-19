@@ -1,9 +1,0 @@
-{
-  "version": "v1",
-  "packages": {
-    "@olonjs/core": {
-      "signature": "33655ff5de425ecacb34813b7dd85e8b",
-      "file": true
-    }
-  }
-}

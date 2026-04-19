@@ -12,3 +12,7 @@ packages/core/dist/
 # Windows Alternate Data Stream (invalid path on Git/Linux)
 *:Zone.Identifier
 .claude/
+
+# yalc (local package linking) — never commit, never link a package to itself
+.yalc/
+yalc.lock
