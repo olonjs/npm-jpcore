@@ -5,6 +5,7 @@
 > Date: 2026-04-19
 > Outcome: **FEASIBLE — HIGH CONFIDENCE**
 > Status: **In execution — Step A split into A.1/A.2/A.3, A.1 + A.2 landed.** See §"Execution Progress" below.
+> ⚠️ Amended 2026-04-19 — see §"Amendment 2026-04-19" for the revised Step B and factory shape. Sections marked **SUPERSEDED** are kept for history but no longer reflect the plan.
 
 ## TL;DR
 
@@ -14,9 +15,10 @@
   1. `import.meta.env.*` reads (Vite inlines env at the module where the literal appears — MUST stay in tenant code, passed in explicitly).
   2. `DopaDrawer` imports `@/fonts.css?inline` — after promotion this coupling needs to flow through factory config.
 - Decisions taken in this spike (confirmed by user):
-  - `ThemeProvider` → **DNA** (generic light/dark toggle, identical per tenant)
-  - `EmptyTenantView` → **TENANT** (brand placeholder, customizable)
-  - `DopaDrawer` → **DNA** (save2repo UX, identical per tenant)
+  - `ThemeProvider` → **DNA, tenant-local** (revised 2026-04-19 — see Amendment; was originally "promote to core")
+  - `EmptyTenantView` → **DNA, tenant-local** (revised 2026-04-19 — was originally "tenant-customizable"; user clarified it's the equivalent of a 404/empty-state page and must stay editable without core round-trips)
+  - `DopaDrawer` (full `save-drawer/` chain) → **DNA, tenant-local** (revised 2026-04-19 — was originally "promote to core"; tight coupling to `@/fonts.css?inline` and the rest of the chain made local placement strictly simpler)
+  - All three live under `apps/tenant-alpha/src/components/dna/` and are wired into `createTenantApp` as required props from the tenant shim.
 
 ## Line-by-line classification of `App.tsx`
 
@@ -167,11 +169,11 @@ export default createTenantApp({
 
 ### §2. `DopaDrawer` reaches into `@/fonts.css` via `?inline`
 
-**Problem.** `DopaDrawer.tsx:5` does `import fontsCss from '@/fonts.css?inline'`. When DopaDrawer is promoted to `@olonjs/core/dna/components/save-drawer/`, the `@/fonts.css` path resolves inside the core package, not the tenant. Tenant-specific fonts would be lost inside the save-drawer Shadow DOM.
+> **RESOLVED 2026-04-19 — see "Amendment 2026-04-19" below.** DopaDrawer no longer moves to core; it stays under `apps/tenant-alpha/src/components/dna/save-drawer/`. The `@/fonts.css?inline` import resolves locally as before. No factory config field, no React Context required.
 
-**Fix in proposed API.** Config field `fontsCss: string` — tenant shim does the `?inline` import and passes it in. Factory forwards it to DopaDrawer via props or a React context (`TenantFontsContext`).
+**Original problem.** `DopaDrawer.tsx:5` does `import fontsCss from '@/fonts.css?inline'`. When DopaDrawer is promoted to `@olonjs/core/dna/components/save-drawer/`, the `@/fonts.css` path resolves inside the core package, not the tenant. Tenant-specific fonts would be lost inside the save-drawer Shadow DOM.
 
-**Cost.** 1 extra line in tenant shim + one React Context in DNA. Trivial.
+**Original proposed fix (now obsolete).** Config field `fontsCss: string` — tenant shim does the `?inline` import and passes it in. Factory forwards it to DopaDrawer via props or a React context (`TenantFontsContext`).
 
 ### §3. `?inline` CSS query is Vite-specific
 
@@ -399,3 +401,193 @@ This is ~10 LOC of sed-style replacements + one extra symbol exported by the dna
 4. A.3.3 last (touches `App.tsx` directly, which feeds into Step C).
 
 After A.3 completes, `apps/tenant-alpha/src/lib/` contains only 3 tenant-authored files and Step A is closed.
+
+---
+
+## Amendment 2026-04-19 — Tenant-side DNA components
+
+> Supersedes: §"Files that move during promotion" (component portion only — lib/types portion is unchanged), §"Proposed factory API" (adds 3 component props), §"Proposed tenant shim" (imports DNA components locally), §"Edge cases §2" (now N/A), §"Estimated LOC delta" (revised below).
+> Lib promotion plan (Step A.1 → A.3) is **NOT affected** by this amendment.
+
+### What changed
+
+The user revised the disposition of the three component-level DNA candidates. Instead of promoting them to `@olonjs/core/dna/components/`, all three live tenant-side under a dedicated `apps/tenant-alpha/src/components/dna/` subdirectory. They remain DNA in the conceptual sense (framework-shaped, not brand-shaped), but are kept locally so the tenant author can iterate on them without an `@olonjs/core` publish round-trip.
+
+### Why
+
+1. **`empty-tenant`** is "the 404 of empty pages" — the tenant author wants to keep editing it (copy, illustration, CTA) without touching core. Treating it as immutable-in-core would make iteration painful.
+2. **`DopaDrawer`** has tight coupling to `@/fonts.css?inline` (Shadow DOM stylesheet injection). Promoting it to core forced a `fontsCss: string` factory prop + a React Context — clever, but extra surface area for zero real benefit. Keeping the file tenant-side makes the Vite alias resolve naturally and removes the edge case entirely.
+3. **`ThemeProvider`** is genuinely identical across tenants today, but lives next to the other two in the rendering tree. Splitting one into core and two into tenant would create an asymmetric mental model. Better to keep all three together under one `components/dna/` umbrella with a shared "tenant-local DNA" status.
+
+The `dna/` folder name signals immutability-by-convention: agents and tenant authors know "these files are framework-shaped, modify with care, never freely refactor". The CLI scaffold and `dna.manifest.json` (Step E) will mark this folder as `writeAllowed: false` for `olon-agent`, same protection level we'd have given the core-promoted versions.
+
+### Revised classification
+
+| Component | Original spike disposition | Final disposition (this amendment) | Rationale |
+|---|---|---|---|
+| `ThemeProvider.tsx` | Promote to `@olonjs/core/dna/components/` | Move to `apps/tenant-alpha/src/components/dna/` | Lives next to the other two; uniformity |
+| `empty-tenant/` | Stay tenant, brand-customizable | Move to `apps/tenant-alpha/src/components/dna/empty-tenant/` | DNA-shaped, but author iterates frequently |
+| `save-drawer/` (incl. `DopaDrawer`) | Promote to `@olonjs/core/dna/components/save-drawer/` | Move to `apps/tenant-alpha/src/components/dna/save-drawer/` | Removes `@/fonts.css?inline` edge case; entire chain stays coupled |
+
+### Revised factory API (Step C)
+
+The factory accepts the three components as **required props**. The tenant shim imports them from local `components/dna/` and passes them in.
+
+```tsx
+// packages/core/src/dna/boot/createTenantApp.tsx
+import type { ComponentType, ReactNode } from 'react';
+import type { JsonPagesConfig, CloudSaveUiState } from '@olonjs/core';
+
+export interface TenantAppEnv {
+  cloudUrl?: string;
+  apiKey?: string;
+  save2repoEnabled: boolean;
+  basePath: string;
+  isDev: boolean;
+}
+
+/** Contract for the tenant-supplied save-drawer component. */
+export interface DopaDrawerProps {
+  state: CloudSaveUiState;
+  onClose: () => void;
+  onRetry: () => void;
+}
+
+export interface CreateTenantAppConfig {
+  tenantId: string;
+  registry: JsonPagesConfig['registry'];
+  schemas: JsonPagesConfig['schemas'];
+  addSection: JsonPagesConfig['addSection'];
+  siteData: unknown;
+  themeData: unknown;
+  menuData: unknown;
+  tenantCss: string;
+  env: TenantAppEnv;
+
+  /** Tenant-local DNA components — supplied by the tenant scaffold. */
+  ThemeProvider: ComponentType<{ children: ReactNode }>;
+  EmptyTenantView: ComponentType;
+  DopaDrawer: ComponentType<DopaDrawerProps>;
+}
+
+export function createTenantApp(cfg: CreateTenantAppConfig): ComponentType;
+```
+
+Notes:
+- `fontsCss: string` and the `TenantFontsContext` from edge case §2 are **gone**.
+- `EmptyTenantView` is now required (not optional) — the tenant always has one.
+- `DopaDrawerProps` is exported from `@olonjs/core/dna` so the tenant component can satisfy the contract by import-typing.
+
+### Revised tenant shim (`apps/tenant-alpha/src/_core/App.tsx`)
+
+```tsx
+import { createTenantApp } from '@olonjs/core/dna';
+import { ComponentRegistry } from '@/lib/ComponentRegistry';
+import { SECTION_SCHEMAS } from '@/lib/schemas';
+import { addSectionConfig } from '@/lib/addSectionConfig';
+import siteData from '@/data/config/site.json';
+import themeData from '@/data/config/theme.json';
+import menuData from '@/data/config/menu.json';
+import tenantCss from '@/index.css?inline';
+import { ThemeProvider } from '@/components/dna/ThemeProvider';
+import { EmptyTenantView } from '@/components/dna/empty-tenant';
+import { DopaDrawer } from '@/components/dna/save-drawer/DopaDrawer';
+
+export default createTenantApp({
+  tenantId: 'alpha',
+  registry: ComponentRegistry,
+  schemas: SECTION_SCHEMAS,
+  addSection: addSectionConfig,
+  siteData,
+  themeData,
+  menuData,
+  tenantCss,
+  env: {
+    cloudUrl: import.meta.env.VITE_OLONJS_CLOUD_URL ?? import.meta.env.VITE_JSONPAGES_CLOUD_URL,
+    apiKey: import.meta.env.VITE_OLONJS_API_KEY ?? import.meta.env.VITE_JSONPAGES_API_KEY,
+    save2repoEnabled: import.meta.env.VITE_SAVE2REPO === 'true',
+    basePath: import.meta.env.BASE_URL || '/',
+    isDev: import.meta.env.DEV,
+  },
+  ThemeProvider,
+  EmptyTenantView,
+  DopaDrawer,
+});
+```
+
+**~35 lines instead of the original 28** — slightly more verbose, dramatically simpler architecture (no `fontsCss` plumbing, no React Context, no Shadow-DOM-aware factory code).
+
+### Revised "files that move" diagram
+
+#### Into `packages/core/src/dna/` (unchanged from original plan, just no `components/`)
+
+```
+packages/core/src/dna/
+├── boot/
+│   ├── createTenantApp.tsx        ← NEW factory (Step C)
+│   ├── createSsgEntry.tsx         ← NEW (Step D)
+│   └── mountTenant.tsx            ← NEW (Step D)
+├── lib/
+│   ├── base-schemas.ts                ✅ A.2 done
+│   ├── cloudSaveStream.ts             ✅ A.2 done
+│   ├── deploySteps.ts                 ✅ A.2 done
+│   ├── OlonFormsContext.ts            ✅ A.2 done
+│   ├── draftStorage.ts                pending A.3.2
+│   ├── normalizePages.ts (new)        pending A.3.3
+│   ├── IconResolver.tsx               pending A.3.4
+│   ├── useFormSubmit.ts               pending A.3.1
+│   └── useOlonForms.ts                pending A.3.1
+├── types/
+│   └── deploy.ts                      ✅ A.2 done
+└── manifest.ts                        Step E
+```
+
+#### Stay tenant-side under `apps/tenant-alpha/src/components/dna/` (Step B)
+
+```
+apps/tenant-alpha/src/components/dna/
+├── ThemeProvider.tsx          ← moved from src/components/ThemeProvider.tsx
+├── empty-tenant/              ← moved from src/components/empty-tenant/
+│   ├── View.tsx
+│   ├── schema.ts
+│   ├── types.ts
+│   └── index.ts
+└── save-drawer/               ← moved from src/components/save-drawer/
+    ├── DopaDrawer.tsx
+    ├── DeployNode.tsx
+    ├── DeployConnector.tsx
+    ├── Visuals.tsx
+    └── saverStyle.css
+```
+
+The `dna.manifest.json` (Step E) will list `src/components/dna/**` in `writeAllowed: false` so `olon-agent` cannot edit these files.
+
+### Revised LOC delta (more honest)
+
+| Location | Before | After | Delta |
+|---|---|---|---|
+| `apps/tenant-alpha/src/App.tsx` | 1162 | 0 (deleted) | −1162 |
+| `apps/tenant-alpha/src/_core/App.tsx` shim | — | ~35 | +35 |
+| `apps/tenant-alpha/src/_core/*` other shims (main, runtime, entry-ssg) | — | ~40 | +40 |
+| `apps/tenant-alpha/src/{main,runtime,entry-ssg}.tsx` | ~60 | 0 | −60 |
+| `apps/tenant-alpha/src/components/{ThemeProvider, empty-tenant, save-drawer}` | ~860 | ~860 (relocated under `components/dna/`) | 0 |
+| `apps/tenant-alpha/src/lib/{9 DNA libs}` | ~270 | 0 | −270 |
+| `packages/core/src/dna/boot/createTenantApp.tsx` | — | ~1100 | +1100 |
+| `packages/core/src/dna/lib/*` (A.1–A.3 total) | — | ~270 | +270 |
+| **Net per tenant after A.3 + B + C + D** | — | — | **≈ −150 LOC per tenant + 1 huge file gone** |
+| **Net monorepo per additional tenant** | — | — | **≈ −1450 LOC** (no longer ships own `App.tsx` or DNA libs; still ships own `components/dna/` chain) |
+
+The headline number is smaller than the original spike's "−2280 per tenant" because `ThemeProvider` + `empty-tenant` + `save-drawer` (~860 LOC) are no longer deduplicated across tenants. **This is intentional** — the user weighed editability against deduplication and chose editability for these three. The big win remains: every tenant stops carrying a 1162-line `App.tsx` and ~270 lines of DNA libs.
+
+### What this amendment does NOT change
+
+- **Step A.1, A.2 ✅, A.3 plan** — entirely unchanged. The 9 DNA libs still go to `@olonjs/core/dna/lib/`.
+- **Step C (createTenantApp factory)** — still happens, just with the revised props shape above.
+- **Step D (`_core/` shims)** — unchanged.
+- **Step E (`dna.manifest.json`)** — unchanged in mechanism, but `writeAllowed: false` paths now include `src/components/dna/**` in addition to `src/_core/**`.
+- **Step F (re-scaffold santa13/gumlon/llms)** — unchanged.
+- **Step G (olon-agent manifest reader)** — unchanged.
+
+### Migration cost
+
+Step B (the only changed step) is now strictly cheaper than the original plan: it's a `git mv` of three folders inside the tenant, zero changes to `@olonjs/core`, zero new exports to publish, and no edge-case factory props. Estimated: **~15 min including verify**, vs the original ~45 min that included a core publish cycle.

@@ -1,7 +1,7 @@
 # DNA Boundary Refactor — Resume Here
 
 > One-page bootstrap for the next session. Read this first, then dive into details only if needed.
-> Last updated: 2026-04-19 (end of session that landed A.1 + A.2)
+> Last updated: 2026-04-19 (end of session that landed A.1 + A.2, plus the "tenant-side DNA components" decision)
 
 ## TL;DR for the next session
 
@@ -9,6 +9,12 @@ We are mid-way through **Step A** of the plan in [`dna-boundary-tenant-core-shim
 [`dna-boundary-spike-report.md`](./dna-boundary-spike-report.md). Two slices have shipped to `main`. One
 slice (A.3) remains before Step A is closed. Steps B–G (component move, factory, shims, manifest, CLI,
 agent guards) have not started.
+
+## Architectural decisions made in this thread
+
+| Date | Decision | Effect |
+|---|---|---|
+| 2026-04-19 | **Tenant-side DNA components** — `ThemeProvider`, `empty-tenant/`, and the full `save-drawer/` chain (incl. `DopaDrawer`) stay tenant-side under `apps/tenant-alpha/src/components/dna/` instead of being promoted to `@olonjs/core/dna/components/`. | Step B is now a `git mv` of three folders inside the tenant (no core publish). The `createTenantApp` factory (Step C) accepts the three components as required props. The `dna.manifest.json` (Step E) lists `src/components/dna/**` as `writeAllowed: false` for `olon-agent`. Edge case §2 (`fonts.css` coupling) is dissolved. See [`dna-boundary-spike-report.md`](./dna-boundary-spike-report.md) §"Amendment 2026-04-19" for full revised factory shape, tenant shim, and LOC delta. |
 
 ## Verify state in 30 seconds
 
@@ -126,3 +132,24 @@ answer before continuing:
    tenant refactor end-to-end (Steps C–F)?
 
 Don't decide these inside Step A. Decide them at the A→B boundary with fresh context.
+
+## Step B (post-amendment) — quick recap
+
+Step B is **simpler than the spike originally proposed** (see Architectural decisions above).
+
+```bash
+cd /home/dev/npm-jpcore/apps/tenant-alpha/src/components
+mkdir dna
+git mv ThemeProvider.tsx dna/ThemeProvider.tsx
+git mv empty-tenant       dna/empty-tenant
+git mv save-drawer        dna/save-drawer
+# update import paths in App.tsx (3 imports) — search for:
+#   from '@/components/ThemeProvider'
+#   from '@/components/empty-tenant'
+#   from '@/components/save-drawer/DopaDrawer'
+# rewrite each to @/components/dna/...
+```
+
+Then `tsc --noEmit` + `vite build` from `apps/tenant-alpha/`. Single commit, no `@olonjs/core` change, no publish.
+
+This sets up Step C: `createTenantApp` will accept `ThemeProvider`, `EmptyTenantView`, `DopaDrawer` as required props imported from `@/components/dna/...`.

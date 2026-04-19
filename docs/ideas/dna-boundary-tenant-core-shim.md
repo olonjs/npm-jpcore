@@ -12,9 +12,10 @@
 | **A.1** ✅ | Dedupe `utils.ts` (already exported by `@olonjs/core`); 27 ui/*.tsx redirected | `a67dc83` | +27 / −33 |
 | **A.2** ✅ | Promote 4 "clean" DNA libs (`base-schemas`, `cloudSaveStream`, `deploySteps`, `OlonFormsContext`) + `types/deploy.ts` to `packages/core/src/dna/`; 8 tenant files redirected | `c216174` | +33 / −15 (5 renames) |
 | **A.3** 🟡 | 5 libs that need API refactor before move: `draftStorage`, `getFilePages`, `IconResolver`, `useFormSubmit`, `useOlonForms` | — | TBD |
-| **B–G** ⬜ | `ThemeProvider` + `save-drawer` move; `createTenantApp` factory; `_core/` shims; `dna.manifest.json`; CLI templates; olon-agent guards | — | — |
+| **B** ⬜ | **Revised 2026-04-19 — simpler than original spike.** `git mv` of three folders into `apps/tenant-alpha/src/components/dna/`: `ThemeProvider.tsx`, `empty-tenant/`, `save-drawer/`. **No core publish.** | — | ~0 (relocate) |
+| **C–G** ⬜ | `createTenantApp` factory (with the 3 DNA components passed as props); `_core/` shims; `dna.manifest.json` (now also covers `src/components/dna/**`); CLI templates; olon-agent guards | — | — |
 
-See [`dna-boundary-spike-report.md`](./dna-boundary-spike-report.md) §"Execution Progress" for the detailed log.
+See [`dna-boundary-spike-report.md`](./dna-boundary-spike-report.md) §"Execution Progress" for the detailed log and §"Amendment 2026-04-19" for the revised Step B / factory shape (DNA components stay tenant-side under `src/components/dna/`).
 
 ## Problem Statement
 
