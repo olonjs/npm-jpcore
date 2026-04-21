@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "kind": "olonjs-page-mcp-manifest",
-  "generatedAt": "2026-04-19T15:34:27.720Z",
+  "generatedAt": "2026-04-21T10:56:09.256Z",
   "slug": "docs",
   "title": "OlonJS Architecture Specifications v1.5",
   "description": "Mandatory Standard — Sovereign Core Edition. Canonical Studio actions, SSG, Save to file, and Hot Save.",
