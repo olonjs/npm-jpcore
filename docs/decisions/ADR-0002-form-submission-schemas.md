@@ -95,6 +95,24 @@ A section that wants to be submittable by an agent MUST:
 
 Sections that do not opt in are ignored. There is no inheritance, no default schema.
 
+5. Expose a `recipientEmail` field in the section's **UI-config** schema (the one registered in `SECTION_SCHEMAS`), not in the submission schema:
+
+   ```ts
+   export const ContactFormSchema = BaseSectionData.extend({
+     // ...display / configuration fields...
+     email:          z.string().optional().describe("ui:text"),           // optional public display email
+     recipientEmail: z.string().email().optional().describe("ui:text"),   // lead destination — consumed by MCP
+   });
+   ```
+
+   Rules:
+   - **The path is fixed.** The MCP gateway (platform, ADR-0001) reads the lead destination from exactly one path: `section.data.recipientEmail`. No alternative names (`email`, `contactEmail`, `mailTo`, …) are inspected.
+   - **It belongs in the config schema, not the submission schema.** `recipientEmail` is tenant-owned configuration that travels with the page JSON. It MUST NOT appear in the `submissionSchema` — agents are never allowed to set it, and the gateway strips any `recipientEmail` key found in the agent's payload before forwarding.
+   - **Display ≠ recipient.** Sections that already expose a public-facing `email` (shown on the page) keep it. Add `recipientEmail` alongside; both fields coexist. Only `recipientEmail` is consumed by the MCP submit-form flow.
+   - **Opt-in, not required.** If a tenant declares a `submissionSchema` but never sets `recipientEmail` in the page JSON, the gateway forwards the submission without a recipient override and the downstream `/api/v1/forms/submit` endpoint falls back to its default behaviour. For MCP-submittable pages in production this field SHOULD be set.
+
+See the mirror section "Tenant Convention — `data.recipientEmail`" in jsonpages-platform ADR-0001 for the platform-side consumer.
+
 Core does **not** ship a `defineSubmissionSchema(...)` helper. Tenants use `z.object({...})` directly. If `.describe` omissions or other convention violations turn out to be a recurring tenant mistake, a helper can be added later behind a new ADR — but the default is the smaller API surface.
 
 ## Alternatives Considered
@@ -192,6 +210,19 @@ submissionSchemas?: Record<string, { parse: (v: unknown) => unknown; shape?: Rec
 The serializer (Slice 2) will cast to `z.ZodTypeAny` at the emission boundary, exactly as the existing `schemas`-to-JSON-Schema path does.
 
 **Why this is a refinement, not a change of decision.** Facet 2 of the Decision is *"separate registry, not nested"*. That still holds. The literal type signature in the earlier draft was a specification detail; aligning it with the package's existing convention preserves architectural symmetry and avoids a pointlessly narrower contract for the new field than for the old one. The effective API that tenants write (pass a `z.object(...)`) is unchanged.
+
+### 2026-04-21 — `data.recipientEmail` made explicit (mirror of ADR-0001)
+
+**Context.** The platform-side ADR (jsonpages-platform ADR-0001) already specifies that the MCP `submit-form` gateway resolves the lead destination from `section.data.recipientEmail`. The reciprocal tenant-side convention was implicit in this ADR but not spelled out. Santamamma26 integration exposed the gap: the tenant used `data.email` as the lead destination (legacy), which is not what the gateway reads.
+
+**Resolved:** Added point 5 to "The tenant convention" section:
+
+- Section-config schemas (`SECTION_SCHEMAS` entries) for MCP-submittable sections MUST expose a `recipientEmail` field.
+- The field lives in the UI-config schema (tenant-owned configuration), never in the submission schema (agent-provided payload).
+- The gateway reads exactly `section.data.recipientEmail`; no alternative field names are recognised.
+- Display emails (a public `email` field shown on the rendered page) may coexist; only `recipientEmail` drives MCP lead routing.
+
+**Rationale.** Having one canonical path eliminates ambiguity for tenants ("where do I put the address?") and prevents agents from redirecting leads to arbitrary inboxes. The separation between display email and operational recipient email is also cleaner architecture: tenant owners who want to hide the recipient from page visitors can do so without losing MCP functionality.
 
 ## References
 

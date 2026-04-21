@@ -1674,7 +1674,7 @@ cat << 'END_OF_FILE_CONTENT' > "package.json"
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
-    "@olonjs/core": "^1.0.120",
+    "@olonjs/core": "^1.0.121",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.474.0",
@@ -2587,13 +2587,13 @@ import { JsonPagesEngine } from '@olonjs/core';
 import type { JsonPagesConfig, LibraryImageEntry, ProjectState } from '@olonjs/core';
 import { normalizeBasePath, withBasePath } from '@olonjs/core';
 import { ComponentRegistry } from '@/lib/ComponentRegistry';
-import { SECTION_SCHEMAS } from '@/lib/schemas';
+import { SECTION_SCHEMAS, SECTION_SUBMISSION_SCHEMAS } from '@/lib/schemas';
 import { addSectionConfig } from '@/lib/addSectionConfig';
 import { getHydratedData } from '@/lib/draftStorage';
 import type { SiteConfig, ThemeConfig, MenuConfig, PageConfig } from '@/types';
-import type { DeployPhase, StepId } from '@/types/deploy';
-import { DEPLOY_STEPS } from '@/lib/deploySteps';
-import { startCloudSaveStream } from '@/lib/cloudSaveStream';
+import type { DeployPhase, StepId } from '@olonjs/core';
+import { DEPLOY_STEPS } from '@olonjs/core';
+import { startCloudSaveStream } from '@olonjs/core';
 import siteData from '@/data/config/site.json';
 import themeData from '@/data/config/theme.json';
 import menuData from '@/data/config/menu.json';
@@ -2603,7 +2603,7 @@ import { EmptyTenantView } from '@/components/empty-tenant';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { useOlonForms } from '@/lib/useOlonForms';
-import { OlonFormsContext } from '@/lib/OlonFormsContext';
+import { OlonFormsContext } from '@olonjs/core';
 import { iconMap } from '@/lib/IconResolver';
 
 import tenantCss from './index.css?inline';
@@ -2751,7 +2751,6 @@ function coerceSiteConfig(value: unknown): SiteConfig | null {
   }
   if (!isObjectRecord(input)) return null;
   if (!isObjectRecord(input.identity)) return null;
-  if (!Array.isArray(input.pages)) return null;
 
   return input as unknown as SiteConfig;
 }
@@ -3442,6 +3441,7 @@ function App() {
     basePath: APP_BASE_PATH,
     registry: ComponentRegistry as JsonPagesConfig['registry'],
     schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+    submissionSchemas: SECTION_SUBMISSION_SCHEMAS as unknown as JsonPagesConfig['submissionSchemas'],
     pages,
     siteConfig,
     themeConfig,
@@ -3838,7 +3838,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/components/empty-tenant/schema.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/empty-tenant/schema.ts"
 import { z } from 'zod';
-import { BaseSectionData } from '@/lib/base-schemas';
+import { BaseSectionData } from '@olonjs/core';
 
 export const EmptyTenantSchema = BaseSectionData.extend({
   title: z.string().optional().describe('ui:text'),
@@ -3861,7 +3861,7 @@ mkdir -p "src/components/form-demo"
 echo "Creating src/components/form-demo/View.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/form-demo/View.tsx"
 import { Icon } from '@/lib/IconResolver';
-import { useFormState } from '@/lib/OlonFormsContext';
+import { useFormState } from '@olonjs/core';
 import type { FormDemoData } from './types';
 
 type FormDemoViewProps = {
@@ -4025,7 +4025,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/components/form-demo/schema.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/form-demo/schema.ts"
 import { z } from 'zod';
-import { BaseSectionData, WithFormRecipient } from '@/lib/base-schemas';
+import { BaseSectionData, WithFormRecipient } from '@olonjs/core';
 
 export const FormDemoSchema = BaseSectionData.merge(WithFormRecipient).extend({
   icon: z.string().optional().describe('ui:icon-picker'),
@@ -4036,6 +4036,20 @@ export const FormDemoSchema = BaseSectionData.merge(WithFormRecipient).extend({
 });
 
 export const FormDemoSettingsSchema = z.object({});
+
+/**
+ * Submission payload schema for the `form-demo` section.
+ *
+ * Describes the fields actually submitted by the rendered `<form>` in View.tsx
+ * (name, email, message). Exposed via `JsonPagesConfig.submissionSchemas` so that
+ * MCP agents can discover the submission contract for this section type without
+ * scraping the DOM. See ADR-0002 (docs/decisions/ADR-0002-form-submission-schemas.md).
+ */
+export const FormDemoSubmissionSchema = z.object({
+  name: z.string().min(1).describe('Full name of the person submitting the form'),
+  email: z.string().email().describe('Contact email address where we will reply'),
+  message: z.string().min(1).describe('Free-form message body'),
+});
 
 END_OF_FILE_CONTENT
 echo "Creating src/components/form-demo/types.ts..."
@@ -4050,7 +4064,7 @@ END_OF_FILE_CONTENT
 mkdir -p "src/components/save-drawer"
 echo "Creating src/components/save-drawer/DeployConnector.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/save-drawer/DeployConnector.tsx"
-import type { StepState } from '@/types/deploy';
+import type { StepState } from '@olonjs/core';
 
 interface DeployConnectorProps {
   fromState: StepState;
@@ -4096,7 +4110,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/components/save-drawer/DeployNode.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/save-drawer/DeployNode.tsx"
 import type { CSSProperties } from 'react';
-import type { DeployStep, StepState } from '@/types/deploy';
+import type { DeployStep, StepState } from '@olonjs/core';
 
 interface DeployNodeProps {
   step: DeployStep;
@@ -4184,8 +4198,8 @@ echo "Creating src/components/save-drawer/DopaDrawer.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/save-drawer/DopaDrawer.tsx"
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { StepId, StepState } from '@/types/deploy';
-import { DEPLOY_STEPS } from '@/lib/deploySteps';
+import type { StepId, StepState } from '@olonjs/core';
+import { DEPLOY_STEPS } from '@olonjs/core';
 import fontsCss from '@/fonts.css?inline';
 import saverStyleCss from './saverStyle.css?inline';
 import { DeployNode } from './DeployNode';
@@ -5134,7 +5148,7 @@ END_OF_FILE_CONTENT
 mkdir -p "src/components/ui"
 echo "Creating src/components/ui/OlonMark.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/OlonMark.tsx"
-import { cn } from '@/lib/utils'
+import { cn } from '@olonjs/core'
 
 interface OlonMarkProps {
   size?: number
@@ -5224,7 +5238,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/accordion.tsx"
 import * as React from "react"
 import { Accordion as AccordionPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
 function Accordion({
@@ -5328,7 +5342,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/avatar.tsx"
 import * as React from "react"
 import { Avatar as AvatarPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function Avatar({
   className,
@@ -5443,7 +5457,7 @@ echo "Creating src/components/ui/badge.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/badge.tsx"
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
+import { cn } from '@olonjs/core'
 
 const badgeVariants = cva(
   'inline-flex items-center px-2.5 py-0.5 text-xs font-medium transition-colors',
@@ -5478,7 +5492,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/breadcrumb.tsx"
 import * as React from "react"
 import { Slot } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
@@ -5605,7 +5619,7 @@ echo "Creating src/components/ui/button.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/button.tsx"
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/lib/utils'
+import { cn } from '@olonjs/core'
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-40 shrink-0',
@@ -5666,7 +5680,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/components/ui/card.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/card.tsx"
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '@olonjs/core'
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
@@ -5725,7 +5739,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/checkbox.tsx"
 import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { CheckIcon } from "lucide-react"
 
 function Checkbox({
@@ -5765,7 +5779,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/dialog.tsx"
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
@@ -5937,7 +5951,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/dropdown-menu.tsx"
 import * as React from "react"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
 
 function DropdownMenu({
@@ -6212,7 +6226,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/hover-card.tsx"
 import * as React from "react"
 import { HoverCard as HoverCardPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function HoverCard({
   ...props
@@ -6258,7 +6272,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/components/ui/input.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/input.tsx"
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '@olonjs/core'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -6289,7 +6303,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/components/ui/label.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/label.tsx"
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '@olonjs/core'
 
 const Label = React.forwardRef<
   HTMLLabelElement,
@@ -6313,7 +6327,7 @@ import * as React from "react"
 import { cva } from "class-variance-authority"
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { ChevronDownIcon } from "lucide-react"
 
 function NavigationMenu({
@@ -6482,7 +6496,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/progress.tsx"
 import * as React from "react"
 import { Progress as ProgressPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function Progress({
   className,
@@ -6517,7 +6531,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/scroll-area.tsx"
 import * as React from "react"
 import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function ScrollArea({
   className,
@@ -6576,7 +6590,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/select.tsx"
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
 function Select({
@@ -6962,7 +6976,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/components/ui/separator.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/separator.tsx"
 import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from '@olonjs/core'
 
 const Separator = React.forwardRef<
   HTMLDivElement,
@@ -6991,7 +7005,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/sheet.tsx"
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
@@ -7139,7 +7153,7 @@ END_OF_FILE_CONTENT
 # SKIP: src/components/ui/sheet.tsx:Zone.Identifier is binary and cannot be embedded as text.
 echo "Creating src/components/ui/skeleton.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/skeleton.tsx"
-import { cn } from '@/lib/utils';
+import { cn } from '@olonjs/core';
 import type { HTMLAttributes } from 'react';
 
 function Skeleton({
@@ -7163,7 +7177,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/switch.tsx"
 import * as React from "react"
 import { Switch as SwitchPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function Switch({
   className,
@@ -7199,7 +7213,7 @@ echo "Creating src/components/ui/table.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/table.tsx"
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
@@ -7323,7 +7337,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Tabs as TabsPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function Tabs({
   className,
@@ -7415,7 +7429,7 @@ echo "Creating src/components/ui/textarea.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/components/ui/textarea.tsx"
 import * as React from "react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
@@ -7444,7 +7458,7 @@ import * as React from "react"
 import { type VariantProps } from "class-variance-authority"
 import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 import { toggleVariants } from "@/components/ui/toggle"
 
 const ToggleGroupContext = React.createContext<
@@ -7539,7 +7553,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Toggle as TogglePrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 const toggleVariants = cva(
   "group/toggle inline-flex items-center justify-center gap-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all outline-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -7591,7 +7605,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/components/ui/tooltip.tsx"
 import * as React from "react"
 import { Tooltip as TooltipPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@olonjs/core"
 
 function TooltipProvider({
   delayDuration = 0,
@@ -7728,16 +7742,7 @@ cat << 'END_OF_FILE_CONTENT' > "src/data/config/site.json"
     "title": "OlonJS",
     "logoUrl": "/brand/mark/olon-mark-dark.svg"
   },
-  "pages": [
-    {
-      "slug": "home",
-      "label": "Home"
-    },
-    {
-      "slug": "design-system",
-      "label": "Design System"
-    }
-  ],
+  
   "header": {
     "id": "global-header",
     "type": "header",
@@ -9507,36 +9512,6 @@ export const Icon: React.FC<IconProps> = ({ name, size = 20, className }) => {
 
 
 END_OF_FILE_CONTENT
-echo "Creating src/lib/OlonFormsContext.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/lib/OlonFormsContext.ts"
-import { createContext, useContext } from 'react';
-
-export type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
-
-export interface FormState {
-  status: FormStatus;
-  message: string;
-}
-
-const DEFAULT_FORM_STATE: FormState = { status: 'idle', message: '' };
-
-/**
- * Context holding the submission state of every olon-managed form,
- * keyed by the form's id attribute (or anchorId).
- * Provided by App.tsx via useOlonForms().
- */
-export const OlonFormsContext = createContext<Record<string, FormState>>({});
-
-/**
- * Read the submission state for a specific form.
- * @param formId - must match the id attribute on the <form> element.
- */
-export function useFormState(formId: string): FormState {
-  const states = useContext(OlonFormsContext);
-  return states[formId] ?? DEFAULT_FORM_STATE;
-}
-
-END_OF_FILE_CONTENT
 echo "Creating src/lib/addSectionConfig.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/lib/addSectionConfig.ts"
 import type { AddSectionConfig } from '@olonjs/core';
@@ -9573,229 +9548,6 @@ export const addSectionConfig: AddSectionConfig = {
   sectionTypeLabels,
   getDefaultSectionData,
 };
-
-END_OF_FILE_CONTENT
-echo "Creating src/lib/base-schemas.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/lib/base-schemas.ts"
-import { z } from 'zod';
-
-/**
- * Image picker field: object { url, alt? } with ui:image-picker for Form Factory.
- * Use in section data and resolve with resolveAssetUrl(url, tenantId) in View.
- */
-export const ImageSelectionSchema = z
-  .object({
-    url: z.string(),
-    alt: z.string().optional(),
-  }) 
-  .describe('ui:image-picker');
-
-/**
- * Base schemas shared by section capsules (CIP governance).
- * Capsules extend these for consistent anchorId, array items, and settings.
- */
-export const BaseSectionData = z.object({
-  id: z.string().optional(),
-  anchorId: z.string().optional().describe('ui:text'),
-});
-
-export const BaseArrayItem = z.object({
-  id: z.string().optional(),
-});
-
-export const BaseSectionSettingsSchema = z.object({
-  paddingTop: z.enum(['none', 'sm', 'md', 'lg', 'xl', '2xl']).default('md').describe('ui:select'),
-  paddingBottom: z.enum(['none', 'sm', 'md', 'lg', 'xl', '2xl']).default('md').describe('ui:select'),
-  theme: z.enum(['dark', 'light', 'accent']).default('dark').describe('ui:select'),
-  container: z.enum(['boxed', 'fluid']).default('boxed').describe('ui:select'),
-});
-
-export const CtaSchema = z.object({
-  id: z.string().optional(),
-  label: z.string().describe('ui:text'),
-  href: z.string().describe('ui:text'),
-  variant: z.enum(['primary', 'secondary', 'accent']).default('primary').describe('ui:select'),
-});
-
-/**
- * Mixin for any section capsule that includes a contact form.
- * Merge into the section data schema to expose recipientEmail
- * as an editable field in the Studio inspector.
- * The View must set data-olon-recipient={data.recipientEmail} on the <form>.
- */
-export const WithFormRecipient = z.object({
-  recipientEmail: z.string().optional().describe('ui:text'),
-});
-
-END_OF_FILE_CONTENT
-echo "Creating src/lib/cloudSaveStream.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/lib/cloudSaveStream.ts"
-import type { StepId } from '@/types/deploy';
-
-interface SaveStreamStepEvent {
-  id: StepId;
-  status: 'running' | 'done';
-  label?: string;
-}
-
-interface SaveStreamLogEvent {
-  stepId: StepId;
-  message: string;
-}
-
-interface SaveStreamDoneEvent {
-  deployUrl?: string;
-  commitSha?: string;
-}
-
-interface SaveStreamErrorEvent {
-  message?: string;
-}
-
-interface StartCloudSaveStreamInput {
-  apiBaseUrl: string;
-  apiKey: string;
-  path: string;
-  content: unknown;
-  message?: string;
-  signal?: AbortSignal;
-  onStep: (event: SaveStreamStepEvent) => void;
-  onLog?: (event: SaveStreamLogEvent) => void;
-  onDone: (event: SaveStreamDoneEvent) => void;
-}
-
-function parseSseEventBlock(rawBlock: string): { event: string; data: string } | null {
-  const lines = rawBlock
-    .split('\n')
-    .map((line) => line.trimEnd())
-    .filter((line) => line.length > 0);
-
-  if (lines.length === 0) return null;
-
-  let eventName = 'message';
-  const dataLines: string[] = [];
-  for (const line of lines) {
-    if (line.startsWith('event:')) {
-      eventName = line.slice(6).trim();
-      continue;
-    }
-    if (line.startsWith('data:')) {
-      dataLines.push(line.slice(5).trim());
-    }
-  }
-  return { event: eventName, data: dataLines.join('\n') };
-}
-
-export async function startCloudSaveStream(input: StartCloudSaveStreamInput): Promise<void> {
-  const response = await fetch(`${input.apiBaseUrl}/save-stream`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${input.apiKey}`,
-    },
-    body: JSON.stringify({
-      path: input.path,
-      content: input.content,
-      message: input.message,
-    }),
-    signal: input.signal,
-  });
-
-  if (!response.ok || !response.body) {
-    const body = (await response.json().catch(() => ({}))) as SaveStreamErrorEvent;
-    throw new Error(body.message ?? `Cloud save stream failed: ${response.status}`);
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let receivedDone = false;
-
-  while (true) {
-    const { value, done } = await reader.read();
-    if (!done) {
-      buffer += decoder.decode(value, { stream: true });
-    } else {
-      buffer += decoder.decode();
-    }
-
-    const chunks = buffer.split('\n\n');
-    buffer = done ? '' : (chunks.pop() ?? '');
-
-    for (const chunk of chunks) {
-      const parsed = parseSseEventBlock(chunk);
-      if (!parsed) continue;
-      if (!parsed.data) continue;
-
-      if (parsed.event === 'step') {
-        const payload = JSON.parse(parsed.data) as SaveStreamStepEvent;
-        input.onStep(payload);
-      } else if (parsed.event === 'log') {
-        const payload = JSON.parse(parsed.data) as SaveStreamLogEvent;
-        input.onLog?.(payload);
-      } else if (parsed.event === 'error') {
-        const payload = JSON.parse(parsed.data) as SaveStreamErrorEvent;
-        throw new Error(payload.message ?? 'Cloud save failed.');
-      } else if (parsed.event === 'done') {
-        const payload = JSON.parse(parsed.data) as SaveStreamDoneEvent;
-        input.onDone(payload);
-        receivedDone = true;
-      }
-    }
-
-    if (done) break;
-  }
-
-  if (!receivedDone) {
-    throw new Error('Cloud save stream ended before completion.');
-  }
-}
-
-
-END_OF_FILE_CONTENT
-echo "Creating src/lib/deploySteps.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/lib/deploySteps.ts"
-import type { DeployStep } from '@/types/deploy';
-
-export const DEPLOY_STEPS: readonly DeployStep[] = [
-  {
-    id: 'commit',
-    label: 'Commit',
-    verb: 'Committing',
-    poem: ['Crystallizing your edit', 'into permanent history.'],
-    color: '#60a5fa',
-    glyph: '◈',
-    duration: 2200,
-  },
-  {
-    id: 'push',
-    label: 'Push',
-    verb: 'Pushing',
-    poem: ['Sending your vision', 'across the wire.'],
-    color: '#a78bfa',
-    glyph: '◎',
-    duration: 2800,
-  },
-  {
-    id: 'build',
-    label: 'Build',
-    verb: 'Building',
-    poem: ['Assembling the pieces,', 'brick by digital brick.'],
-    color: '#f59e0b',
-    glyph: '⬡',
-    duration: 7500,
-  },
-  {
-    id: 'live',
-    label: 'Live',
-    verb: 'Going live',
-    poem: ['Your content', 'is now breathing.'],
-    color: '#34d399',
-    glyph: '✦',
-    duration: 1600,
-  },
-] as const;
-
 
 END_OF_FILE_CONTENT
 echo "Creating src/lib/draftStorage.ts..."
@@ -9877,11 +9629,22 @@ END_OF_FILE_CONTENT
 echo "Creating src/lib/schemas.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/lib/schemas.ts"
 import { EmptyTenantSchema } from '@/components/empty-tenant';
-import { FormDemoSchema } from '@/components/form-demo';
+import { FormDemoSchema, FormDemoSubmissionSchema } from '@/components/form-demo';
 
 export const SECTION_SCHEMAS = {
   'empty-tenant': EmptyTenantSchema,
   'form-demo': FormDemoSchema,
+} as const;
+
+/**
+ * Registry of per-section-type submission schemas. Keys MUST match a key of
+ * SECTION_SCHEMAS. A section type appearing here is declaring itself as
+ * MCP-submittable: the Zod schema describes the payload accepted by the form.
+ *
+ * See ADR-0002 (docs/decisions/ADR-0002-form-submission-schemas.md).
+ */
+export const SECTION_SUBMISSION_SCHEMAS = {
+  'form-demo': FormDemoSubmissionSchema,
 } as const;
 
 export type SectionType = keyof typeof SECTION_SCHEMAS;
@@ -9892,7 +9655,7 @@ export {
   BaseSectionSettingsSchema,
   CtaSchema,
   ImageSelectionSchema,
-} from '@/lib/base-schemas';
+} from '@olonjs/core';
 
 END_OF_FILE_CONTENT
 echo "Creating src/lib/useFormSubmit.ts..."
@@ -9987,7 +9750,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/lib/useOlonForms.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/lib/useOlonForms.ts"
 import { useCallback, useEffect, useState } from 'react';
-import type { FormState } from './OlonFormsContext';
+import type { FormState } from '@olonjs/core';
 
 const API_BASE =
   (import.meta.env.VITE_OLONJS_CLOUD_URL as string | undefined) ??
@@ -10115,16 +9878,6 @@ export function useOlonForms(options?: UseOlonFormsOptions): { states: Record<st
 }
 
 END_OF_FILE_CONTENT
-echo "Creating src/lib/utils.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/lib/utils.ts"
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-END_OF_FILE_CONTENT
 echo "Creating src/main.tsx..."
 cat << 'END_OF_FILE_CONTENT' > "src/main.tsx"
 import '@/types'; // TBP: load type augmentation from capsule-driven types
@@ -10146,7 +9899,7 @@ END_OF_FILE_CONTENT
 echo "Creating src/runtime.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/runtime.ts"
 import type { JsonPagesConfig, MenuConfig, PageConfig, SiteConfig, ThemeConfig } from '@/types';
-import { SECTION_SCHEMAS } from '@/lib/schemas';
+import { SECTION_SCHEMAS, SECTION_SUBMISSION_SCHEMAS } from '@/lib/schemas';
 import { getFilePages } from '@/lib/getFilePages';
 import siteData from '@/data/config/site.json';
 import menuData from '@/data/config/menu.json';
@@ -10165,17 +9918,18 @@ export const refDocuments = {
 export function getWebMcpBuildState(): {
   pages: Record<string, PageConfig>;
   schemas: JsonPagesConfig['schemas'];
+  submissionSchemas: JsonPagesConfig['submissionSchemas'];
   siteConfig: SiteConfig;
 } {
   return {
     pages,
     schemas: SECTION_SCHEMAS as unknown as JsonPagesConfig['schemas'],
+    submissionSchemas: SECTION_SUBMISSION_SCHEMAS as unknown as JsonPagesConfig['submissionSchemas'],
     siteConfig,
   };
 }
 
 END_OF_FILE_CONTENT
-mkdir -p "src/types"
 echo "Creating src/types.ts..."
 cat << 'END_OF_FILE_CONTENT' > "src/types.ts"
 import type { EmptyTenantData, EmptyTenantSettings } from '@/components/empty-tenant';
@@ -10198,26 +9952,6 @@ declare module '@olonjs/core' {
 }
 
 export * from '@olonjs/core';
-
-END_OF_FILE_CONTENT
-echo "Creating src/types/deploy.ts..."
-cat << 'END_OF_FILE_CONTENT' > "src/types/deploy.ts"
-export type StepId = 'commit' | 'push' | 'build' | 'live';
-
-export type StepState = 'pending' | 'active' | 'done';
-
-export type DeployPhase = 'idle' | 'running' | 'done' | 'error';
-
-export interface DeployStep {
-  id: StepId;
-  label: string;
-  verb: string;
-  poem: [string, string];
-  color: string;
-  glyph: string;
-  duration: number;
-}
-
 
 END_OF_FILE_CONTENT
 echo "Creating src/vite-env.d.ts..."
@@ -10410,6 +10144,7 @@ export default defineConfig({
               sendJson(res, 200, buildSiteManifest({
                 pages: buildState.pages,
                 schemas: buildState.schemas,
+                submissionSchemas: buildState.submissionSchemas,
                 siteConfig: buildState.siteConfig,
               }));
               return true;
@@ -10428,6 +10163,7 @@ export default defineConfig({
                 slug,
                 pageConfig,
                 schemas: buildState.schemas,
+                submissionSchemas: buildState.submissionSchemas,
                 siteConfig: buildState.siteConfig,
               }));
               return true;
@@ -10446,6 +10182,7 @@ export default defineConfig({
                 slug,
                 pageConfig,
                 schemas: buildState.schemas,
+                submissionSchemas: buildState.submissionSchemas,
                 siteConfig: buildState.siteConfig,
               }));
               return true;
