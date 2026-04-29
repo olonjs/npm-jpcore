@@ -217,15 +217,15 @@
               "type": "object",
               "description": "Letter-spacing tokens. Typically em, px and rem also accepted.",
               "additionalProperties": {
-				"$ref": "#/definitions/cssTracking"
-			  }
+                "$ref": "#/definitions/cssTracking"
+              }
             },
             "leading": {
               "type": "object",
               "description": "Line-height tokens. Values are unitless ratios or CSS lengths.",
               "additionalProperties": {
-				"$ref": "#/definitions/cssLineHeight"
-			  }
+                "$ref": "#/definitions/cssLineHeight"
+              }
             }
           }
         },
@@ -301,21 +301,21 @@
       "description": "A CSS color value: hex (#RRGGBB or #RGB), rgb(), hsl(), oklch(), or named color.",
       "pattern": "^(#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|rgb\\(|rgba\\(|hsl\\(|oklch\\(|[a-z]+).*$"
     },
-   "cssLength": {
-    "type": "string",
-    "description": "A positive CSS length value: px, rem, em, %, vw, vh.",
-    "pattern": "^(0|\\d+(\\.\\d+)?(px|rem|em|%|vw|vh))$"
-  },
-  "cssTracking": {
-    "type": "string",
-    "description": "A letter-spacing value, typically negative em.",
-    "pattern": "^-?\\d+(\\.\\d+)?(em|px|rem)$"
-  },
-  "cssLineHeight": {
-    "type": "string",
-    "description": "A line-height value: unitless ratio or CSS length.",
-    "pattern": "^(\\d+(\\.\\d+)?|\\d+(\\.\\d+)?(px|rem|em|%))$"
-  },
+    "cssLength": {
+      "type": "string",
+      "description": "A positive CSS length value: px, rem, em, %, vw, vh.",
+      "pattern": "^(0|\\d+(\\.\\d+)?(px|rem|em|%|vw|vh))$"
+    },
+    "cssTracking": {
+      "type": "string",
+      "description": "A letter-spacing value, typically negative em.",
+      "pattern": "^-?\\d+(\\.\\d+)?(em|px|rem)$"
+    },
+    "cssLineHeight": {
+      "type": "string",
+      "description": "A line-height value: unitless ratio or CSS length.",
+      "pattern": "^(\\d+(\\.\\d+)?|\\d+(\\.\\d+)?(px|rem|em|%))$"
+    },
     "zIndexValue": {
       "type": "string",
       "description": "A numeric string representing a z-index value.",
