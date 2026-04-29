@@ -7,16 +7,10 @@
 			"path": "../temp/llms"
 		},
 		{
-			"path": "../temp/gumlon"
-		},
-		{
 			"path": "../jsonpages-platform"
 		},
 		{
 			"path": "C:/Users/gseri/Desktop/GEMINI/AISTUDIO/Dev/JPS/olon-agent"
-		},
-		{
-			"path": "../temp/cult"
 		},
 		{
 			"path": "../temp/YDEMO/santamamma26"
@@ -26,6 +20,9 @@
 		},
 		{
 			"path": "../temp/1.6"
+		},
+		{
+			"path": "../temp/YDEMO/gumlon"
 		}
 	]
 }

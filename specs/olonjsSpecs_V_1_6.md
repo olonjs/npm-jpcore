@@ -1,7 +1,7 @@
 
-# OlonJS Architecture Specifications v1.6 Draft
+# OlonJS Architecture Specifications v1.6 Final
 
-**Status:** Draft  
+**Status:** Final  
 **Version:** 1.6.0 (Complete Draft - Core-Agnostic Theme Transport, Shell/Menu Contract Clarification, Full v1.5 Consolidation)  
 **Target:** Senior Architects / AI Agents / Enterprise Governance
 

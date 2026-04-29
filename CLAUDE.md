@@ -235,7 +235,6 @@ Descriptor sconosciuti vengono trattati come `ui:text`.
 
 Quando si itera su `packages/core` localmente prima di pubblicare:
 ```bash
-cd packages/core && npm run build && yalc push
-cd apps/tenant-alpha && yalc add @olonjs/core && npm install
+npm run build:all
 ```
-`packages/core/.yalc/` e `yalc.lock` sono artefatti local-only.
+
