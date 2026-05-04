@@ -1,6 +1,7 @@
 # ADR-0004: Scroll restoration in `JsonPagesEngine` via React Router `ScrollRestoration`
 
-**Status:** Accepted  
+**Status:** Deprecated — implementation reverted (2026-05-04). `ScrollRestoration` was removed from `JsonPagesEngine` after it caused regressions across routes/admin behavior; do not re-add without a scoped fix.
+
 **Date:** 2026-05-04  
 **Scope:** `packages/core` — `JsonPagesEngine` (`BrowserRouter` shell)
 

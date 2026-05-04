@@ -44,7 +44,7 @@ Optional: `Follow-ups`, `Open Points`, `Compliance mapping`, `Risk mitigation`, 
 | 0001 | [Remove `SiteConfig.pages`](./ADR-0001-remove-siteconfig-pages.md)              | Proposed — pending implementation and verification    | 2026-04-20 |
 | 0002 | [Declarative form submission schemas in OlonJS core](./ADR-0002-form-submission-schemas.md) | Accepted                                              | 2026-04-21 |
 | 0003 | [JSON Schema as public contract, Zod as internal SOT](./ADR-0003-jsonschema-as-public-contract-zod-as-internal-sot.md) | Accepted | 2026-05-03 |
-| 0004 | [Scroll restoration in `JsonPagesEngine`](./ADR-0004-scroll-restoration-in-json-pages-engine.md) | Accepted | 2026-05-04 |
+| 0004 | [Scroll restoration in `JsonPagesEngine`](./ADR-0004-scroll-restoration-in-json-pages-engine.md) | Deprecated — reverted | 2026-05-04 |
 
 ## For agents
 
