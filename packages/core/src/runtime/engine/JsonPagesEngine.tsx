@@ -3,7 +3,7 @@
  * Enterprise: this file stays as the composition root that wires runtime concerns together.
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, ScrollRestoration } from 'react-router-dom';
 import { resolveRuntimeConfig } from '../../contract/config-resolver';
 import type { JsonPagesConfig } from '../../contract/types-engine';
 import { ensureWebMcpRuntime } from '../../webmcp';
@@ -128,6 +128,7 @@ export function JsonPagesEngine({ config }: JsonPagesEngineProps) {
         }}
       >
         <BrowserRouter basename={routerBasePath}>
+          <ScrollRestoration />
           <Routes>
             <Route
               path="/"
